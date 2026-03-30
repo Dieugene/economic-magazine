@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Карточка статьи — Админ-панель ВТЭ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: { 50: '#f0f3f7', 100: '#d9e1eb', 200: '#b3c3d7', 300: '#8da5c3', 400: '#5c7ea6', 500: '#3a5f8a', 600: '#1B3A5C', 700: '#152e4a', 800: '#0f2238', 900: '#0a1626' },
+            gold: { 50: '#fdf8ef', 100: '#f9ecd4', 200: '#f2d9a9', 300: '#e8c277', 400: '#C4933F', 500: '#a87a2f', 600: '#8c6224' },
+            cream: { 50: '#FDFCF9', 100: '#FAFAF7', 200: '#F5F3EE', 300: '#EEEBE3', 400: '#E4DFD4', 500: '#D4CFC4' },
+          },
+          fontFamily: {
+            sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+    .sidebar-link.active { background-color: #f0f3f7; color: #1B3A5C; border-left-color: #C4933F; }
+    .field-label { font-size: 0.8125rem; font-weight: 500; color: #4b5563; margin-bottom: 0.375rem; display: block; }
+    .field-hint { font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem; }
+    input[type="text"], input[type="email"], input[type="url"], input[type="date"], input[type="number"],
+    textarea, select {
+      width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #E4DFD4; border-radius: 2px;
+      font-size: 0.875rem; color: #374151; background: #fff; transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #3a5f8a; box-shadow: 0 0 0 2px rgba(59,95,138,0.1); }
+    textarea { resize: vertical; min-height: 80px; }
+    .author-card { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .ref-item { animation: fadeIn 0.2s ease; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased min-h-screen flex">
+
+  <!-- Admin sidebar -->
+  <aside class="hidden lg:flex lg:flex-col w-64 bg-navy-800 text-white/70 min-h-screen flex-shrink-0">
+    <div class="p-5 border-b border-white/10">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-white/10 rounded flex items-center justify-center">
+          <span class="text-white font-bold text-sm">ВТЭ</span>
+        </div>
+        <div>
+          <p class="text-white text-sm font-medium leading-tight">Админ-панель</p>
+          <p class="text-xs text-white/40">Управление журналом</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 py-4">
+      <div class="px-3 mb-2">
+        <p class="text-xs text-white/30 uppercase tracking-wider px-3 mb-2">Навигация</p>
+      </div>
+      <a href="#" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm hover:bg-white/5 hover:text-white transition-colors border-l-2 border-transparent">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Главная
+      </a>
+      <a href="#" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm hover:bg-white/5 hover:text-white transition-colors border-l-2 border-transparent">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        Номера
+      </a>
+      <a href="#" class="sidebar-link active flex items-center gap-3 px-6 py-2.5 text-sm hover:bg-white/5 hover:text-white transition-colors border-l-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Статьи
+      </a>
+    </nav>
+    <div class="p-5 border-t border-white/10">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-gold-400 rounded-full flex items-center justify-center">
+          <span class="text-navy-800 text-xs font-bold">АП</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-white text-sm truncate">Администратор</p>
+          <p class="text-xs text-white/40">admin@questionset.ru</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="flex-1 min-w-0">
+    <!-- Top bar -->
+    <header class="bg-white border-b border-gray-200 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button class="lg:hidden text-gray-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div>
+            <nav class="text-xs text-gray-400 mb-1">
+              <a href="#" class="hover:text-navy-600">Номера</a>
+              <span class="mx-1">/</span>
+              <a href="#" class="hover:text-navy-600">№ 1 (30) / 2026</a>
+              <span class="mx-1">/</span>
+              <span class="text-navy-600 font-medium">Статья 1</span>
+            </nav>
+            <h1 class="text-lg font-semibold text-navy-600">Карточка статьи</h1>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="article.html" target="_blank" class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-navy-600 transition-colors px-3 py-2 border border-gray-200 rounded-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            Предпросмотр
+          </a>
+          <button class="inline-flex items-center gap-1.5 text-sm font-medium text-white bg-navy-600 px-4 py-2 rounded-sm hover:bg-navy-700 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Сохранить
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Form content -->
+    <div class="p-6 max-w-5xl">
+
+      <!-- Issue context bar -->
+      <div class="bg-navy-50 border border-navy-200 rounded-sm p-4 mb-6 flex items-center justify-between">
+        <div class="flex items-center gap-3 text-sm">
+          <svg class="w-5 h-5 text-navy-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          <span class="text-navy-600 font-medium">Номер: № 1 (30) / 2026</span>
+          <span class="text-gray-400">|</span>
+          <span class="text-gray-500">Статус: <span class="text-gold-500 font-medium">Черновик</span></span>
+        </div>
+        <span class="text-xs text-gray-400">Статья 1 из 12</span>
+      </div>
+
+      <form class="space-y-8">
+        <!-- Section 1: Basic info -->
+        <fieldset class="bg-white border border-gray-200 rounded-sm">
+          <legend class="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">Основная информация</legend>
+          <div class="p-5 pt-3 grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label class="field-label">Рубрика *</label>
+              <select>
+                <option value="" disabled>Выберите рубрику</option>
+                <option value="econ-theory" selected>Экономическая теория</option>
+                <option value="methodology">Методология экономической науки</option>
+                <option value="theory-policy">От теории к экономической политике</option>
+                <option value="history-thought">История мысли</option>
+                <option value="interdisciplinary">Междисциплинарные исследования</option>
+                <option value="econ-history">Экономическая история</option>
+                <option value="reviews">Обзоры и рецензии</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Тип статьи *</label>
+              <select>
+                <option value="scientific" selected>Научная статья</option>
+                <option value="review">Обзор</option>
+                <option value="book-review">Рецензия</option>
+                <option value="editorial">От редактора</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Страницы *</label>
+              <div class="flex items-center gap-2">
+                <input type="number" placeholder="от" value="7" class="w-full">
+                <span class="text-gray-400">&ndash;</span>
+                <input type="number" placeholder="до" value="21" class="w-full">
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section 2: Title -->
+        <fieldset class="bg-white border border-gray-200 rounded-sm">
+          <legend class="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">Заглавие</legend>
+          <div class="p-5 pt-3 space-y-4">
+            <div>
+              <label class="field-label">
+                Название (русский) *
+                <span class="inline-block w-5 h-3 bg-white border border-gray-300 rounded-sm text-[9px] text-center leading-3 ml-1 font-normal text-gray-400">RU</span>
+              </label>
+              <input type="text" value="Научная деятельность в цифровую эпоху: производство и распространение знания">
+            </div>
+            <div>
+              <label class="field-label">
+                Название (английский) *
+                <span class="inline-block w-5 h-3 bg-white border border-gray-300 rounded-sm text-[9px] text-center leading-3 ml-1 font-normal text-gray-400">EN</span>
+              </label>
+              <input type="text" value="Scientific Activity in the Digital Age: Production and Dissemination of Knowledge">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section 3: Authors -->
+        <fieldset class="bg-white border border-gray-200 rounded-sm">
+          <legend class="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">Авторы</legend>
+          <div class="p-5 pt-3">
+            <div id="authorsContainer" class="space-y-4">
+              <!-- Author 1 -->
+              <div class="author-card border border-cream-400 rounded-sm p-4 bg-cream-50 relative">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs font-medium text-navy-600 bg-navy-100 px-2 py-0.5 rounded">Автор 1</span>
+                  <button type="button" class="text-gray-400 hover:text-red-500 transition-colors" title="Удалить автора">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="field-label">ФИО (русский) *</label>
+                    <input type="text" value="Рубинштейн Александр Яковлевич">
+                  </div>
+                  <div>
+                    <label class="field-label">ФИО (английский) *</label>
+                    <input type="text" value="Alexander Ya. Rubinshtein">
+                  </div>
+                  <div>
+                    <label class="field-label">Аффилиация (русский) *</label>
+                    <input type="text" value="Институт экономики РАН, главный научный сотрудник, д-р филос. наук, профессор">
+                  </div>
+                  <div>
+                    <label class="field-label">Аффилиация (английский)</label>
+                    <input type="text" value="Institute of Economics RAS, Chief Researcher, Doctor of Sciences (Philosophy), Professor">
+                  </div>
+                  <div>
+                    <label class="field-label">Email</label>
+                    <input type="email" value="arubinstein@inecon.ru">
+                  </div>
+                  <div>
+                    <label class="field-label">ORCID</label>
+                    <input type="text" value="0000-0003-2906-8280" placeholder="0000-0000-0000-0000">
+                    <p class="field-hint">Формат: 0000-0000-0000-0000</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Author 2 -->
+              <div class="author-card border border-cream-400 rounded-sm p-4 bg-cream-50 relative">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs font-medium text-navy-600 bg-navy-100 px-2 py-0.5 rounded">Автор 2</span>
+                  <button type="button" class="text-gray-400 hover:text-red-500 transition-colors" title="Удалить автора">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="field-label">ФИО (русский) *</label>
+                    <input type="text" value="Чуковская Екатерина Эдуардовна">
+                  </div>
+                  <div>
+                    <label class="field-label">ФИО (английский) *</label>
+                    <input type="text" value="Ekaterina E. Chukovskaya">
+                  </div>
+                  <div>
+                    <label class="field-label">Аффилиация (русский) *</label>
+                    <input type="text" value="Институт законодательства и сравнительного правоведения при Правительстве РФ">
+                  </div>
+                  <div>
+                    <label class="field-label">Аффилиация (английский)</label>
+                    <input type="text" value="Institute of Legislation and Comparative Law under the Government of the Russian Federation">
+                  </div>
+                  <div>
+                    <label class="field-label">Email</label>
+                    <input type="email" value="echukovskaya@izak.ru">
+                  </div>
+                  <div>
+                    <label class="field-label">ORCID</label>
+                    <input type="text" placeholder="0000-0000-0000-0000">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" onclick="addAuthor()" class="mt-4 inline-flex items-center gap-2 text-sm font-medium text-navy-600 border border-dashed border-navy-300 rounded-sm px-4 py-2 hover:bg-navy-50 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+              Добавить автора
+            </button>
+          </div>
+        </fieldset>
+
+        <!-- Section 4: Abstract -->
+        <fieldset class="bg-white border border-gray-200 rounded-sm">
+          <legend class="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">Аннотация</legend>
+          <div class="p-5 pt-3 space-y-4">
+            <div>
+              <label class="field-label">
+                Аннотация (русский) *
+                <span class="inline-block w-5 h-3 bg-white border border-gray-300 rounded-sm text-[9px] text-center leading-3 ml-1 font-normal text-gray-400">RU</span>
+              </label>
+              <textarea rows="4">Статья посвящена анализу трансформации научной деятельности в условиях цифровизации. Рассматриваются механизмы производства и распространения научного знания, влияние цифровых технологий на академические институты и формы коммуникации в научном сообществе. Особое внимание уделяется вопросам открытого доступа и новым моделям научных публикаций.</textarea>
+            </div>
+            <div>
+              <label class="field-label">
+                Аннотация (английский) *
+                <span class="inline-block w-5 h-3 bg-white border border-gray-300 rounded-sm text-[9px] text-center leading-3 ml-1 font-normal text-gray-400">EN</span>
+              </label>
+              <textarea rows="4">The article analyzes the transformation of scientific activity in the context of digitalization. It examines the mechanisms of production and dissemination of scientific knowledge, the impact of digital technologies on academic institutions, and forms of communication within the scientific community.</textarea>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section 5: Keywords -->
+        <fieldset class="bg-white border border-gray-200 rounded-sm">
+          <legend class="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">Ключевые слова</legend>
+          <div class="p-5 pt-3 space-y-4">
+            <div>
+              <label class="field-label">Ключевые слова (русский) *</label>
+              <input type="text" value="научная деятельность, цифровизация, производство знания, открытый доступ, научные публикации, цифровая экономика">
+              <p class="field-hint">Разделяйте запятой</p>
+            </div>
+            <div>
+              <label class="field-label">Ключевые слова (английский) *</label>
+              <input type="text" value="scientific activity, digitalization, knowledge production, open access, scientific publishing, digital economy">
+              <p class="field-hint">Separate with commas</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section 6: Identifiers -->
+        <fieldset class="bg-white border border-gray-200 rounded-sm">
+          <legend class="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">Идентификаторы и коды</legend>
+          <div class="p-5 pt-3 grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label class="field-label">DOI *</label>
+              <input type="text" value="10.52342/2587-7666VTE_2026_1_7_21">
+            </div>
+            <div>
+              <label class="field-label">УДК</label>
+              <input type="text" value="330.1">
+            </div>
+            <div>
+              <label class="field-label">JEL-коды</label>
+              <input type="text" value="A11, D83, O33">
+              <p class="field-hint">Через запятую</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section 7: Dates -->
+        <fieldset class="bg-white border border-gray-200 rounded-sm">
+          <legend class="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">Даты</legend>
+          <div class="p-5 pt-3 grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="field-label">Дата получения</label>
+              <input type="date" value="2025-11-18">
+            </div>
+            <div>
+              <label class="field-label">Дата принятия в печать</label>
+              <input type="date" value="2026-01-20">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section 8: Funding -->
+        <fieldset class="bg-white border border-gray-200 rounded-sm">
+          <legend class="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">Финансирование</legend>
+          <div class="p-5 pt-3">
+            <div>
+              <label class="field-label">Источники финансирования</label>
+              <textarea rows="2">Исследование выполнено при финансовой поддержке Министерства науки и высшего образования Российской Федерации в рамках государственного задания Института экономики РАН.</textarea>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section 9: Bibliography -->
+        <fieldset class="bg-white border border-gray-200 rounded-sm">
+          <legend class="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">Библиография</legend>
+          <div class="p-5 pt-3 space-y-5">
+            <div>
+              <label class="field-label">Литература (русский)</label>
+              <div id="refsRuContainer" class="space-y-2 mb-3">
+                <div class="ref-item flex items-start gap-2">
+                  <span class="text-xs text-gray-400 mt-2.5 w-5 text-right flex-shrink-0">1.</span>
+                  <input type="text" value="Полтерович В.М. Кризис экономической теории // Экономическая наука современной России. 1998. № 1. С. 46–66." class="flex-1">
+                  <button type="button" class="mt-1.5 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+                <div class="ref-item flex items-start gap-2">
+                  <span class="text-xs text-gray-400 mt-2.5 w-5 text-right flex-shrink-0">2.</span>
+                  <input type="text" value="Рубинштейн А.Я. К теории рынков опекаемых благ // Вопросы экономики. 2018. № 3. С. 28–45." class="flex-1">
+                  <button type="button" class="mt-1.5 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+                <div class="ref-item flex items-start gap-2">
+                  <span class="text-xs text-gray-400 mt-2.5 w-5 text-right flex-shrink-0">3.</span>
+                  <input type="text" value="Автономов В.С. Модель человека в экономической науке. СПб.: Экономическая школа, 1998. 230 с." class="flex-1">
+                  <button type="button" class="mt-1.5 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              </div>
+              <button type="button" onclick="addRef('refsRuContainer')" class="inline-flex items-center gap-1.5 text-xs text-navy-600 hover:text-navy-700 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                Добавить ссылку
+              </button>
+            </div>
+
+            <div class="border-t border-gray-100 pt-5">
+              <label class="field-label">References (английский)</label>
+              <div id="refsEnContainer" class="space-y-2 mb-3">
+                <div class="ref-item flex items-start gap-2">
+                  <span class="text-xs text-gray-400 mt-2.5 w-5 text-right flex-shrink-0">1.</span>
+                  <input type="text" value="Polterovich V.M. (1998). Crisis of Economic Theory. Ekonomicheskaya Nauka Sovremennoy Rossii, (1), 46–66. (In Russian)." class="flex-1">
+                  <button type="button" class="mt-1.5 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+                <div class="ref-item flex items-start gap-2">
+                  <span class="text-xs text-gray-400 mt-2.5 w-5 text-right flex-shrink-0">2.</span>
+                  <input type="text" value="Rubinshtein A.Ya. (2018). Toward a Theory of Markets of Patronized Goods. Voprosy Ekonomiki, (3), 28–45. (In Russian)." class="flex-1">
+                  <button type="button" class="mt-1.5 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+                <div class="ref-item flex items-start gap-2">
+                  <span class="text-xs text-gray-400 mt-2.5 w-5 text-right flex-shrink-0">3.</span>
+                  <input type="text" value="Avtonomov V.S. (1998). Model of Man in Economic Science. St. Petersburg: Ekonomicheskaya Shkola. (In Russian)." class="flex-1">
+                  <button type="button" class="mt-1.5 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              </div>
+              <button type="button" onclick="addRef('refsEnContainer')" class="inline-flex items-center gap-1.5 text-xs text-navy-600 hover:text-navy-700 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                Добавить ссылку
+              </button>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section 10: Files -->
+        <fieldset class="bg-white border border-gray-200 rounded-sm">
+          <legend class="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">Файлы и ссылки</legend>
+          <div class="p-5 pt-3 space-y-5">
+            <div>
+              <label class="field-label">PDF статьи</label>
+              <div class="border-2 border-dashed border-cream-400 rounded-sm p-6 text-center hover:border-navy-300 transition-colors cursor-pointer bg-cream-50">
+                <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                <p class="text-sm text-gray-500">Перетащите файл или <span class="text-navy-600 font-medium">выберите</span></p>
+                <p class="text-xs text-gray-400 mt-1">PDF, максимум 50 МБ</p>
+              </div>
+              <!-- Uploaded file preview -->
+              <div class="mt-3 flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-sm">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-green-800 font-medium truncate">vte_2026_1_rubinshtein_chukovskaya.pdf</p>
+                  <p class="text-xs text-green-600">188 КБ</p>
+                </div>
+                <button type="button" class="text-green-400 hover:text-red-500 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Ссылка на XML (JATS)</label>
+              <input type="url" placeholder="https://journals.rcsi.science/..." value="https://journals.rcsi.science/2587-7666/article/view/258476">
+              <p class="field-hint">Ссылка на XML в системе РЦНИ</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Action buttons -->
+        <div class="flex items-center justify-between pt-4 pb-8">
+          <button type="button" class="text-sm text-gray-400 hover:text-red-500 transition-colors">
+            Удалить статью
+          </button>
+          <div class="flex items-center gap-3">
+            <button type="button" class="text-sm text-gray-500 border border-gray-200 px-4 py-2 rounded-sm hover:bg-gray-50 transition-colors">
+              Отмена
+            </button>
+            <button type="submit" class="inline-flex items-center gap-2 text-sm font-medium text-white bg-navy-600 px-5 py-2.5 rounded-sm hover:bg-navy-700 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Сохранить статью
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let authorCount = 2;
+
+    function addAuthor() {
+      authorCount++;
+      const container = document.getElementById('authorsContainer');
+      const card = document.createElement('div');
+      card.className = 'author-card border border-cream-400 rounded-sm p-4 bg-cream-50 relative';
+      card.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-medium text-navy-600 bg-navy-100 px-2 py-0.5 rounded">Автор ${authorCount}</span>
+          <button type="button" onclick="this.closest('.author-card').remove()" class="text-gray-400 hover:text-red-500 transition-colors" title="Удалить автора">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="field-label">ФИО (русский) *</label>
+            <input type="text" placeholder="Фамилия Имя Отчество">
+          </div>
+          <div>
+            <label class="field-label">ФИО (английский) *</label>
+            <input type="text" placeholder="Name Surname">
+          </div>
+          <div>
+            <label class="field-label">Аффилиация (русский) *</label>
+            <input type="text" placeholder="Организация, должность, степень">
+          </div>
+          <div>
+            <label class="field-label">Аффилиация (английский)</label>
+            <input type="text" placeholder="Organization, position, degree">
+          </div>
+          <div>
+            <label class="field-label">Email</label>
+            <input type="email" placeholder="email@example.com">
+          </div>
+          <div>
+            <label class="field-label">ORCID</label>
+            <input type="text" placeholder="0000-0000-0000-0000">
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    }
+
+    function addRef(containerId) {
+      const container = document.getElementById(containerId);
+      const count = container.children.length + 1;
+      const item = document.createElement('div');
+      item.className = 'ref-item flex items-start gap-2';
+      item.innerHTML = `
+        <span class="text-xs text-gray-400 mt-2.5 w-5 text-right flex-shrink-0">${count}.</span>
+        <input type="text" class="flex-1" placeholder="Введите библиографическую ссылку...">
+        <button type="button" onclick="this.closest('.ref-item').remove()" class="mt-1.5 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      `;
+      container.appendChild(item);
+      item.querySelector('input').focus();
+    }
+  </script>
+
+</body>
+</html>

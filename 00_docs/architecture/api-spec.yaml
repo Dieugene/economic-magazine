@@ -1,0 +1,1378 @@
+openapi: 3.0.3
+info:
+  title: ВТЭ — Вопросы теоретической экономики API
+  description: |
+    REST API для сайта журнала «Вопросы теоретической экономики».
+
+    Две группы эндпоинтов:
+    - `/api/` — публичные (без авторизации), для клиентской части сайта
+    - `/api/admin/` — закрытые (JWT), для админ-панели
+  version: 1.0.0
+  contact:
+    name: Команда фронтенда ВТЭ
+
+servers:
+  - url: https://api.questionset.ru
+    description: Production
+  - url: http://localhost:8000
+    description: Local development
+
+tags:
+  - name: Issues (public)
+    description: Номера журнала — публичный доступ
+  - name: Articles (public)
+    description: Статьи — публичный доступ
+  - name: Sections (public)
+    description: Рубрики — публичный доступ
+  - name: Editorial Board (public)
+    description: Редколлегия — публичный доступ
+  - name: Pages (public)
+    description: Статические страницы — публичный доступ
+  - name: Search (public)
+    description: Поиск по сайту
+  - name: Auth
+    description: Авторизация админ-панели
+  - name: Issues (admin)
+    description: Управление номерами
+  - name: Articles (admin)
+    description: Управление статьями
+  - name: Files (admin)
+    description: Загрузка файлов
+  - name: Editorial Board (admin)
+    description: Управление редколлегией
+
+# ============================================================
+# SECURITY
+# ============================================================
+security: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # ==========================================================
+  # SCHEMAS
+  # ==========================================================
+  schemas:
+
+    # ---------- Enums ----------
+
+    ArticleType:
+      type: string
+      enum: [scientific, review, book_review, editorial]
+      description: |
+        Тип статьи:
+        - scientific — научная
+        - review — обзор
+        - book_review — рецензия
+        - editorial — от редактора
+
+    SectionSlug:
+      type: string
+      enum:
+        - economic-theory
+        - methodology
+        - theory-to-policy
+        - history-of-thought
+        - interdisciplinary
+        - economic-history
+        - reviews
+      description: |
+        Рубрики журнала:
+        - economic-theory — Экономическая теория
+        - methodology — Методология экономической науки
+        - theory-to-policy — От теории к экономической политике
+        - history-of-thought — История мысли
+        - interdisciplinary — Междисциплинарные исследования
+        - economic-history — Экономическая история
+        - reviews — Обзоры и рецензии
+
+    IssueStatus:
+      type: string
+      enum: [draft, ready, published]
+      description: |
+        Статус номера:
+        - draft — черновик (заполняется)
+        - ready — готов к публикации
+        - published — опубликован на сайте
+
+    Lang:
+      type: string
+      enum: [ru, en]
+      default: ru
+
+    # ---------- Nested objects ----------
+
+    LocalizedString:
+      type: object
+      required: [ru]
+      properties:
+        ru:
+          type: string
+        en:
+          type: string
+      description: Строка на двух языках
+
+    LocalizedText:
+      type: object
+      required: [ru]
+      properties:
+        ru:
+          type: string
+          description: Текст на русском
+        en:
+          type: string
+          description: Текст на английском
+      description: Длинный текст на двух языках (аннотация и т.п.)
+
+    Author:
+      type: object
+      required: [full_name, affiliation]
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        full_name:
+          $ref: '#/components/schemas/LocalizedString'
+          description: ФИО полностью
+        affiliation:
+          $ref: '#/components/schemas/LocalizedString'
+          description: Место работы / организация
+        email:
+          type: string
+          format: email
+          nullable: true
+        orcid:
+          type: string
+          nullable: true
+          example: "0000-0001-8169-729X"
+
+    Reference:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        text_ru:
+          type: string
+          description: Запись в списке ЛИТЕРАТУРА
+        text_en:
+          type: string
+          description: Запись в списке REFERENCES
+        order:
+          type: integer
+          description: Порядковый номер в списке
+
+    EditorialBoardMember:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        full_name:
+          $ref: '#/components/schemas/LocalizedString'
+        role:
+          type: string
+          nullable: true
+          description: "Роль в редколлегии (главный редактор, зам. гл. редактора, ответственный секретарь и т.д.)"
+        degree:
+          $ref: '#/components/schemas/LocalizedString'
+          description: "Учёная степень и звание"
+        affiliation:
+          $ref: '#/components/schemas/LocalizedString'
+          description: "Должность и организация"
+        email:
+          type: string
+          format: email
+          nullable: true
+        spin_code:
+          type: string
+          nullable: true
+          example: "6086-8715"
+        orcid:
+          type: string
+          nullable: true
+          example: "0000-0001-8169-729X"
+        scopus_id:
+          type: string
+          nullable: true
+        order:
+          type: integer
+          description: Порядок отображения
+
+    # ---------- Main entities ----------
+
+    Section:
+      type: object
+      properties:
+        slug:
+          $ref: '#/components/schemas/SectionSlug'
+        name:
+          $ref: '#/components/schemas/LocalizedString'
+
+    IssueSummary:
+      type: object
+      description: Краткая информация о номере (для списков)
+      properties:
+        id:
+          type: integer
+        year:
+          type: integer
+          example: 2026
+        number:
+          type: integer
+          description: Порядковый номер в году (1-4)
+          example: 1
+        sequential_number:
+          type: integer
+          description: Сквозной номер
+          example: 30
+        published_date:
+          type: string
+          format: date
+          example: "2026-02-27"
+        cover_url:
+          type: string
+          format: uri
+          nullable: true
+          description: URL обложки
+        full_pdf_url:
+          type: string
+          format: uri
+          nullable: true
+          description: URL PDF полного выпуска
+        status:
+          $ref: '#/components/schemas/IssueStatus'
+        article_count:
+          type: integer
+          description: Количество статей в номере
+
+    IssueFull:
+      type: object
+      description: Полная информация о номере с содержанием
+      allOf:
+        - $ref: '#/components/schemas/IssueSummary'
+        - type: object
+          properties:
+            sections:
+              type: array
+              description: Содержание, сгруппированное по рубрикам
+              items:
+                type: object
+                properties:
+                  section:
+                    $ref: '#/components/schemas/Section'
+                  articles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ArticleSummary'
+
+    ArticleSummary:
+      type: object
+      description: Краткая информация о статье (для списков и содержания номера)
+      properties:
+        id:
+          type: integer
+        title:
+          $ref: '#/components/schemas/LocalizedString'
+        authors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Author'
+        section:
+          $ref: '#/components/schemas/Section'
+        pages:
+          type: string
+          example: "7-21"
+        doi:
+          type: string
+          nullable: true
+          example: "10.52342/2587-7666VTE_2026_1_7_21"
+        pdf_url:
+          type: string
+          format: uri
+          nullable: true
+        pdf_size_kb:
+          type: integer
+          nullable: true
+          description: Размер PDF в КБ (отображается на странице номера рядом со статьёй)
+          example: 188
+        abstract:
+          $ref: '#/components/schemas/LocalizedText'
+          nullable: true
+          description: Аннотация (для раскрывающегося блока на странице содержания номера)
+        article_type:
+          $ref: '#/components/schemas/ArticleType'
+        issue_id:
+          type: integer
+        issue_year:
+          type: integer
+        issue_number:
+          type: integer
+        issue_sequential_number:
+          type: integer
+          description: Сквозной номер выпуска (для отображения «№ 1 (30)» на странице статьи)
+          example: 30
+
+    ArticleFull:
+      type: object
+      description: Полная информация о статье (страница статьи)
+      allOf:
+        - $ref: '#/components/schemas/ArticleSummary'
+        - type: object
+          properties:
+            abstract:
+              $ref: '#/components/schemas/LocalizedText'
+              description: Аннотация
+            keywords:
+              type: object
+              properties:
+                ru:
+                  type: array
+                  items:
+                    type: string
+                en:
+                  type: array
+                  items:
+                    type: string
+            udk:
+              type: string
+              nullable: true
+              description: Код УДК
+            jel_codes:
+              type: array
+              items:
+                type: string
+              description: Коды JEL
+              example: ["D80", "E22", "G31"]
+            references:
+              type: array
+              items:
+                $ref: '#/components/schemas/Reference'
+            received_date:
+              type: string
+              format: date
+              nullable: true
+              description: Дата получения статьи
+            accepted_date:
+              type: string
+              format: date
+              nullable: true
+              description: Дата принятия в печать
+            funding:
+              $ref: '#/components/schemas/LocalizedText'
+              nullable: true
+              description: Источники финансирования
+            xml_url:
+              type: string
+              format: uri
+              nullable: true
+              description: Ссылка на JATS XML (внешний ресурс РЦНИ)
+            pdf_size_kb:
+              type: integer
+              nullable: true
+              description: Размер PDF в КБ
+              example: 188
+
+    # ---------- Admin input schemas ----------
+
+    IssueCreate:
+      type: object
+      required: [year, number]
+      properties:
+        year:
+          type: integer
+          example: 2026
+        number:
+          type: integer
+          example: 1
+        sequential_number:
+          type: integer
+          example: 30
+        published_date:
+          type: string
+          format: date
+          nullable: true
+
+    IssueUpdate:
+      type: object
+      properties:
+        year:
+          type: integer
+        number:
+          type: integer
+        sequential_number:
+          type: integer
+        published_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          $ref: '#/components/schemas/IssueStatus'
+
+    ArticleCreate:
+      type: object
+      required: [issue_id, title, section, article_type]
+      properties:
+        issue_id:
+          type: integer
+        title:
+          $ref: '#/components/schemas/LocalizedString'
+        section:
+          $ref: '#/components/schemas/SectionSlug'
+        article_type:
+          $ref: '#/components/schemas/ArticleType'
+        authors:
+          type: array
+          items:
+            type: object
+            required: [full_name, affiliation]
+            properties:
+              full_name:
+                $ref: '#/components/schemas/LocalizedString'
+              affiliation:
+                $ref: '#/components/schemas/LocalizedString'
+              email:
+                type: string
+                format: email
+                nullable: true
+              orcid:
+                type: string
+                nullable: true
+        abstract:
+          $ref: '#/components/schemas/LocalizedText'
+        keywords:
+          type: object
+          properties:
+            ru:
+              type: array
+              items:
+                type: string
+            en:
+              type: array
+              items:
+                type: string
+        pages:
+          type: string
+          example: "7-21"
+        doi:
+          type: string
+          nullable: true
+        udk:
+          type: string
+          nullable: true
+        jel_codes:
+          type: array
+          items:
+            type: string
+        references:
+          type: array
+          items:
+            type: object
+            properties:
+              text_ru:
+                type: string
+              text_en:
+                type: string
+              order:
+                type: integer
+        received_date:
+          type: string
+          format: date
+          nullable: true
+        accepted_date:
+          type: string
+          format: date
+          nullable: true
+        funding:
+          $ref: '#/components/schemas/LocalizedText'
+          nullable: true
+        xml_url:
+          type: string
+          format: uri
+          nullable: true
+        order_in_issue:
+          type: integer
+          description: Порядковый номер статьи в номере
+
+    ArticleUpdate:
+      description: Все поля опциональны при обновлении
+      allOf:
+        - $ref: '#/components/schemas/ArticleCreate'
+      required: []
+
+    # ---------- Pagination ----------
+
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Общее количество записей
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items: {}
+
+    # ---------- Auth ----------
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    TokenResponse:
+      type: object
+      properties:
+        access:
+          type: string
+          description: JWT access token
+        refresh:
+          type: string
+          description: JWT refresh token
+
+    # ---------- Errors ----------
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+        code:
+          type: string
+
+# ============================================================
+# PATHS
+# ============================================================
+paths:
+
+  # ==========================================================
+  # PUBLIC: Issues
+  # ==========================================================
+
+  /api/issues/:
+    get:
+      tags: [Issues (public)]
+      summary: Список номеров журнала
+      description: |
+        Возвращает список номеров. Без фильтров — все опубликованные номера.
+        С фильтром year — номера за конкретный год.
+      parameters:
+        - name: year
+          in: query
+          schema:
+            type: integer
+          description: Фильтр по году
+        - name: lang
+          in: query
+          schema:
+            $ref: '#/components/schemas/Lang'
+      responses:
+        '200':
+          description: Список номеров
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueSummary'
+
+  /api/issues/latest/:
+    get:
+      tags: [Issues (public)]
+      summary: Последний опубликованный номер
+      description: Возвращает самый свежий опубликованный номер (для блока «Свежий номер»)
+      responses:
+        '200':
+          description: Последний номер
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueSummary'
+
+  /api/issues/years/:
+    get:
+      tags: [Issues (public)]
+      summary: Список годов с номерами
+      description: Возвращает список годов, за которые есть опубликованные номера (для навигации в архиве)
+      responses:
+        '200':
+          description: Список годов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+                example: [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017]
+
+  /api/issues/{id}/:
+    get:
+      tags: [Issues (public)]
+      summary: Полная информация о номере
+      description: Возвращает номер с содержанием (статьи, сгруппированные по рубрикам)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: lang
+          in: query
+          schema:
+            $ref: '#/components/schemas/Lang'
+      responses:
+        '200':
+          description: Номер с содержанием
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueFull'
+        '404':
+          description: Номер не найден
+
+  # ==========================================================
+  # PUBLIC: Articles
+  # ==========================================================
+
+  /api/articles/{id}/:
+    get:
+      tags: [Articles (public)]
+      summary: Полная информация о статье
+      description: Все метаданные статьи для страницы статьи
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: lang
+          in: query
+          schema:
+            $ref: '#/components/schemas/Lang'
+      responses:
+        '200':
+          description: Статья
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleFull'
+        '404':
+          description: Статья не найдена
+
+  # ==========================================================
+  # PUBLIC: Sections (Рубрикатор)
+  # ==========================================================
+
+  /api/sections/:
+    get:
+      tags: [Sections (public)]
+      summary: Список рубрик
+      description: Возвращает все рубрики журнала
+      parameters:
+        - name: lang
+          in: query
+          schema:
+            $ref: '#/components/schemas/Lang'
+      responses:
+        '200':
+          description: Список рубрик
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Section'
+
+  /api/sections/{slug}/articles/:
+    get:
+      tags: [Sections (public)]
+      summary: Статьи по рубрике
+      description: Все статьи в данной рубрике, от новых к старым
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/SectionSlug'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: lang
+          in: query
+          schema:
+            $ref: '#/components/schemas/Lang'
+      responses:
+        '200':
+          description: Пагинированный список статей
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ArticleSummary'
+
+  # ==========================================================
+  # PUBLIC: Editorial Board
+  # ==========================================================
+
+  /api/editorial-board/:
+    get:
+      tags: [Editorial Board (public)]
+      summary: Список членов редколлегии
+      parameters:
+        - name: lang
+          in: query
+          schema:
+            $ref: '#/components/schemas/Lang'
+      responses:
+        '200':
+          description: Редколлегия
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EditorialBoardMember'
+
+  # ==========================================================
+  # PUBLIC: Static Pages
+  # ==========================================================
+
+  /api/pages/{slug}/:
+    get:
+      tags: [Pages (public)]
+      summary: Статическая страница
+      description: |
+        Контент статических страниц (О журнале, Авторам, Этика публикаций, Контакты).
+        Slug-и: about, contacts, for-authors, author-agreement, review-process, ethics, privacy-policy
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [about, contacts, for-authors, author-agreement, review-process, ethics, privacy-policy]
+        - name: lang
+          in: query
+          schema:
+            $ref: '#/components/schemas/Lang'
+      responses:
+        '200':
+          description: Страница
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  slug:
+                    type: string
+                  title:
+                    $ref: '#/components/schemas/LocalizedString'
+                  content:
+                    $ref: '#/components/schemas/LocalizedText'
+                  updated_at:
+                    type: string
+                    format: date-time
+        '404':
+          description: Страница не найдена
+
+  # ==========================================================
+  # PUBLIC: Search
+  # ==========================================================
+
+  /api/search/:
+    get:
+      tags: [Search (public)]
+      summary: Поиск по статьям
+      description: Поиск по названию, авторам и ключевым словам
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          description: Поисковый запрос
+        - name: section
+          in: query
+          schema:
+            $ref: '#/components/schemas/SectionSlug'
+          description: Фильтр по рубрике
+        - name: year_from
+          in: query
+          schema:
+            type: integer
+          description: Год начала диапазона
+        - name: year_to
+          in: query
+          schema:
+            type: integer
+          description: Год окончания диапазона
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: lang
+          in: query
+          schema:
+            $ref: '#/components/schemas/Lang'
+      responses:
+        '200':
+          description: Результаты поиска
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ArticleSummary'
+
+  # ==========================================================
+  # AUTH
+  # ==========================================================
+
+  /api/auth/login/:
+    post:
+      tags: [Auth]
+      summary: Авторизация
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Токены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Неверные учётные данные
+
+  /api/auth/refresh/:
+    post:
+      tags: [Auth]
+      summary: Обновление токена
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh]
+              properties:
+                refresh:
+                  type: string
+      responses:
+        '200':
+          description: Новый access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+
+  # ==========================================================
+  # ADMIN: Issues
+  # ==========================================================
+
+  /api/admin/issues/:
+    get:
+      tags: [Issues (admin)]
+      summary: Список всех номеров (включая черновики)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/IssueStatus'
+      responses:
+        '200':
+          description: Список номеров
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueSummary'
+        '401':
+          description: Не авторизован
+
+    post:
+      tags: [Issues (admin)]
+      summary: Создать номер
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCreate'
+      responses:
+        '201':
+          description: Номер создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueSummary'
+
+  /api/admin/issues/{id}/:
+    get:
+      tags: [Issues (admin)]
+      summary: Полная информация о номере (для редактирования)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Номер
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueFull'
+
+    put:
+      tags: [Issues (admin)]
+      summary: Обновить номер
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueUpdate'
+      responses:
+        '200':
+          description: Номер обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueSummary'
+
+    delete:
+      tags: [Issues (admin)]
+      summary: Удалить номер
+      description: Только черновики. Опубликованные номера удалить нельзя.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Удалён
+        '400':
+          description: Нельзя удалить опубликованный номер
+
+  /api/admin/issues/{id}/publish/:
+    post:
+      tags: [Issues (admin)]
+      summary: Опубликовать номер
+      description: Меняет статус на published, номер становится доступен на публичном сайте
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Номер опубликован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueSummary'
+        '400':
+          description: Номер не готов к публикации (не заполнены обязательные поля)
+
+  /api/admin/issues/{id}/unpublish/:
+    post:
+      tags: [Issues (admin)]
+      summary: Снять с публикации
+      description: Возвращает номер в статус ready
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Номер снят с публикации
+
+  /api/admin/issues/{id}/reorder-articles/:
+    put:
+      tags: [Issues (admin)]
+      summary: Изменить порядок статей в номере
+      description: Принимает массив ID статей в нужном порядке
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [article_ids]
+              properties:
+                article_ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: ID статей в нужном порядке
+      responses:
+        '200':
+          description: Порядок обновлён
+
+  # ==========================================================
+  # ADMIN: Articles
+  # ==========================================================
+
+  /api/admin/articles/:
+    get:
+      tags: [Articles (admin)]
+      summary: Список статей
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: issue_id
+          in: query
+          schema:
+            type: integer
+          description: Фильтр по номеру
+      responses:
+        '200':
+          description: Список статей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArticleSummary'
+
+    post:
+      tags: [Articles (admin)]
+      summary: Создать статью
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleCreate'
+      responses:
+        '201':
+          description: Статья создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleFull'
+
+  /api/admin/articles/{id}/:
+    get:
+      tags: [Articles (admin)]
+      summary: Полная информация о статье (для редактирования)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Статья
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleFull'
+
+    put:
+      tags: [Articles (admin)]
+      summary: Обновить статью
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleUpdate'
+      responses:
+        '200':
+          description: Статья обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleFull'
+
+    delete:
+      tags: [Articles (admin)]
+      summary: Удалить статью
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Удалена
+
+  # ==========================================================
+  # ADMIN: File Upload
+  # ==========================================================
+
+  /api/admin/upload/issue-cover/:
+    post:
+      tags: [Files (admin)]
+      summary: Загрузить обложку номера
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [issue_id, file]
+              properties:
+                issue_id:
+                  type: integer
+                file:
+                  type: string
+                  format: binary
+                  description: Изображение обложки (JPEG/PNG)
+      responses:
+        '200':
+          description: Обложка загружена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+
+  /api/admin/upload/issue-pdf/:
+    post:
+      tags: [Files (admin)]
+      summary: Загрузить PDF полного выпуска
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [issue_id, file]
+              properties:
+                issue_id:
+                  type: integer
+                file:
+                  type: string
+                  format: binary
+                  description: PDF полного выпуска
+      responses:
+        '200':
+          description: PDF загружен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  size_kb:
+                    type: integer
+
+  /api/admin/upload/article-pdf/:
+    post:
+      tags: [Files (admin)]
+      summary: Загрузить PDF статьи
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [article_id, file]
+              properties:
+                article_id:
+                  type: integer
+                file:
+                  type: string
+                  format: binary
+                  description: PDF статьи
+      responses:
+        '200':
+          description: PDF загружен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  size_kb:
+                    type: integer
+
+  # ==========================================================
+  # ADMIN: Editorial Board
+  # ==========================================================
+
+  /api/admin/editorial-board/:
+    get:
+      tags: [Editorial Board (admin)]
+      summary: Список членов редколлегии (для редактирования)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Редколлегия
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EditorialBoardMember'
+
+    post:
+      tags: [Editorial Board (admin)]
+      summary: Добавить члена редколлегии
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditorialBoardMember'
+      responses:
+        '201':
+          description: Добавлен
+
+  /api/admin/editorial-board/{id}/:
+    put:
+      tags: [Editorial Board (admin)]
+      summary: Обновить члена редколлегии
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditorialBoardMember'
+      responses:
+        '200':
+          description: Обновлён
+
+    delete:
+      tags: [Editorial Board (admin)]
+      summary: Удалить члена редколлегии
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Удалён

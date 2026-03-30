@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Научная деятельность в цифровую эпоху — ВТЭ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: {
+              50: '#f2f5f2', 100: '#dce3dc', 200: '#b8c7b9', 300: '#8fa891',
+              400: '#5e7d61', 500: '#3f5c42', 600: '#2B3D2F', 700: '#223127',
+              800: '#19251D', 900: '#111a13'
+            },
+            copper: {
+              50: '#fdf6ee', 100: '#f9e8d0', 200: '#f0cfa0', 300: '#e4b06a',
+              400: '#B07D3A', 500: '#96682E', 600: '#7a5424', 700: '#5e401b',
+              800: '#432d13', 900: '#2a1c0b'
+            },
+            teal: {
+              50: '#eef7f5', 100: '#d0ebe6', 200: '#a1d7cd', 300: '#6bbfb1',
+              400: '#2E9A87', 500: '#1A7A6D', 600: '#146158', 700: '#0f4a43',
+              800: '#0a332e', 900: '#061e1b'
+            },
+            stone: {
+              50: '#FDFCFA', 100: '#F7F5F0', 200: '#F0EDE6', 300: '#E6E2D8',
+              400: '#D4CFC2', 500: '#B8B3A6'
+            },
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+    .font-serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+    .nav-link { position: relative; }
+    .nav-link::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 1px; background: #B07D3A; transition: width 0.3s ease; }
+    .nav-link:hover::after { width: 100%; }
+    .dropdown:hover .dropdown-menu { display: block; }
+    .tab-btn.active { color: #2B3D2F; border-bottom-color: #B07D3A; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-in { animation: fadeInUp 0.6s ease forwards; }
+    .animate-delay-1 { animation-delay: 0.1s; opacity: 0; }
+    .animate-delay-2 { animation-delay: 0.2s; opacity: 0; }
+    .animate-delay-3 { animation-delay: 0.3s; opacity: 0; }
+    .animate-delay-4 { animation-delay: 0.4s; opacity: 0; }
+  </style>
+</head>
+<body class="bg-stone-100 text-gray-800 antialiased">
+
+  <!-- Top bar -->
+  <div class="bg-forest-800 text-white/80 text-xs">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-2 flex justify-between items-center">
+      <span class="tracking-wide">ISSN 2587-7666 (Online)</span>
+      <div class="flex items-center gap-4">
+        <a href="#" class="hover:text-white transition-colors">
+          <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          Поиск
+        </a>
+        <div class="flex items-center gap-1 border-l border-white/20 pl-4">
+          <span class="text-white font-medium">RU</span>
+          <span class="text-white/40">/</span>
+          <a href="#" class="hover:text-white transition-colors">EN</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white border-b border-stone-400">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+      <div class="flex items-center gap-5">
+        <div class="w-14 h-14 bg-forest-600 rounded-sm flex items-center justify-center flex-shrink-0">
+          <span class="text-white font-serif text-2xl font-bold">ВТЭ</span>
+        </div>
+        <div>
+          <h1 class="font-serif text-2xl sm:text-3xl font-bold text-forest-600 leading-tight tracking-tight">
+            Вопросы теоретической экономики
+          </h1>
+          <p class="text-sm text-gray-500 mt-0.5 tracking-wide">Институт экономики РАН</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="border-t border-stone-300 bg-stone-50">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6">
+        <div class="hidden md:flex items-center gap-0">
+          <a href="index.html" class="nav-link px-4 py-3 text-sm font-medium text-gray-600 hover:text-forest-600 transition-colors">О журнале</a>
+          <a href="#" class="nav-link px-4 py-3 text-sm font-medium text-gray-600 hover:text-forest-600 transition-colors">Редколлегия</a>
+          <div class="dropdown relative">
+            <a href="#" class="nav-link px-4 py-3 text-sm font-medium text-gray-600 hover:text-forest-600 transition-colors inline-flex items-center gap-1">
+              Рубрикатор
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </a>
+            <div class="dropdown-menu hidden absolute top-full left-0 bg-white shadow-lg border border-stone-300 rounded-sm py-1 min-w-[280px] z-50">
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">Экономическая теория</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">Методология экономической науки</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">От теории к экономической политике</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">История мысли</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">Междисциплинарные исследования</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">Экономическая история</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">Обзоры и рецензии</a>
+            </div>
+          </div>
+          <div class="dropdown relative">
+            <a href="#" class="nav-link px-4 py-3 text-sm font-medium text-forest-600 bg-copper-50 border-b-2 border-copper-400 inline-flex items-center gap-1">
+              Архив
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </a>
+            <div class="dropdown-menu hidden absolute top-full left-0 bg-white shadow-lg border border-stone-300 rounded-sm py-1 min-w-[160px] z-50">
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">2026</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">2025</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">2024</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">2023</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600">2022</a>
+            </div>
+          </div>
+          <a href="#" class="nav-link px-4 py-3 text-sm font-medium text-gray-600 hover:text-forest-600 transition-colors">Авторам</a>
+          <a href="#" class="nav-link px-4 py-3 text-sm font-medium text-gray-600 hover:text-forest-600 transition-colors">Этика публикаций</a>
+          <a href="#" class="nav-link px-4 py-3 text-sm font-medium text-gray-600 hover:text-forest-600 transition-colors">Контакты</a>
+        </div>
+        <div class="md:hidden py-3">
+          <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="flex items-center gap-2 text-sm font-medium text-forest-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            Меню
+          </button>
+        </div>
+      </div>
+      <div id="mobileMenu" class="hidden md:hidden pb-4 px-4 space-y-1">
+        <a href="index.html" class="block px-3 py-2 text-sm text-gray-600">О журнале</a>
+        <a href="#" class="block px-3 py-2 text-sm text-gray-600">Редколлегия</a>
+        <a href="#" class="block px-3 py-2 text-sm text-gray-600">Рубрикатор</a>
+        <a href="#" class="block px-3 py-2 text-sm font-medium text-forest-600 bg-copper-50 rounded">Архив</a>
+        <a href="#" class="block px-3 py-2 text-sm text-gray-600">Авторам</a>
+        <a href="#" class="block px-3 py-2 text-sm text-gray-600">Этика публикаций</a>
+        <a href="#" class="block px-3 py-2 text-sm text-gray-600">Контакты</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Breadcrumbs -->
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3">
+    <nav class="text-xs text-gray-400">
+      <a href="index.html" class="hover:text-forest-600 transition-colors">Главная</a>
+      <span class="mx-1.5">/</span>
+      <a href="#" class="hover:text-forest-600 transition-colors">Архив</a>
+      <span class="mx-1.5">/</span>
+      <a href="#" class="hover:text-forest-600 transition-colors">2026</a>
+      <span class="mx-1.5">/</span>
+      <a href="issue.html" class="hover:text-forest-600 transition-colors">№ 1 (30)</a>
+      <span class="mx-1.5">/</span>
+      <span class="text-forest-600 font-medium">Статья</span>
+    </nav>
+  </div>
+
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-14">
+
+      <article class="lg:col-span-2">
+        <!-- Article header -->
+        <div class="animate-in animate-delay-1">
+          <!-- Section badge -->
+          <div class="mb-4">
+            <span class="inline-block text-xs font-medium text-copper-600 bg-copper-50 border border-copper-200 px-2.5 py-1 rounded-sm uppercase tracking-wide">
+              Экономическая теория
+            </span>
+            <span class="inline-block text-xs text-gray-400 ml-2">Научная статья</span>
+          </div>
+
+          <div class="w-[60px] h-[2px] bg-copper-400 mb-5"></div>
+
+          <!-- Title RU -->
+          <h2 class="font-serif text-3xl sm:text-4xl font-bold text-forest-600 leading-tight mb-3">
+            Научная деятельность в цифровую эпоху: производство и распространение знания
+          </h2>
+          <!-- Title EN -->
+          <p class="font-serif text-xl text-gray-400 italic leading-snug mb-6">
+            Scientific Activity in the Digital Age: Production and Dissemination of Knowledge
+          </p>
+
+          <!-- DOI & citation -->
+          <div class="bg-stone-200 border border-stone-400 rounded-sm p-4 mb-6 text-sm">
+            <div class="flex flex-wrap gap-x-6 gap-y-2">
+              <div>
+                <span class="text-gray-500">DOI:</span>
+                <a href="#" class="text-teal-500 hover:text-copper-400 transition-colors font-medium">10.52342/2587-7666VTE_2026_1_7_21</a>
+              </div>
+              <div>
+                <span class="text-gray-500">Страницы:</span>
+                <span class="text-forest-600 font-medium">7&ndash;21</span>
+              </div>
+              <div>
+                <span class="text-gray-500">УДК:</span>
+                <span class="text-forest-600">330.1</span>
+              </div>
+              <div>
+                <span class="text-gray-500">JEL:</span>
+                <span class="text-forest-600">A11, D83, O33</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Authors -->
+          <div class="mb-8">
+            <h3 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Авторы</h3>
+
+            <div class="space-y-4">
+              <div class="flex items-start gap-4 p-4 bg-white border border-stone-400 rounded-sm">
+                <div class="w-10 h-10 bg-forest-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span class="text-forest-600 font-serif text-sm font-bold">АР</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-forest-700">Рубинштейн Александр Яковлевич</p>
+                  <p class="text-sm text-gray-500 italic">Alexander Ya. Rubinshtein</p>
+                  <p class="text-sm text-gray-500 mt-1">
+                    Институт экономики РАН, главный научный сотрудник, д-р филос. наук, профессор
+                  </p>
+                  <p class="text-sm text-gray-500 italic">
+                    Institute of Economics RAS, Chief Researcher, Doctor of Sciences (Philosophy), Professor
+                  </p>
+                  <div class="flex flex-wrap items-center gap-3 mt-2 text-xs">
+                    <a href="#" class="text-green-700 hover:text-green-800 font-medium flex items-center gap-1">
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm-1.2 18h-2.4V9.6h2.4V18zM12 8.4c-.996 0-1.8-.804-1.8-1.8S11.004 4.8 12 4.8s1.8.804 1.8 1.8-.804 1.8-1.8 1.8zm6 9.6h-2.4v-4.2c0-1.2-.6-1.8-1.5-1.8-.9 0-1.5.6-1.5 1.8V18h-2.4V9.6h2.4v1.2c.6-.9 1.5-1.5 2.7-1.5 1.8 0 2.7 1.2 2.7 3.3V18z"/></svg>
+                      ORCID: 0000-0003-2906-8280
+                    </a>
+                    <a href="mailto:arubinstein@inecon.ru" class="text-gray-500 hover:text-forest-600 transition-colors">arubinstein@inecon.ru</a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4 p-4 bg-white border border-stone-400 rounded-sm">
+                <div class="w-10 h-10 bg-forest-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span class="text-forest-600 font-serif text-sm font-bold">ЕЧ</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-forest-700">Чуковская Екатерина Эдуардовна</p>
+                  <p class="text-sm text-gray-500 italic">Ekaterina E. Chukovskaya</p>
+                  <p class="text-sm text-gray-500 mt-1">
+                    Институт законодательства и сравнительного правоведения при Правительстве РФ, главный научный сотрудник, д-р юрид. наук
+                  </p>
+                  <div class="flex flex-wrap items-center gap-3 mt-2 text-xs">
+                    <a href="mailto:echukovskaya@izak.ru" class="text-gray-500 hover:text-forest-600 transition-colors">echukovskaya@izak.ru</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dates -->
+          <div class="flex flex-wrap gap-4 mb-8 text-sm text-gray-500">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              Получена: 18.11.2025
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Принята в печать: 20.01.2026
+            </div>
+          </div>
+        </div>
+
+        <!-- Abstract tabs (RU/EN) -->
+        <div class="animate-in animate-delay-2">
+          <div class="border-b border-stone-400 mb-0">
+            <div class="flex gap-0">
+              <button onclick="switchTab('ru')" class="tab-btn active px-5 py-3 text-sm font-medium text-forest-600 border-b-2 border-copper-400 transition-colors" data-tab="ru">
+                Аннотация
+              </button>
+              <button onclick="switchTab('en')" class="tab-btn px-5 py-3 text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-600 transition-colors" data-tab="en">
+                Abstract
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-white border border-t-0 border-stone-400 rounded-b-sm p-6 mb-8">
+            <div id="tab-ru" class="tab-content active">
+              <p class="text-[15px] text-gray-700 leading-relaxed">
+                Статья посвящена анализу трансформации научной деятельности в условиях цифровизации.
+                Рассматриваются механизмы производства и распространения научного знания, влияние цифровых
+                технологий на академические институты и формы коммуникации в научном сообществе.
+                Особое внимание уделяется вопросам открытого доступа и новым моделям научных публикаций.
+                Авторы исследуют противоречия между традиционными академическими нормами и императивами
+                цифровой экономики, анализируют влияние алгоритмов и платформ на структуру научного знания.
+                Предложена концептуальная рамка для анализа цифровой трансформации науки,
+                учитывающая как институциональные, так и когнитивные аспекты процесса.
+              </p>
+              <div class="mt-5">
+                <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Ключевые слова</h4>
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">научная деятельность</span>
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">цифровизация</span>
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">производство знания</span>
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">открытый доступ</span>
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">научные публикации</span>
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">цифровая экономика</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="tab-en" class="tab-content">
+              <p class="text-[15px] text-gray-700 leading-relaxed">
+                The article analyzes the transformation of scientific activity in the context of digitalization.
+                It examines the mechanisms of production and dissemination of scientific knowledge, the impact
+                of digital technologies on academic institutions, and forms of communication within the scientific
+                community. Special attention is given to open access issues and new models of scientific publishing.
+                The authors explore contradictions between traditional academic norms and the imperatives of the
+                digital economy, analyzing the influence of algorithms and platforms on the structure of scientific knowledge.
+                A conceptual framework is proposed for analyzing the digital transformation of science,
+                taking into account both institutional and cognitive aspects of the process.
+              </p>
+              <div class="mt-5">
+                <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Keywords</h4>
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">scientific activity</span>
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">digitalization</span>
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">knowledge production</span>
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">open access</span>
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">scientific publishing</span>
+                  <span class="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm">digital economy</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Funding -->
+          <div class="mb-8 p-4 bg-copper-50 border border-copper-200 rounded-sm">
+            <h4 class="text-xs font-medium text-copper-700 uppercase tracking-wider mb-1">Финансирование</h4>
+            <p class="text-sm text-gray-700">
+              Исследование выполнено при финансовой поддержке Министерства науки и высшего образования
+              Российской Федерации в рамках государственного задания Института экономики РАН.
+            </p>
+          </div>
+
+          <!-- Bibliography -->
+          <div class="mb-8">
+            <h3 class="font-serif text-2xl font-semibold text-forest-600 mb-4">Литература</h3>
+            <ol class="space-y-3 text-sm text-gray-700 leading-relaxed list-decimal list-outside pl-5">
+              <li>Полтерович В.М. Кризис экономической теории // Экономическая наука современной России. 1998. № 1. С. 46&ndash;66.</li>
+              <li>Рубинштейн А.Я. К теории рынков опекаемых благ // Вопросы экономики. 2018. № 3. С. 28&ndash;45. DOI: 10.32609/0042-8736-2018-3-28-45.</li>
+              <li>Автономов В.С. Модель человека в экономической науке. СПб.: Экономическая школа, 1998. 230 с.</li>
+              <li>Hess C., Ostrom E. (eds.) Understanding Knowledge as a Commons: From Theory to Practice. Cambridge, MA: MIT Press, 2007.</li>
+              <li>Merton R.K. The Sociology of Science: Theoretical and Empirical Investigations. Chicago: University of Chicago Press, 1973.</li>
+              <li>David P.A. The Economics of Compatibility Standards: An Introduction to Recent Research // Economics of Innovation and New Technology. 1995. Vol. 4. Pp. 3&ndash;41.</li>
+              <li>Dasgupta P., David P.A. Toward a New Economics of Science // Research Policy. 1994. Vol. 23. No. 5. Pp. 487&ndash;521.</li>
+              <li>Mokyr J. The Gifts of Athena: Historical Origins of the Knowledge Economy. Princeton: Princeton University Press, 2002.</li>
+            </ol>
+          </div>
+
+          <!-- References (English) -->
+          <div class="mb-8">
+            <h3 class="font-serif text-2xl font-semibold text-forest-600 mb-4">References</h3>
+            <ol class="space-y-3 text-sm text-gray-700 leading-relaxed list-decimal list-outside pl-5">
+              <li>Polterovich V.M. (1998). Crisis of Economic Theory. <em>Ekonomicheskaya Nauka Sovremennoy Rossii</em>, (1), 46&ndash;66. (In Russian).</li>
+              <li>Rubinshtein A.Ya. (2018). Toward a Theory of Markets of Patronized Goods. <em>Voprosy Ekonomiki</em>, (3), 28&ndash;45. DOI: 10.32609/0042-8736-2018-3-28-45. (In Russian).</li>
+              <li>Avtonomov V.S. (1998). <em>Model of Man in Economic Science</em>. St. Petersburg: Ekonomicheskaya Shkola. (In Russian).</li>
+              <li>Hess C., Ostrom E. (eds.) (2007). <em>Understanding Knowledge as a Commons: From Theory to Practice</em>. Cambridge, MA: MIT Press.</li>
+              <li>Merton R.K. (1973). <em>The Sociology of Science: Theoretical and Empirical Investigations</em>. Chicago: University of Chicago Press.</li>
+              <li>David P.A. (1995). The Economics of Compatibility Standards: An Introduction to Recent Research. <em>Economics of Innovation and New Technology</em>, 4, 3&ndash;41.</li>
+              <li>Dasgupta P., David P.A. (1994). Toward a New Economics of Science. <em>Research Policy</em>, 23(5), 487&ndash;521.</li>
+              <li>Mokyr J. (2002). <em>The Gifts of Athena: Historical Origins of the Knowledge Economy</em>. Princeton: Princeton University Press.</li>
+            </ol>
+          </div>
+
+          <!-- Citation -->
+          <div class="p-5 bg-forest-50 border border-forest-200 rounded-sm">
+            <h4 class="text-xs font-medium text-forest-600 uppercase tracking-wider mb-2">Для цитирования</h4>
+            <p class="text-sm text-gray-700 leading-relaxed">
+              Рубинштейн А.Я., Чуковская Е.Э. Научная деятельность в цифровую эпоху: производство и распространение знания //
+              Вопросы теоретической экономики. 2026. № 1 (30). С. 7&ndash;21.
+              DOI: 10.52342/2587-7666VTE_2026_1_7_21.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Sidebar -->
+      <aside class="lg:col-span-1">
+        <div class="lg:sticky lg:top-6 space-y-6">
+          <!-- Download actions -->
+          <div class="bg-white border border-stone-400 rounded-sm p-5">
+            <h3 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">Скачать</h3>
+            <div class="space-y-2">
+              <a href="#" class="flex items-center gap-3 p-3 bg-forest-600 text-white rounded-sm hover:bg-forest-700 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M6 20h12a2 2 0 002-2V8l-6-6H6a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                <div>
+                  <span class="text-sm font-medium">PDF статьи</span>
+                  <span class="text-xs text-white/60 ml-1">188 КБ</span>
+                </div>
+              </a>
+              <a href="#" class="flex items-center gap-3 p-3 bg-stone-200 text-forest-600 rounded-sm hover:bg-stone-300 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                <div>
+                  <span class="text-sm font-medium">XML (JATS)</span>
+                  <span class="text-xs text-gray-400 ml-1">РЦНИ</span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Article metadata -->
+          <div class="bg-white border border-stone-400 rounded-sm p-5">
+            <h3 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">Метаданные</h3>
+            <dl class="space-y-3 text-sm">
+              <div>
+                <dt class="text-gray-400 text-xs">Номер</dt>
+                <dd><a href="issue.html" class="text-forest-600 font-medium hover:text-copper-400 transition-colors">ВТЭ № 1 (30) / 2026</a></dd>
+              </div>
+              <div>
+                <dt class="text-gray-400 text-xs">Рубрика</dt>
+                <dd class="text-forest-600">Экономическая теория</dd>
+              </div>
+              <div>
+                <dt class="text-gray-400 text-xs">Тип</dt>
+                <dd class="text-forest-600">Научная статья</dd>
+              </div>
+              <div>
+                <dt class="text-gray-400 text-xs">DOI</dt>
+                <dd><a href="#" class="text-teal-500 hover:text-copper-400 transition-colors text-xs break-all">10.52342/2587-7666VTE_2026_1_7_21</a></dd>
+              </div>
+              <div>
+                <dt class="text-gray-400 text-xs">УДК</dt>
+                <dd class="text-forest-600">330.1</dd>
+              </div>
+              <div>
+                <dt class="text-gray-400 text-xs">JEL</dt>
+                <dd class="text-forest-600">A11, D83, O33</dd>
+              </div>
+              <div>
+                <dt class="text-gray-400 text-xs">Лицензия</dt>
+                <dd class="text-forest-600">Creative Commons 4.0</dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- Issue navigation -->
+          <div class="bg-white border border-stone-400 rounded-sm overflow-hidden">
+            <div class="bg-forest-600 px-5 py-3">
+              <h3 class="text-sm font-medium text-white tracking-wide">В этом номере</h3>
+            </div>
+            <div class="p-4">
+              <a href="issue.html" class="flex items-center gap-2 text-sm text-copper-500 hover:text-copper-600 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Содержание номера
+              </a>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-forest-800 text-white/70 mt-auto">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-white/10 rounded-sm flex items-center justify-center">
+              <span class="text-white font-serif text-lg font-bold">ВТЭ</span>
+            </div>
+            <div>
+              <p class="text-white font-serif text-sm font-semibold leading-tight">Вопросы теоретической</p>
+              <p class="text-white font-serif text-sm font-semibold">экономики</p>
+            </div>
+          </div>
+          <p class="text-xs leading-relaxed">Научный журнал Института экономики Российской академии наук. Издается с 2017 года.</p>
+        </div>
+        <div>
+          <h4 class="text-white text-sm font-medium mb-3 tracking-wide">Навигация</h4>
+          <ul class="space-y-1.5 text-sm">
+            <li><a href="index.html" class="hover:text-white transition-colors">О журнале</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Редколлегия</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Рубрикатор</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Архив</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white text-sm font-medium mb-3 tracking-wide">Авторам</h4>
+          <ul class="space-y-1.5 text-sm">
+            <li><a href="#" class="hover:text-white transition-colors">Подать статью</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Требования к оформлению</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Авторское соглашение</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Этика публикаций</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white text-sm font-medium mb-3 tracking-wide">Контакты</h4>
+          <div class="text-sm space-y-1.5">
+            <p>Институт экономики РАН</p>
+            <p>Москва, 117218</p>
+            <p>Нахимовский пр-т, 32</p>
+            <p><a href="mailto:vte@inecon.ru" class="text-copper-300 hover:text-copper-200 transition-colors">vte@inecon.ru</a></p>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-white/10 mt-8 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
+        <p>&copy; 2017&ndash;2026 Вопросы теоретической экономики. Учредитель: ИЭ РАН</p>
+        <div class="flex items-center gap-4">
+          <a href="#" class="hover:text-white transition-colors">Политика персональных данных</a>
+          <a href="#" class="hover:text-white transition-colors">ISSN 2587-7666</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function switchTab(lang) {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === lang);
+        if (b.dataset.tab === lang) {
+          b.classList.add('text-forest-600');
+          b.classList.remove('text-gray-400');
+          b.style.borderBottomColor = '#B07D3A';
+        } else {
+          b.classList.remove('text-forest-600');
+          b.classList.add('text-gray-400');
+          b.style.borderBottomColor = 'transparent';
+        }
+      });
+      document.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.toggle('active', c.id === 'tab-' + lang);
+      });
+    }
+  </script>
+
+</body>
+</html>
