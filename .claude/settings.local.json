@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "mcp__chrome-devtools__*",
-      "mcp__chrome-devtools__navigate_page"
-    ]
-  }
-}

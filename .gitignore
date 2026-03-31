@@ -2,6 +2,13 @@
 .idea/
 .vscode/
 
+# Development tooling (local only)
+.agents/
+.claude/
+01_tasks/
+AGENTS.md
+DEVELOPER_WORKFLOW.md
+
 # Temporary/old files
 .old/
 *.bak
