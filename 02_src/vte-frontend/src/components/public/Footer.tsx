@@ -37,9 +37,9 @@ export default function Footer() {
 
           {/* Navigation */}
           <div>
-            <h4 className="text-white text-sm font-medium mb-3 tracking-wide">
+            <p className="text-white text-sm font-medium mb-3 tracking-wide">
               {t("Навигация", "Navigation")}
-            </h4>
+            </p>
             <ul className="space-y-1.5 text-sm">
               <li>
                 <Link href="/" className="hover:text-white transition-colors">
@@ -75,9 +75,9 @@ export default function Footer() {
 
           {/* For authors */}
           <div>
-            <h4 className="text-white text-sm font-medium mb-3 tracking-wide">
+            <p className="text-white text-sm font-medium mb-3 tracking-wide">
               {t("Авторам", "For Authors")}
-            </h4>
+            </p>
             <ul className="space-y-1.5 text-sm">
               <li>
                 <Link
@@ -116,9 +116,9 @@ export default function Footer() {
 
           {/* Contacts */}
           <div>
-            <h4 className="text-white text-sm font-medium mb-3 tracking-wide">
+            <p className="text-white text-sm font-medium mb-3 tracking-wide">
               {t("Контакты", "Contacts")}
-            </h4>
+            </p>
             <div className="text-sm space-y-1.5">
               <p>{t("Институт экономики РАН", "Institute of Economics RAS")}</p>
               <p>{t("Москва, 117218", "Moscow, 117218")}</p>

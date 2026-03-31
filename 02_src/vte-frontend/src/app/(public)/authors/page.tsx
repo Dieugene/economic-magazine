@@ -28,7 +28,7 @@ export default function AuthorsPage() {
               Если у Вас возникли сложности с использованием сервиса, пожалуйста, направьте статью на электронный адрес редакции журнала:{" "}
               <a
                 href="mailto:editorqet@inecon.ru"
-                className="text-teal-500 hover:text-copper-400 transition-colors"
+                className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
               >
                 editorqet@inecon.ru
               </a>

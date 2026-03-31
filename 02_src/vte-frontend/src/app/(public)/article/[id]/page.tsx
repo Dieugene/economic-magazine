@@ -91,7 +91,7 @@ export default async function ArticlePage({
               <span className="inline-block text-xs font-medium text-copper-600 bg-copper-50 border border-copper-200 px-2.5 py-1 rounded-sm uppercase tracking-wide">
                 {article.section.name.ru}
               </span>
-              <span className="inline-block text-xs text-gray-400 ml-2">
+              <span className="inline-block text-xs text-gray-500 ml-2">
                 {formatArticleType(article.article_type)}
               </span>
             </div>
@@ -106,7 +106,7 @@ export default async function ArticlePage({
 
             {/* Title EN */}
             {article.title.en && (
-              <p className="font-serif text-xl text-gray-400 italic leading-snug mb-6">
+              <p className="font-serif text-xl text-gray-500 italic leading-snug mb-6">
                 {article.title.en}
               </p>
             )}
@@ -116,32 +116,32 @@ export default async function ArticlePage({
               <div className="flex flex-wrap gap-x-6 gap-y-2">
                 {article.doi && (
                   <div>
-                    <span className="text-gray-500">DOI:</span>{" "}
+                    <span className="text-gray-600">DOI:</span>{" "}
                     <a
                       href={`https://doi.org/${article.doi}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-teal-500 hover:text-copper-400 transition-colors font-medium"
+                      className="text-teal-600 hover:text-copper-400 transition-colors font-medium underline underline-offset-2"
                     >
                       {article.doi}
                     </a>
                   </div>
                 )}
                 <div>
-                  <span className="text-gray-500">Страницы:</span>{" "}
+                  <span className="text-gray-600">Страницы:</span>{" "}
                   <span className="text-forest-600 font-medium">
                     {article.pages}
                   </span>
                 </div>
                 {article.udk && (
                   <div>
-                    <span className="text-gray-500">УДК:</span>{" "}
+                    <span className="text-gray-600">УДК:</span>{" "}
                     <span className="text-forest-600">{article.udk}</span>
                   </div>
                 )}
                 {article.jel_codes && article.jel_codes.length > 0 && (
                   <div>
-                    <span className="text-gray-500">JEL:</span>{" "}
+                    <span className="text-gray-600">JEL:</span>{" "}
                     <span className="text-forest-600">
                       {article.jel_codes.join(", ")}
                     </span>
@@ -152,7 +152,7 @@ export default async function ArticlePage({
 
             {/* Authors */}
             <div className="mb-8">
-              <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
                 Авторы
               </h3>
               <div className="space-y-4">
@@ -323,7 +323,7 @@ export default async function ArticlePage({
           <div className="lg:sticky lg:top-6 space-y-6">
             {/* Download section */}
             <div className="bg-white border border-stone-400 rounded-sm p-5">
-              <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">
                 Скачать
               </h3>
               <div className="space-y-2">
@@ -379,7 +379,7 @@ export default async function ArticlePage({
                     </svg>
                     <div>
                       <span className="text-sm font-medium">XML (JATS)</span>
-                      <span className="text-xs text-gray-400 ml-1">РЦНИ</span>
+                      <span className="text-xs text-gray-600 ml-1">РЦНИ</span>
                     </div>
                   </a>
                 )}
@@ -388,12 +388,12 @@ export default async function ArticlePage({
 
             {/* Metadata card */}
             <div className="bg-white border border-stone-400 rounded-sm p-5">
-              <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">
                 Метаданные
               </h3>
               <dl className="space-y-3 text-sm">
                 <div>
-                  <dt className="text-gray-400 text-xs">Номер</dt>
+                  <dt className="text-gray-500 text-xs">Номер</dt>
                   <dd>
                     <Link
                       href={`/archive/${article.issue_year}/${article.issue_number}`}
@@ -405,24 +405,24 @@ export default async function ArticlePage({
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-gray-400 text-xs">Рубрика</dt>
+                  <dt className="text-gray-500 text-xs">Рубрика</dt>
                   <dd className="text-forest-600">{article.section.name.ru}</dd>
                 </div>
                 <div>
-                  <dt className="text-gray-400 text-xs">Тип</dt>
+                  <dt className="text-gray-500 text-xs">Тип</dt>
                   <dd className="text-forest-600">
                     {formatArticleType(article.article_type)}
                   </dd>
                 </div>
                 {article.doi && (
                   <div>
-                    <dt className="text-gray-400 text-xs">DOI</dt>
+                    <dt className="text-gray-500 text-xs">DOI</dt>
                     <dd>
                       <a
                         href={`https://doi.org/${article.doi}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-teal-500 hover:text-copper-400 transition-colors text-xs break-all"
+                        className="text-teal-600 hover:text-copper-400 transition-colors text-xs break-all"
                       >
                         {article.doi}
                       </a>
@@ -431,20 +431,20 @@ export default async function ArticlePage({
                 )}
                 {article.udk && (
                   <div>
-                    <dt className="text-gray-400 text-xs">УДК</dt>
+                    <dt className="text-gray-500 text-xs">УДК</dt>
                     <dd className="text-forest-600">{article.udk}</dd>
                   </div>
                 )}
                 {article.jel_codes && article.jel_codes.length > 0 && (
                   <div>
-                    <dt className="text-gray-400 text-xs">JEL</dt>
+                    <dt className="text-gray-500 text-xs">JEL</dt>
                     <dd className="text-forest-600">
                       {article.jel_codes.join(", ")}
                     </dd>
                   </div>
                 )}
                 <div>
-                  <dt className="text-gray-400 text-xs">Лицензия</dt>
+                  <dt className="text-gray-500 text-xs">Лицензия</dt>
                   <dd className="text-forest-600">Creative Commons 4.0</dd>
                 </div>
               </dl>

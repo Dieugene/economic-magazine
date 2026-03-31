@@ -26,7 +26,7 @@ export default function AbstractTabs({
             className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === "ru"
                 ? "text-forest-600 border-copper-400"
-                : "text-gray-400 border-transparent hover:text-gray-600"
+                : "text-gray-500 border-transparent hover:text-gray-600"
             }`}
           >
             Аннотация
@@ -37,7 +37,7 @@ export default function AbstractTabs({
               className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === "en"
                   ? "text-forest-600 border-copper-400"
-                  : "text-gray-400 border-transparent hover:text-gray-600"
+                  : "text-gray-500 border-transparent hover:text-gray-600"
               }`}
             >
               Abstract
@@ -54,7 +54,7 @@ export default function AbstractTabs({
             </p>
             {keywords_ru && keywords_ru.length > 0 && (
               <div className="mt-5">
-                <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
                   Ключевые слова
                 </h4>
                 <div className="flex flex-wrap gap-1.5">
@@ -79,7 +79,7 @@ export default function AbstractTabs({
             </p>
             {keywords_en && keywords_en.length > 0 && (
               <div className="mt-5">
-                <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
                   Keywords
                 </h4>
                 <div className="flex flex-wrap gap-1.5">

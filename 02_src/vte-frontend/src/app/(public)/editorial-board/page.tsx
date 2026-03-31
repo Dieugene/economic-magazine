@@ -37,18 +37,18 @@ export default async function EditorialBoardPage() {
                 </p>
               )}
               {member.role && (
-                <p className="text-xs text-copper-400 font-medium mt-2">
+                <p className="text-xs text-copper-500 font-medium mt-2">
                   {member.role}
                 </p>
               )}
 
-              <div className="mt-3 space-y-1 text-xs text-gray-400">
+              <div className="mt-3 space-y-1 text-xs text-gray-500">
                 {member.email && (
                   <p>
                     Email:{" "}
                     <a
                       href={`mailto:${member.email}`}
-                      className="text-teal-500 hover:text-copper-400 transition-colors"
+                      className="text-teal-600 hover:text-copper-400 transition-colors"
                     >
                       {member.email}
                     </a>
@@ -62,7 +62,7 @@ export default async function EditorialBoardPage() {
                       href={`https://orcid.org/${member.orcid}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-teal-500 hover:text-copper-400 transition-colors"
+                      className="text-teal-600 hover:text-copper-400 transition-colors"
                     >
                       {member.orcid}
                     </a>

@@ -34,7 +34,7 @@ export default function ArticleCard({
               {title}
             </Link>
           </h4>
-          <p className="text-sm text-gray-400 mt-2">
+          <p className="text-sm text-gray-500 mt-2">
             С.&nbsp;{pages.replace('-', '\u2013')}
             {pdfSizeKb ? ` \u00B7 ${pdfSizeKb} КБ` : ''}
           </p>

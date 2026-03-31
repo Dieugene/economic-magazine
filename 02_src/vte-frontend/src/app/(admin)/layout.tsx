@@ -41,14 +41,14 @@ export default function AdminLayout({
               <p className="text-white text-sm font-medium leading-tight">
                 Админ-панель
               </p>
-              <p className="text-xs text-white/40">Управление журналом</p>
+              <p className="text-xs text-white/60">Управление журналом</p>
             </div>
           </div>
         </div>
 
         <nav className="flex-1 py-4">
           <div className="px-3 mb-2">
-            <p className="text-xs text-white/30 uppercase tracking-wider px-3 mb-2">
+            <p className="text-xs text-white/50 uppercase tracking-wider px-3 mb-2">
               Навигация
             </p>
           </div>
@@ -77,11 +77,11 @@ export default function AdminLayout({
         <div className="p-5 border-t border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-copper-400 rounded-full flex items-center justify-center">
-              <span className="text-forest-800 text-xs font-bold">АП</span>
+              <span className="text-forest-900 text-xs font-bold">АП</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm truncate">Администратор</p>
-              <p className="text-xs text-white/40">admin@questionset.ru</p>
+              <p className="text-xs text-white/60">admin@questionset.ru</p>
             </div>
           </div>
         </div>
@@ -104,11 +104,12 @@ export default function AdminLayout({
               <button
                 className="lg:hidden text-gray-500"
                 onClick={() => setSidebarOpen(true)}
+                aria-label="Открыть меню"
               >
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <nav className="text-xs text-gray-400 mb-1">
+                <nav className="text-xs text-gray-600 mb-1">
                   <Link
                     href="/admin/issues"
                     className="hover:text-forest-600 transition-colors"

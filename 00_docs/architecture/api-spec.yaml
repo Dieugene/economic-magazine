@@ -7,6 +7,67 @@ info:
     Две группы эндпоинтов:
     - `/api/` — публичные (без авторизации), для клиентской части сайта
     - `/api/admin/` — закрытые (JWT), для админ-панели
+
+    ---
+
+    ## Backend Implementation Notes
+
+    ### DOI
+    Формат DOI: `10.52342/2587-7666VTE_{year}_{issue}_{startpage}_{endpage}`
+    Пример: `10.52342/2587-7666VTE_2026_1_7_21`
+
+    ### PDF
+    Бэкенд хранит и раздаёт PDF-файлы статей и полных выпусков.
+    Фронтенд получает готовый URL (`pdf_url`, `full_pdf_url`) и просто отображает ссылку.
+    Поле `pdf_size_kb` — целое число, размер PDF в килобайтах (отображается пользователю рядом со ссылкой на скачивание).
+
+    ### JATS XML
+    Поле `xml_url` содержит внешнюю ссылку на XML-версию статьи на сайте journals.rcsi.science.
+    Хранится как строка (URL). Пример: `https://journals.rcsi.science/vte/article/view/2026_1_7_21/xml`
+
+    ### Обложки номеров
+    Обложки загружаются через админку (`POST /api/admin/upload/issue-cover/`),
+    хранятся на сервере и отдаются как статические файлы.
+    Поле `cover_url` — относительный или абсолютный URL изображения.
+
+    ### 7 фиксированных рубрик журнала
+    Рубрики имеют фиксированный порядок и не создаются/удаляются через API:
+
+    | # | slug                | Русское название                         | English name                   |
+    |---|---------------------|------------------------------------------|--------------------------------|
+    | 1 | `economic-theory`   | Экономическая теория                     | Economic Theory                |
+    | 2 | `methodology`       | Методология экономической науки          | Methodology of Economics       |
+    | 3 | `theory-to-policy`  | От теории к экономической политике       | From Theory to Economic Policy |
+    | 4 | `history-of-thought`| История мысли                            | History of Thought             |
+    | 5 | `interdisciplinary` | Междисциплинарные исследования           | Interdisciplinary Studies      |
+    | 6 | `economic-history`  | Экономическая история                    | Economic History               |
+    | 7 | `reviews`           | Обзоры и рецензии                        | Reviews                        |
+
+    ### Группировка статей в IssueFull
+    Эндпоинт `GET /api/issues/{id}/` возвращает `IssueFull`, в котором поле `sections` —
+    массив объектов `{section, articles[]}`. Статьи **обязательно** группируются по рубрикам
+    в порядке, указанном в таблице выше. Рубрики, в которых нет статей в данном номере,
+    в массив не включаются.
+
+    ### Публичные эндпоинты и статус
+    Все публичные эндпоинты (`/api/...`) возвращают **только** данные со статусом `status=published`.
+    Черновики и номера со статусом `ready` доступны только через админские эндпоинты.
+
+    ### Параметр `lang`
+    Публичные эндпоинты принимают query-параметр `lang` (`ru` | `en`, по умолчанию `ru`).
+    При `lang=en` бэкенд должен возвращать английские значения локализованных полей
+    (`title`, `abstract`, `full_name`, `affiliation`, `degree`, `name` и т.д.) там, где они заполнены.
+    Если английский вариант не заполнен — возвращать русский (fallback).
+
+    ### CORS
+    Бэкенд **обязан** выставлять CORS-заголовки, разрешающие запросы с домена фронтенда.
+    Минимально необходимые заголовки:
+    - `Access-Control-Allow-Origin: https://questionset.ru` (или `*` для dev-режима)
+    - `Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS`
+    - `Access-Control-Allow-Headers: Content-Type, Authorization`
+
+    Для Django рекомендуется `django-cors-headers` с настройкой `CORS_ALLOWED_ORIGINS`.
+
   version: 1.0.0
   contact:
     name: Команда фронтенда ВТЭ
@@ -81,7 +142,7 @@ components:
         - economic-history
         - reviews
       description: |
-        Рубрики журнала:
+        Рубрики журнала (фиксированный набор, порядок важен):
         - economic-theory — Экономическая теория
         - methodology — Методология экономической науки
         - theory-to-policy — От теории к экономической политике
@@ -252,7 +313,10 @@ components:
 
     IssueFull:
       type: object
-      description: Полная информация о номере с содержанием
+      description: |
+        Полная информация о номере с содержанием.
+        Поле `sections` содержит статьи, сгруппированные по рубрикам
+        в фиксированном порядке (см. SectionSlug). Рубрики без статей не включаются.
       allOf:
         - $ref: '#/components/schemas/IssueSummary'
         - type: object
@@ -324,9 +388,6 @@ components:
         - $ref: '#/components/schemas/ArticleSummary'
         - type: object
           properties:
-            abstract:
-              $ref: '#/components/schemas/LocalizedText'
-              description: Аннотация
             keywords:
               type: object
               properties:
@@ -370,12 +431,7 @@ components:
               type: string
               format: uri
               nullable: true
-              description: Ссылка на JATS XML (внешний ресурс РЦНИ)
-            pdf_size_kb:
-              type: integer
-              nullable: true
-              description: Размер PDF в КБ
-              example: 188
+              description: Ссылка на JATS XML (внешний ресурс journals.rcsi.science, хранится как строка URL)
 
     # ---------- Admin input schemas ----------
 
@@ -603,6 +659,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IssueSummary'
+              example:
+                id: 1
+                year: 2026
+                number: 1
+                sequential_number: 30
+                published_date: "2026-02-27"
+                cover_url: "/covers/vte_2026_1.jpg"
+                full_pdf_url: "https://journals.rcsi.science/vte/issue/download/2026_1/full.pdf"
+                status: "published"
+                article_count: 12
 
   /api/issues/years/:
     get:
@@ -624,7 +690,10 @@ paths:
     get:
       tags: [Issues (public)]
       summary: Полная информация о номере
-      description: Возвращает номер с содержанием (статьи, сгруппированные по рубрикам)
+      description: |
+        Возвращает номер с содержанием (статьи, сгруппированные по рубрикам).
+        Рубрики расположены в фиксированном порядке (см. SectionSlug).
+        Рубрики без статей в данном номере не включаются в массив `sections`.
       parameters:
         - name: id
           in: path
@@ -642,6 +711,120 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IssueFull'
+              example:
+                id: 1
+                year: 2026
+                number: 1
+                sequential_number: 30
+                published_date: "2026-02-27"
+                cover_url: "/covers/vte_2026_1.jpg"
+                full_pdf_url: "https://journals.rcsi.science/vte/issue/download/2026_1/full.pdf"
+                status: "published"
+                article_count: 12
+                sections:
+                  - section:
+                      slug: "economic-theory"
+                      name:
+                        ru: "Экономическая теория"
+                        en: "Economic Theory"
+                    articles:
+                      - id: 1
+                        title:
+                          ru: "Научная деятельность в цифровую эпоху: производство и распространение знания"
+                        authors:
+                          - id: 1
+                            full_name:
+                              ru: "А.Я. Рубинштейн"
+                              en: "A.Ya. Rubinstein"
+                            affiliation:
+                              ru: "ФГБУН Институт экономики РАН, Москва, Россия"
+                              en: "Institute of Economics of the Russian Academy of Sciences, Moscow, Russia"
+                            email: "arubin@aha.ru"
+                            orcid: "0000-0003-0455-3879"
+                          - id: 2
+                            full_name:
+                              ru: "Е.Э. Чуковская"
+                              en: "E.E. Chukovskaya"
+                            affiliation:
+                              ru: "АНО ДПО «Научно-образовательный центр интеллектуальной собственности и цифровой экономики», Москва, Россия"
+                              en: "Scientific and Educational Centre for Intellectual Property and Digital Economy, Moscow, Russia"
+                            email: "echukovskaya@yandex.ru"
+                            orcid: "0000-0002-2715-761X"
+                        section:
+                          slug: "economic-theory"
+                          name:
+                            ru: "Экономическая теория"
+                            en: "Economic Theory"
+                        pages: "7-21"
+                        doi: "10.52342/2587-7666VTE_2026_1_7_21"
+                        pdf_url: "https://journals.rcsi.science/vte/article/download/2026_1_7_21/pdf"
+                        pdf_size_kb: 188
+                        abstract:
+                          ru: "В статье представлен анализ современной ситуации, сложившейся спустя 12 лет после передачи в 2013 г. академических институтов..."
+                          en: "The article presents an analysis of the current situation 12 years after the transfer in 2013 of academic institutions..."
+                        article_type: "scientific"
+                        issue_id: 1
+                        issue_year: 2026
+                        issue_number: 1
+                        issue_sequential_number: 30
+                      - id: 2
+                        title:
+                          ru: "Неопределённость и экономическая активность: теоретические аспекты"
+                        authors:
+                          - id: 3
+                            full_name:
+                              ru: "Н.В. Комаровская"
+                            affiliation:
+                              ru: "МГУ им. М.В. Ломоносова, Москва, Россия"
+                            email: null
+                            orcid: null
+                        section:
+                          slug: "economic-theory"
+                          name:
+                            ru: "Экономическая теория"
+                            en: "Economic Theory"
+                        pages: "22-38"
+                        doi: "10.52342/2587-7666VTE_2026_1_22_38"
+                        pdf_url: "https://journals.rcsi.science/vte/article/download/2026_1_22_38/pdf"
+                        pdf_size_kb: 213
+                        abstract: null
+                        article_type: "scientific"
+                        issue_id: 1
+                        issue_year: 2026
+                        issue_number: 1
+                        issue_sequential_number: 30
+                  - section:
+                      slug: "methodology"
+                      name:
+                        ru: "Методология экономической науки"
+                        en: "Methodology of Economics"
+                    articles:
+                      - id: 4
+                        title:
+                          ru: "Науковедческие подходы Т. Куна и И. Лакатоса в методологии экономической науки и их критика"
+                        authors:
+                          - id: 5
+                            full_name:
+                              ru: "А.С. Тишкин"
+                            affiliation:
+                              ru: "РАНХиГС, Москва, Россия"
+                            email: null
+                            orcid: null
+                        section:
+                          slug: "methodology"
+                          name:
+                            ru: "Методология экономической науки"
+                            en: "Methodology of Economics"
+                        pages: "54-69"
+                        doi: "10.52342/2587-7666VTE_2026_1_54_69"
+                        pdf_url: "https://journals.rcsi.science/vte/article/download/2026_1_54_69/pdf"
+                        pdf_size_kb: 249
+                        abstract: null
+                        article_type: "scientific"
+                        issue_id: 1
+                        issue_year: 2026
+                        issue_number: 1
+                        issue_sequential_number: 30
         '404':
           description: Номер не найден
 
@@ -671,6 +854,84 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArticleFull'
+              example:
+                id: 1
+                title:
+                  ru: "Научная деятельность в цифровую эпоху: производство и распространение знания"
+                authors:
+                  - id: 1
+                    full_name:
+                      ru: "А.Я. Рубинштейн"
+                      en: "A.Ya. Rubinstein"
+                    affiliation:
+                      ru: "ФГБУН Институт экономики РАН, Москва, Россия"
+                      en: "Institute of Economics of the Russian Academy of Sciences, Moscow, Russia"
+                    email: "arubin@aha.ru"
+                    orcid: "0000-0003-0455-3879"
+                  - id: 2
+                    full_name:
+                      ru: "Е.Э. Чуковская"
+                      en: "E.E. Chukovskaya"
+                    affiliation:
+                      ru: "АНО ДПО «Научно-образовательный центр интеллектуальной собственности и цифровой экономики», Москва, Россия"
+                      en: "Scientific and Educational Centre for Intellectual Property and Digital Economy, Moscow, Russia"
+                    email: "echukovskaya@yandex.ru"
+                    orcid: "0000-0002-2715-761X"
+                section:
+                  slug: "economic-theory"
+                  name:
+                    ru: "Экономическая теория"
+                    en: "Economic Theory"
+                pages: "7-21"
+                doi: "10.52342/2587-7666VTE_2026_1_7_21"
+                pdf_url: "https://journals.rcsi.science/vte/article/download/2026_1_7_21/pdf"
+                pdf_size_kb: 188
+                abstract:
+                  ru: "В статье представлен анализ современной ситуации, сложившейся спустя 12 лет после передачи в 2013 г. академических институтов сначала в подчинение Федерального агентства научных организаций (ФАНО), а затем Министерства науки и высшего образования, обусловившей фактическую утрату Российской академией наук статуса самоуправляемой организации гражданского общества. Это не могло не отразиться на авторитете РАН. Основной акцент сделан на исследовании актуальных проблем деятельности экономических институтов РАН и связанных с ними вопросах авторского права."
+                  en: "The article presents an analysis of the current situation 12 years after the transfer in 2013 of academic institutions first to the Federal Agency for Scientific Organisations (FANO) and then to the Ministry of Science and Higher Education, which led to the Russian Academy of Sciences effectively losing its status as a self-governing civil society organization, which affected the authority of the RAS. The focus is on researching current problems in the activities of the RAS's economic institutions and related copyright issues."
+                article_type: "scientific"
+                issue_id: 1
+                issue_year: 2026
+                issue_number: 1
+                issue_sequential_number: 30
+                keywords:
+                  ru:
+                    - "социологические исследования"
+                    - "распространение знания"
+                    - "интеллектуальная собственность"
+                    - "авторские права"
+                    - "нейросети"
+                    - "ранжирование журналов"
+                    - "рейтинг"
+                  en:
+                    - "sociological research"
+                    - "knowledge dissemination"
+                    - "intellectual property"
+                    - "copyright"
+                    - "neural networks"
+                    - "journal ranking"
+                    - "rating"
+                udk: "330.1"
+                jel_codes: ["A11", "D83", "O33"]
+                references:
+                  - id: 1
+                    order: 1
+                    text_ru: "Рубинштейн А.Я. Теория опекаемых благ. СПб.: Алетейя, 2018."
+                    text_en: "Rubinstein A.Ya. Theory of Patronized Goods. St. Petersburg: Aletheia, 2018."
+                  - id: 2
+                    order: 2
+                    text_ru: "Полтерович В.М. Позитивное сотрудничество: факторы и механизмы эволюции // Вопросы экономики. 2016. № 11. С. 5–23."
+                    text_en: "Polterovich V.M. Positive Collaboration: Factors and Mechanisms of Evolution // Voprosy Ekonomiki. 2016. No. 11. Pp. 5–23."
+                  - id: 3
+                    order: 3
+                    text_ru: "Дасгупта П. Экономический прогресс и идея социального капитала // Экономический вестник. 2004. Т. 3, № 2. С. 36–54."
+                    text_en: "Dasgupta P. Economic Progress and the Idea of Social Capital // Economic Bulletin. 2004. Vol. 3, No. 2. Pp. 36–54."
+                received_date: "2025-11-18"
+                accepted_date: "2026-01-20"
+                funding:
+                  ru: "Исследование выполнено при финансовой поддержке Министерства науки и высшего образования Российской Федерации в рамках государственного задания Института экономики РАН."
+                  en: "The study was financially supported by the Ministry of Science and Higher Education of the Russian Federation within the state assignment of the Institute of Economics RAS."
+                xml_url: "https://journals.rcsi.science/vte/article/view/2026_1_7_21/xml"
         '404':
           description: Статья не найдена
 
@@ -760,6 +1021,20 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/EditorialBoardMember'
+              example:
+                - id: 1
+                  full_name:
+                    ru: "В.С. Автономов"
+                  role: "Член редколлегии"
+                  degree:
+                    ru: "член-корреспондент РАН, д-р экон. наук, профессор"
+                  affiliation:
+                    ru: "Национальный исследовательский университет «Высшая школа экономики», профессор"
+                  email: "vavtonomov@hse.ru"
+                  spin_code: "6086-8715"
+                  orcid: "0000-0001-8169-729X"
+                  scopus_id: null
+                  order: 1
 
   # ==========================================================
   # PUBLIC: Static Pages

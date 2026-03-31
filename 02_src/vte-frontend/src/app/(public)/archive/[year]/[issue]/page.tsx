@@ -171,7 +171,7 @@ export default async function IssuePage({
                     className="block text-gray-600 hover:text-copper-500 transition-colors"
                   >
                     {ROMAN[i]}. {SHORT_NAMES[sg.section.slug] ?? sg.section.name.ru}{' '}
-                    <span className="text-gray-400">({sg.articles.length})</span>
+                    <span className="text-gray-500">({sg.articles.length})</span>
                   </a>
                 ))}
               </nav>

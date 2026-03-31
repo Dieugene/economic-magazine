@@ -19,6 +19,7 @@ const ibmPlexSans = IBM_Plex_Sans({
 
 export const metadata: Metadata = {
   title: "Вопросы теоретической экономики",
+  description: "Научный журнал Института экономики РАН. Публикует оригинальные теоретические и эмпирические исследования в области экономической теории, методологии, экономической истории. ISSN 2587-7666.",
 };
 
 export default function RootLayout({

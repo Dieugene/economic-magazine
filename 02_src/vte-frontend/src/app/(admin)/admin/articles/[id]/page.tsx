@@ -21,7 +21,7 @@ const inputClass =
 const textareaClass = `${inputClass} resize-y min-h-[80px]`;
 const selectClass = inputClass;
 const labelClass = "text-[13px] font-medium text-gray-600 mb-1.5 block";
-const hintClass = "text-xs text-gray-400 mt-1";
+const hintClass = "text-xs text-gray-500 mt-1";
 
 // ── Types for form state ────────────────────────────────────────
 interface AuthorForm {
@@ -66,7 +66,7 @@ const initialRefsEn: RefForm[] = (data.references || []).slice(0, 3).map((r, i) 
 // ── Language badge ──────────────────────────────────────────────
 function LangBadge({ lang }: { lang: "RU" | "EN" }) {
   return (
-    <span className="inline-block w-5 h-3 bg-white border border-gray-300 rounded-sm text-[9px] text-center leading-3 ml-1 font-normal text-gray-400">
+    <span className="inline-block w-5 h-3 bg-white border border-gray-300 rounded-sm text-[9px] text-center leading-3 ml-1 font-normal text-gray-500">
       {lang}
     </span>
   );
@@ -221,19 +221,19 @@ export default function ArticleCardPage() {
             Номер: № {data.issue_number} ({data.issue_sequential_number}) /{" "}
             {data.issue_year}
           </span>
-          <span className="text-gray-400">|</span>
-          <span className="text-gray-500">
+          <span className="text-gray-500">|</span>
+          <span className="text-gray-600">
             Статус:{" "}
-            <span className="text-copper-500 font-medium">Черновик</span>
+            <span className="text-copper-600 font-medium">Черновик</span>
           </span>
         </div>
-        <span className="text-xs text-gray-400">Статья 1 из 12</span>
+        <span className="text-xs text-gray-600">Статья 1 из 12</span>
       </div>
 
       {/* Breadcrumbs + actions bar */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <nav className="text-xs text-gray-400 mb-1">
+          <nav className="text-xs text-gray-600 mb-1">
             <Link
               href="/admin/issues"
               className="hover:text-forest-600 transition-colors"
@@ -283,13 +283,14 @@ export default function ArticleCardPage() {
       >
         {/* ── Section 1: Basic info ──────────────────────────────── */}
         <fieldset className="bg-white border border-gray-200 rounded-sm">
-          <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">
+          <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Основная информация
           </legend>
           <div className="p-5 pt-3 grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
-              <label className={labelClass}>Рубрика *</label>
+              <label htmlFor="section-slug" className={labelClass}>Рубрика *</label>
               <select
+                id="section-slug"
                 className={selectClass}
                 value={sectionSlug}
                 onChange={(e) => setSectionSlug(e.target.value as SectionSlug)}
@@ -305,8 +306,9 @@ export default function ArticleCardPage() {
               </select>
             </div>
             <div>
-              <label className={labelClass}>Тип статьи *</label>
+              <label htmlFor="article-type" className={labelClass}>Тип статьи *</label>
               <select
+                id="article-type"
                 className={selectClass}
                 value={articleType}
                 onChange={(e) => setArticleType(e.target.value as ArticleType)}
@@ -324,14 +326,16 @@ export default function ArticleCardPage() {
                   type="number"
                   className={inputClass}
                   placeholder="от"
+                  aria-label="Страница от"
                   value={pageFrom}
                   onChange={(e) => setPageFrom(e.target.value)}
                 />
-                <span className="text-gray-400">&ndash;</span>
+                <span className="text-gray-500">&ndash;</span>
                 <input
                   type="number"
                   className={inputClass}
                   placeholder="до"
+                  aria-label="Страница до"
                   value={pageTo}
                   onChange={(e) => setPageTo(e.target.value)}
                 />
@@ -342,16 +346,17 @@ export default function ArticleCardPage() {
 
         {/* ── Section 2: Title ───────────────────────────────────── */}
         <fieldset className="bg-white border border-gray-200 rounded-sm">
-          <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">
+          <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Заглавие
           </legend>
           <div className="p-5 pt-3 space-y-4">
             <div>
-              <label className={labelClass}>
+              <label htmlFor="title-ru" className={labelClass}>
                 Название (русский) *
                 <LangBadge lang="RU" />
               </label>
               <input
+                id="title-ru"
                 type="text"
                 className={inputClass}
                 value={titleRu}
@@ -359,11 +364,12 @@ export default function ArticleCardPage() {
               />
             </div>
             <div>
-              <label className={labelClass}>
+              <label htmlFor="title-en" className={labelClass}>
                 Название (английский) *
                 <LangBadge lang="EN" />
               </label>
               <input
+                id="title-en"
                 type="text"
                 className={inputClass}
                 value={titleEn}
@@ -375,7 +381,7 @@ export default function ArticleCardPage() {
 
         {/* ── Section 3: Authors ─────────────────────────────────── */}
         <fieldset className="bg-white border border-gray-200 rounded-sm">
-          <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">
+          <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Авторы
           </legend>
           <div className="p-5 pt-3">
@@ -394,14 +400,16 @@ export default function ArticleCardPage() {
                       onClick={() => removeAuthor(author.id)}
                       className="text-gray-400 hover:text-red-500 transition-colors"
                       title="Удалить автора"
+                      aria-label="Удалить автора"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className={labelClass}>ФИО (русский) *</label>
+                      <label htmlFor={`author-${author.id}-name-ru`} className={labelClass}>ФИО (русский) *</label>
                       <input
+                        id={`author-${author.id}-name-ru`}
                         type="text"
                         className={inputClass}
                         placeholder="Фамилия Имя Отчество"
@@ -412,8 +420,9 @@ export default function ArticleCardPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>ФИО (английский) *</label>
+                      <label htmlFor={`author-${author.id}-name-en`} className={labelClass}>ФИО (английский) *</label>
                       <input
+                        id={`author-${author.id}-name-en`}
                         type="text"
                         className={inputClass}
                         placeholder="Name Surname"
@@ -424,10 +433,11 @@ export default function ArticleCardPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>
+                      <label htmlFor={`author-${author.id}-affiliation-ru`} className={labelClass}>
                         Аффилиация (русский) *
                       </label>
                       <input
+                        id={`author-${author.id}-affiliation-ru`}
                         type="text"
                         className={inputClass}
                         placeholder="Организация, должность, степень"
@@ -442,10 +452,11 @@ export default function ArticleCardPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>
+                      <label htmlFor={`author-${author.id}-affiliation-en`} className={labelClass}>
                         Аффилиация (английский)
                       </label>
                       <input
+                        id={`author-${author.id}-affiliation-en`}
                         type="text"
                         className={inputClass}
                         placeholder="Organization, position, degree"
@@ -460,8 +471,9 @@ export default function ArticleCardPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>Email</label>
+                      <label htmlFor={`author-${author.id}-email`} className={labelClass}>Email</label>
                       <input
+                        id={`author-${author.id}-email`}
                         type="email"
                         className={inputClass}
                         placeholder="email@example.com"
@@ -472,8 +484,9 @@ export default function ArticleCardPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>ORCID</label>
+                      <label htmlFor={`author-${author.id}-orcid`} className={labelClass}>ORCID</label>
                       <input
+                        id={`author-${author.id}-orcid`}
                         type="text"
                         className={inputClass}
                         placeholder="0000-0000-0000-0000"
@@ -503,16 +516,17 @@ export default function ArticleCardPage() {
 
         {/* ── Section 4: Abstract ────────────────────────────────── */}
         <fieldset className="bg-white border border-gray-200 rounded-sm">
-          <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">
+          <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Аннотация
           </legend>
           <div className="p-5 pt-3 space-y-4">
             <div>
-              <label className={labelClass}>
+              <label htmlFor="abstract-ru" className={labelClass}>
                 Аннотация (русский) *
                 <LangBadge lang="RU" />
               </label>
               <textarea
+                id="abstract-ru"
                 className={textareaClass}
                 rows={4}
                 value={abstractRu}
@@ -520,11 +534,12 @@ export default function ArticleCardPage() {
               />
             </div>
             <div>
-              <label className={labelClass}>
+              <label htmlFor="abstract-en" className={labelClass}>
                 Аннотация (английский) *
                 <LangBadge lang="EN" />
               </label>
               <textarea
+                id="abstract-en"
                 className={textareaClass}
                 rows={4}
                 value={abstractEn}
@@ -536,13 +551,14 @@ export default function ArticleCardPage() {
 
         {/* ── Section 5: Keywords ────────────────────────────────── */}
         <fieldset className="bg-white border border-gray-200 rounded-sm">
-          <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">
+          <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Ключевые слова
           </legend>
           <div className="p-5 pt-3 space-y-4">
             <div>
-              <label className={labelClass}>Ключевые слова (русский) *</label>
+              <label htmlFor="keywords-ru" className={labelClass}>Ключевые слова (русский) *</label>
               <input
+                id="keywords-ru"
                 type="text"
                 className={inputClass}
                 value={keywordsRu}
@@ -551,10 +567,11 @@ export default function ArticleCardPage() {
               <p className={hintClass}>Разделяйте запятой</p>
             </div>
             <div>
-              <label className={labelClass}>
+              <label htmlFor="keywords-en" className={labelClass}>
                 Ключевые слова (английский) *
               </label>
               <input
+                id="keywords-en"
                 type="text"
                 className={inputClass}
                 value={keywordsEn}
@@ -567,13 +584,14 @@ export default function ArticleCardPage() {
 
         {/* ── Section 6: Identifiers ─────────────────────────────── */}
         <fieldset className="bg-white border border-gray-200 rounded-sm">
-          <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">
+          <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Идентификаторы и коды
           </legend>
           <div className="p-5 pt-3 grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
-              <label className={labelClass}>DOI *</label>
+              <label htmlFor="doi" className={labelClass}>DOI *</label>
               <input
+                id="doi"
                 type="text"
                 className={inputClass}
                 value={doi}
@@ -581,8 +599,9 @@ export default function ArticleCardPage() {
               />
             </div>
             <div>
-              <label className={labelClass}>УДК</label>
+              <label htmlFor="udk" className={labelClass}>УДК</label>
               <input
+                id="udk"
                 type="text"
                 className={inputClass}
                 value={udk}
@@ -590,8 +609,9 @@ export default function ArticleCardPage() {
               />
             </div>
             <div>
-              <label className={labelClass}>JEL-коды</label>
+              <label htmlFor="jel-codes" className={labelClass}>JEL-коды</label>
               <input
+                id="jel-codes"
                 type="text"
                 className={inputClass}
                 value={jelCodes}
@@ -604,13 +624,14 @@ export default function ArticleCardPage() {
 
         {/* ── Section 7: Dates ───────────────────────────────────── */}
         <fieldset className="bg-white border border-gray-200 rounded-sm">
-          <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">
+          <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Даты
           </legend>
           <div className="p-5 pt-3 grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className={labelClass}>Дата получения</label>
+              <label htmlFor="received-date" className={labelClass}>Дата получения</label>
               <input
+                id="received-date"
                 type="date"
                 className={inputClass}
                 value={receivedDate}
@@ -618,8 +639,9 @@ export default function ArticleCardPage() {
               />
             </div>
             <div>
-              <label className={labelClass}>Дата принятия в печать</label>
+              <label htmlFor="accepted-date" className={labelClass}>Дата принятия в печать</label>
               <input
+                id="accepted-date"
                 type="date"
                 className={inputClass}
                 value={acceptedDate}
@@ -631,13 +653,14 @@ export default function ArticleCardPage() {
 
         {/* ── Section 8: Funding ─────────────────────────────────── */}
         <fieldset className="bg-white border border-gray-200 rounded-sm">
-          <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">
+          <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Финансирование
           </legend>
           <div className="p-5 pt-3">
             <div>
-              <label className={labelClass}>Источники финансирования</label>
+              <label htmlFor="funding" className={labelClass}>Источники финансирования</label>
               <textarea
+                id="funding"
                 className={textareaClass}
                 rows={2}
                 value={funding}
@@ -649,7 +672,7 @@ export default function ArticleCardPage() {
 
         {/* ── Section 9: Bibliography ────────────────────────────── */}
         <fieldset className="bg-white border border-gray-200 rounded-sm">
-          <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">
+          <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Библиография
           </legend>
           <div className="p-5 pt-3 space-y-5">
@@ -659,7 +682,7 @@ export default function ArticleCardPage() {
               <div className="space-y-2 mb-3">
                 {refsRu.map((ref, idx) => (
                   <div key={ref.id} className="flex items-start gap-2">
-                    <span className="text-xs text-gray-400 mt-2.5 w-5 text-right flex-shrink-0">
+                    <span className="text-xs text-gray-500 mt-2.5 w-5 text-right flex-shrink-0">
                       {idx + 1}.
                     </span>
                     <input
@@ -668,11 +691,13 @@ export default function ArticleCardPage() {
                       value={ref.text}
                       onChange={(e) => updateRefRu(ref.id, e.target.value)}
                       placeholder="Введите библиографическую ссылку..."
+                      aria-label={`Ссылка ${idx + 1} (русский)`}
                     />
                     <button
                       type="button"
                       onClick={() => removeRefRu(ref.id)}
                       className="mt-1.5 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
+                      aria-label="Удалить ссылку"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -695,7 +720,7 @@ export default function ArticleCardPage() {
               <div className="space-y-2 mb-3">
                 {refsEn.map((ref, idx) => (
                   <div key={ref.id} className="flex items-start gap-2">
-                    <span className="text-xs text-gray-400 mt-2.5 w-5 text-right flex-shrink-0">
+                    <span className="text-xs text-gray-500 mt-2.5 w-5 text-right flex-shrink-0">
                       {idx + 1}.
                     </span>
                     <input
@@ -704,11 +729,13 @@ export default function ArticleCardPage() {
                       value={ref.text}
                       onChange={(e) => updateRefEn(ref.id, e.target.value)}
                       placeholder="Enter bibliographic reference..."
+                      aria-label={`Reference ${idx + 1} (English)`}
                     />
                     <button
                       type="button"
                       onClick={() => removeRefEn(ref.id)}
                       className="mt-1.5 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
+                      aria-label="Удалить ссылку"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -729,7 +756,7 @@ export default function ArticleCardPage() {
 
         {/* ── Section 10: Files & links ──────────────────────────── */}
         <fieldset className="bg-white border border-gray-200 rounded-sm">
-          <legend className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 pt-5 pb-0">
+          <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Файлы и ссылки
           </legend>
           <div className="p-5 pt-3 space-y-5">
@@ -743,7 +770,7 @@ export default function ArticleCardPage() {
                     выберите
                   </span>
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   PDF, максимум 50 МБ
                 </p>
               </div>
@@ -754,21 +781,23 @@ export default function ArticleCardPage() {
                   <p className="text-sm text-green-800 font-medium truncate">
                     vte_2026_1_rubinshtein_chukovskaya.pdf
                   </p>
-                  <p className="text-xs text-green-600">
+                  <p className="text-xs text-green-700">
                     {data.pdf_size_kb} КБ
                   </p>
                 </div>
                 <button
                   type="button"
                   className="text-green-400 hover:text-red-500 transition-colors"
+                  aria-label="Удалить файл"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
             <div>
-              <label className={labelClass}>Ссылка на XML (JATS)</label>
+              <label htmlFor="xml-url" className={labelClass}>Ссылка на XML (JATS)</label>
               <input
+                id="xml-url"
                 type="url"
                 className={inputClass}
                 placeholder="https://journals.rcsi.science/..."
@@ -784,7 +813,7 @@ export default function ArticleCardPage() {
         <div className="flex items-center justify-between pt-4 pb-8">
           <button
             type="button"
-            className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+            className="text-sm text-gray-500 hover:text-red-500 transition-colors"
           >
             Удалить статью
           </button>

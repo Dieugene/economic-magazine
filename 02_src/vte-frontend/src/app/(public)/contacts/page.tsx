@@ -52,7 +52,7 @@ export default function ContactsPage() {
                   href="https://inecon.org/institut/ob-institute.html"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-teal-500 hover:text-copper-400 transition-colors"
+                  className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
                 >
                   inecon.org
                 </a>
@@ -69,7 +69,7 @@ export default function ContactsPage() {
                 Для авторов статей:{" "}
                 <a
                   href="mailto:editorqet@inecon.ru"
-                  className="text-teal-500 hover:text-copper-400 transition-colors"
+                  className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
                 >
                   editorqet@inecon.ru
                 </a>
@@ -78,7 +78,7 @@ export default function ContactsPage() {
                 Институт экономики РАН:{" "}
                 <a
                   href="mailto:ieras@inecon.ru"
-                  className="text-teal-500 hover:text-copper-400 transition-colors"
+                  className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
                 >
                   ieras@inecon.ru
                 </a>
@@ -94,7 +94,7 @@ export default function ContactsPage() {
               <p>
                 <a
                   href="tel:+74997241541"
-                  className="text-teal-500 hover:text-copper-400 transition-colors"
+                  className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
                 >
                   8 (499) 724-15-41
                 </a>

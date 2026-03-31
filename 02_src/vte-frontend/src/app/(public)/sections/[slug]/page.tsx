@@ -57,7 +57,7 @@ export default async function SectionPage({
                 <p className="text-sm text-gray-600 mt-2">
                   {article.authors.map((a) => a.full_name.ru).join(", ")}
                 </p>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-gray-400">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-gray-500">
                   <span>
                     ВТЭ. {article.issue_year}. №{article.issue_number} (
                     {article.issue_sequential_number})

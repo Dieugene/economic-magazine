@@ -268,7 +268,7 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                 )}
                 <Link
                   href={`/archive/${latestIssue.year}/${latestIssue.number}`}
-                  className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-copper-400 hover:text-copper-500 transition-colors"
+                  className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-copper-500 hover:text-copper-600 transition-colors"
                 >
                   {t("Содержание номера", "Table of Contents")}
                   <svg
@@ -344,7 +344,7 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
               <p>
                 <a
                   href="mailto:editorqet@inecon.ru"
-                  className="text-teal-500 hover:text-copper-400 transition-colors"
+                  className="text-teal-600 hover:text-copper-500 transition-colors"
                 >
                   editorqet@inecon.ru
                 </a>

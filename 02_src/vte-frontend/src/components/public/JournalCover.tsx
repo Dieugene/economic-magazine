@@ -103,13 +103,13 @@ export default function JournalCover({
           экономики
         </p>
         <p
-          className="text-[#D4B878]/80 font-serif italic"
+          className="text-[#D4B878] font-serif italic"
           style={{ fontSize: "clamp(0.7rem, 2.2vw, 1.1rem)" }}
         >
           {"\u2116"}&thinsp;{number}
         </p>
         <p
-          className="text-[#D4B878]/60 font-serif"
+          className="text-[#D4B878]/90 font-serif"
           style={{ fontSize: "clamp(0.7rem, 2.2vw, 1.1rem)" }}
         >
           {year}

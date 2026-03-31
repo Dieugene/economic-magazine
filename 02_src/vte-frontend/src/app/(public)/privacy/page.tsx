@@ -67,7 +67,7 @@ export default function PrivacyPage() {
                 редакцию журнала:{" "}
                 <a
                   href="mailto:vte@inecon.ru"
-                  className="text-teal-500 hover:text-copper-400 transition-colors"
+                  className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
                 >
                   vte@inecon.ru
                 </a>
