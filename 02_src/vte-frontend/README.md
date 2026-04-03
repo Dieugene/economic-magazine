@@ -26,24 +26,26 @@
 
 ```bash
 cd 02_src/vte-frontend
+cp .env.example .env.local   # создать файл настроек
 npm install
 npm run dev
 ```
 
 Открыть [http://localhost:3000](http://localhost:3000)
 
-### Режим работы с моками
+### Настройка окружения
 
-По умолчанию фронтенд работает на mock-данных — бэкенд не нужен. Настройка в `.env.local`:
+Файл `.env.example` содержит все необходимые переменные с комментариями. При первом запуске скопируйте его в `.env.local`:
 
+```bash
+cp .env.example .env.local
 ```
-NEXT_PUBLIC_API_MODE=mock   # mock-данные (по умолчанию)
-NEXT_PUBLIC_API_URL=http://localhost:8000  # URL бэкенда (используется при mode=real)
-```
+
+По умолчанию фронтенд работает на mock-данных — бэкенд не нужен.
 
 ### Переключение на реальный API
 
-Когда бэкенд готов, достаточно изменить `.env.local`:
+В файле `.env.local` изменить одну строку:
 
 ```
 NEXT_PUBLIC_API_MODE=real

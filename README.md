@@ -25,6 +25,7 @@
 
 ```bash
 cd 02_src/vte-frontend
+cp .env.example .env.local   # создать файл настроек
 npm install
 npm run dev
 ```
@@ -35,14 +36,13 @@ npm run dev
 
 ### Переключение на реальный API
 
-Когда бэкенд готов, изменить `.env.local`:
+В файле `.env.local` изменить одну строку:
 
 ```
 NEXT_PUBLIC_API_MODE=real
-NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-Перезапустить `npm run dev`.
+Перезапустить `npm run dev`. Фронтенд начнёт обращаться к бэкенду по адресу из `NEXT_PUBLIC_API_URL`.
 
 ## Страницы
 
