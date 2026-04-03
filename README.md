@@ -180,6 +180,51 @@ interface LocalizedString {
 | Ссылки | `#1A7A6D` (teal) |
 | Фоны | `#F7F5F0`, `#F0EDE6` (stone) |
 
+## Развёртывание (Docker)
+
+В репозитории есть `Dockerfile` (multi-stage, ~50 МБ итоговый образ).
+
+### Сборка образа
+
+```bash
+cd 02_src/vte-frontend
+docker build \
+  --build-arg NEXT_PUBLIC_API_MODE=real \
+  --build-arg NEXT_PUBLIC_API_URL=http://backend:8000 \
+  -t vte-frontend .
+```
+
+`NEXT_PUBLIC_API_URL` — адрес бэкенда внутри Docker-сети. Имя сервиса (`backend`) должно совпадать с тем, что указано в `docker-compose.yaml`.
+
+### Запуск
+
+```bash
+docker run -p 3000:3000 vte-frontend
+```
+
+### Пример для docker-compose.yaml
+
+```yaml
+services:
+  frontend:
+    build:
+      context: ./02_src/vte-frontend
+      args:
+        NEXT_PUBLIC_API_MODE: real
+        NEXT_PUBLIC_API_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  backend:
+    # ... Django-приложение
+    ports:
+      - "8000:8000"
+```
+
+Reverse proxy (nginx) для маршрутизации `/api/` → backend, остальное → frontend — настраивается отдельно.
+
 ## Скрипты
 
 | Команда | Описание |
