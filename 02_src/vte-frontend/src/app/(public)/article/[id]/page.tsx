@@ -287,7 +287,7 @@ export default async function ArticlePage({
               </h3>
               <ol className="space-y-3 text-sm text-gray-700 leading-relaxed list-decimal list-outside pl-5">
                 {referencesRu.map((ref) => (
-                  <li key={ref.id}>{ref.text_ru}</li>
+                  <li key={ref.order}>{ref.text_ru}</li>
                 ))}
               </ol>
             </div>
@@ -301,7 +301,7 @@ export default async function ArticlePage({
               </h3>
               <ol className="space-y-3 text-sm text-gray-700 leading-relaxed list-decimal list-outside pl-5">
                 {referencesEn.map((ref) => (
-                  <li key={ref.id}>{ref.text_en}</li>
+                  <li key={ref.order}>{ref.text_en}</li>
                 ))}
               </ol>
             </div>

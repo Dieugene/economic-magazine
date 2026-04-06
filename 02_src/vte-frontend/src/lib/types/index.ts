@@ -13,7 +13,6 @@ export interface LocalizedText {
 export type ArticleType = 'scientific' | 'review' | 'book_review' | 'editorial';
 export type SectionSlug = 'economic-theory' | 'methodology' | 'theory-to-policy' | 'history-of-thought' | 'interdisciplinary' | 'economic-history' | 'reviews';
 export type IssueStatus = 'draft' | 'ready' | 'published';
-export type Lang = 'ru' | 'en';
 
 // Entities
 export interface Author {
@@ -30,7 +29,6 @@ export interface Section {
 }
 
 export interface Reference {
-  id: number;
   text_ru: string;
   text_en?: string;
   order: number;

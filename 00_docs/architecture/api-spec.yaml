@@ -53,11 +53,11 @@ info:
     Все публичные эндпоинты (`/api/...`) возвращают **только** данные со статусом `status=published`.
     Черновики и номера со статусом `ready` доступны только через админские эндпоинты.
 
-    ### Параметр `lang`
-    Публичные эндпоинты принимают query-параметр `lang` (`ru` | `en`, по умолчанию `ru`).
-    При `lang=en` бэкенд должен возвращать английские значения локализованных полей
-    (`title`, `abstract`, `full_name`, `affiliation`, `degree`, `name` и т.д.) там, где они заполнены.
-    Если английский вариант не заполнен — возвращать русский (fallback).
+    ### Двуязычность (локализация)
+    Все локализованные поля (`title`, `abstract`, `full_name`, `affiliation`, `degree`, `name` и т.д.)
+    всегда возвращаются в формате `LocalizedString { ru, en? }` — оба языка в одном ответе.
+    Фронтенд переключает язык на клиенте без повторных запросов к API.
+    Параметр `lang` в query-строке **не используется**.
 
     ### CORS
     Бэкенд **обязан** выставлять CORS-заголовки, разрешающие запросы с домена фронтенда.
@@ -160,11 +160,6 @@ components:
         - ready — готов к публикации
         - published — опубликован на сайте
 
-    Lang:
-      type: string
-      enum: [ru, en]
-      default: ru
-
     # ---------- Nested objects ----------
 
     LocalizedString:
@@ -213,10 +208,10 @@ components:
 
     Reference:
       type: object
+      description: |
+        Запись списка литературы. Уникальна для каждой статьи, переиспользование между статьями не предполагается.
+        Хранение на стороне бэкенда — JSON-поле или дочерняя таблица без отдельного эндпоинта.
       properties:
-        id:
-          type: integer
-          readOnly: true
         text_ru:
           type: string
           description: Запись в списке ЛИТЕРАТУРА
@@ -633,10 +628,6 @@ paths:
           schema:
             type: integer
           description: Фильтр по году
-        - name: lang
-          in: query
-          schema:
-            $ref: '#/components/schemas/Lang'
       responses:
         '200':
           description: Список номеров
@@ -700,10 +691,6 @@ paths:
           required: true
           schema:
             type: integer
-        - name: lang
-          in: query
-          schema:
-            $ref: '#/components/schemas/Lang'
       responses:
         '200':
           description: Номер с содержанием
@@ -843,10 +830,6 @@ paths:
           required: true
           schema:
             type: integer
-        - name: lang
-          in: query
-          schema:
-            $ref: '#/components/schemas/Lang'
       responses:
         '200':
           description: Статья
@@ -914,16 +897,13 @@ paths:
                 udk: "330.1"
                 jel_codes: ["A11", "D83", "O33"]
                 references:
-                  - id: 1
-                    order: 1
+                  - order: 1
                     text_ru: "Рубинштейн А.Я. Теория опекаемых благ. СПб.: Алетейя, 2018."
                     text_en: "Rubinstein A.Ya. Theory of Patronized Goods. St. Petersburg: Aletheia, 2018."
-                  - id: 2
-                    order: 2
+                  - order: 2
                     text_ru: "Полтерович В.М. Позитивное сотрудничество: факторы и механизмы эволюции // Вопросы экономики. 2016. № 11. С. 5–23."
                     text_en: "Polterovich V.M. Positive Collaboration: Factors and Mechanisms of Evolution // Voprosy Ekonomiki. 2016. No. 11. Pp. 5–23."
-                  - id: 3
-                    order: 3
+                  - order: 3
                     text_ru: "Дасгупта П. Экономический прогресс и идея социального капитала // Экономический вестник. 2004. Т. 3, № 2. С. 36–54."
                     text_en: "Dasgupta P. Economic Progress and the Idea of Social Capital // Economic Bulletin. 2004. Vol. 3, No. 2. Pp. 36–54."
                 received_date: "2025-11-18"
@@ -944,11 +924,6 @@ paths:
       tags: [Sections (public)]
       summary: Список рубрик
       description: Возвращает все рубрики журнала
-      parameters:
-        - name: lang
-          in: query
-          schema:
-            $ref: '#/components/schemas/Lang'
       responses:
         '200':
           description: Список рубрик
@@ -963,7 +938,11 @@ paths:
     get:
       tags: [Sections (public)]
       summary: Статьи по рубрике
-      description: Все статьи в данной рубрике, от новых к старым
+      description: |
+        Все статьи в данной рубрике, от новых к старым. Возвращает формат `ArticleSummary` —
+        облегчённые карточки без библиографии. Необходимые поля для карточки:
+        `id`, `title`, `authors` (только `full_name`), `abstract`, `doi`, `pages`,
+        `pdf_url`, `pdf_size_kb`, `issue_year`, `issue_number`, `issue_sequential_number`.
       parameters:
         - name: slug
           in: path
@@ -980,10 +959,6 @@ paths:
           schema:
             type: integer
             default: 20
-        - name: lang
-          in: query
-          schema:
-            $ref: '#/components/schemas/Lang'
       responses:
         '200':
           description: Пагинированный список статей
@@ -1007,11 +982,6 @@ paths:
     get:
       tags: [Editorial Board (public)]
       summary: Список членов редколлегии
-      parameters:
-        - name: lang
-          in: query
-          schema:
-            $ref: '#/components/schemas/Lang'
       responses:
         '200':
           description: Редколлегия
@@ -1054,10 +1024,6 @@ paths:
           schema:
             type: string
             enum: [about, contacts, for-authors, author-agreement, review-process, ethics, privacy-policy]
-        - name: lang
-          in: query
-          schema:
-            $ref: '#/components/schemas/Lang'
       responses:
         '200':
           description: Страница
@@ -1120,10 +1086,6 @@ paths:
           schema:
             type: integer
             default: 20
-        - name: lang
-          in: query
-          schema:
-            $ref: '#/components/schemas/Lang'
       responses:
         '200':
           description: Результаты поиска
