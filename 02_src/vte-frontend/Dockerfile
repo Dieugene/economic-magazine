@@ -10,12 +10,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build arguments → environment variables at build time
+# Defaults — can be overridden by build args. Runtime env vars also work
+# for NEXT_PUBLIC_API_MODE / NEXT_PUBLIC_API_PROXY_TARGET because the
+# Next.js API-route at /backend reads them server-side at request time.
 ARG NEXT_PUBLIC_API_MODE=real
-ARG NEXT_PUBLIC_API_URL=http://backend:8000
-
 ENV NEXT_PUBLIC_API_MODE=$NEXT_PUBLIC_API_MODE
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 RUN npm run build
 

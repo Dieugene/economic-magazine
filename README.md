@@ -36,13 +36,16 @@ npm run dev
 
 ### Переключение на реальный API
 
-В файле `.env.local` изменить одну строку:
+В `.env.local` укажите URL бэкенда, на который Next.js будет проксировать запросы:
 
 ```
 NEXT_PUBLIC_API_MODE=real
+NEXT_PUBLIC_API_PROXY_TARGET=http://185.180.230.243/api
 ```
 
-Перезапустить `npm run dev`. Фронтенд начнёт обращаться к бэкенду по адресу из `NEXT_PUBLIC_API_URL`.
+Перезапустите `npm run dev`. Все клиентские запросы пойдут на `/backend/*` своего origin, а встроенный Next.js API-route (`src/app/backend/[...path]/route.ts`) форвардит их на указанный бэкенд. Это снимает CORS-проблемы локальной разработки.
+
+Альтернатива — задать `NEXT_PUBLIC_API_URL=https://api.example.com` (фронт пойдёт напрямую). Тогда CORS должен быть настроен на бэкенде.
 
 ## Страницы
 
@@ -117,34 +120,29 @@ Lighthouse-аудит всех 15 страниц:
 
 ### Эндпоинты, используемые фронтендом
 
+Базовый URL бэкенда — `https://<host>/api/`. Фронт ходит через прокси `/backend/*` (см. секцию «Переключение на реальный API»).
+
 | Страница | Эндпоинт | Метод |
 |----------|----------|-------|
-| Главная | `/api/issues/latest/` | GET |
-| Архив за год | `/api/issues/?year=2026` | GET |
-| Архив (годы) | `/api/issues/years/` | GET |
-| Страница номера | `/api/issues/{id}/` | GET |
-| Страница статьи | `/api/articles/{id}/` | GET |
-| Рубрики | `/api/sections/` | GET |
-| Статьи по рубрике | `/api/sections/{slug}/articles/` | GET |
-| Редколлегия | `/api/editorial-board/` | GET |
-| Поиск | `/api/search/?q={query}` | GET |
+| Главная / Архив | `/issues/` | GET (фильтр на клиенте) |
+| Страница номера | `/issues/{id}/` | GET |
+| Статьи номера | `/articles/?issue_id={id}` | GET |
+| Страница статьи | `/articles/{id}/` | GET |
+| Рубрики | `/sections/` | GET |
+| Рубрика | `/sections/{slug}/` | GET |
+| Статьи по рубрике | `/sections/{slug}/articles/` | GET |
+| Редколлегия | `/editorial_board/` | GET |
+| Поиск | `/search/?q={query}` | GET |
 
-### Минимум для запуска публичного сайта
-
-Достаточно **4 эндпоинта**:
-
-1. `GET /api/issues/latest/` — `IssueSummary`
-2. `GET /api/issues/{id}/` — `IssueFull` (номер со статьями по рубрикам)
-3. `GET /api/articles/{id}/` — `ArticleFull` (полные метаданные статьи)
-4. `GET /api/issues/?year=N` — `IssueSummary[]`
+Админ-эндпоинты (требуют JWT): `/issues/` (POST/PATCH/DELETE/upload_cover/upload_pdf/update_status/...), `/articles/` (POST/PATCH/DELETE/upload_ready_pdf_file), `/sections/` (POST/PATCH/DELETE), `/auth/login/`, `/auth/refresh/`, `/auth/logout/`.
 
 ### CORS
 
-Бэкенд должен разрешить:
+Если фронт работает через прокси `/backend/*`, CORS не нужен (всё same-origin). Если же фронт использует прямой URL (`NEXT_PUBLIC_API_URL`), бэкенд должен разрешить:
 
 ```
-Access-Control-Allow-Origin: http://localhost:3000
-Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+Access-Control-Allow-Origin: https://questionset.ru
+Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
 Access-Control-Allow-Headers: Content-Type, Authorization
 ```
 
@@ -188,42 +186,61 @@ interface LocalizedString {
 
 ```bash
 cd 02_src/vte-frontend
-docker build \
-  --build-arg NEXT_PUBLIC_API_MODE=real \
-  --build-arg NEXT_PUBLIC_API_URL=http://backend:8000 \
-  -t vte-frontend .
+docker build -t vte-frontend .
 ```
 
-`NEXT_PUBLIC_API_URL` — адрес бэкенда внутри Docker-сети. Имя сервиса (`backend`) должно совпадать с тем, что указано в `docker-compose.yaml`.
+Build-args не требуются — конфигурация задаётся через runtime-переменные при запуске контейнера (Next.js API-route читает их на лету).
 
 ### Запуск
 
 ```bash
-docker run -p 3000:3000 vte-frontend
+docker run -p 3000:3000 \
+  -e NEXT_PUBLIC_API_MODE=real \
+  -e NEXT_PUBLIC_API_PROXY_TARGET=http://backend:8000/api \
+  vte-frontend
 ```
 
-### Пример для docker-compose.yaml
+`NEXT_PUBLIC_API_PROXY_TARGET` — URL Django-бэкенда внутри Docker-сети. Все клиентские запросы фронта идут на `/backend/*` своего origin, а Next.js форвардит их на указанный URL. CORS не нужен.
+
+### Пример docker-compose.yaml
 
 ```yaml
 services:
   frontend:
-    build:
-      context: ./02_src/vte-frontend
-      args:
-        NEXT_PUBLIC_API_MODE: real
-        NEXT_PUBLIC_API_URL: http://backend:8000
+    build: ./02_src/vte-frontend
+    environment:
+      NEXT_PUBLIC_API_MODE: real
+      NEXT_PUBLIC_API_PROXY_TARGET: http://backend:8000/api
     ports:
       - "3000:3000"
     depends_on:
       - backend
 
   backend:
-    # ... Django-приложение
+    # ... Django-приложение, слушает 8000
     ports:
       - "8000:8000"
 ```
 
-Reverse proxy (nginx) для маршрутизации `/api/` → backend, остальное → frontend — настраивается отдельно.
+### Альтернатива: nginx как reverse proxy
+
+Если в продакшене перед фронтом стоит nginx/Traefik, можно отказаться от встроенного Next.js-прокси. В этом случае настройте у nginx:
+
+```nginx
+location /backend/ {
+    proxy_pass http://backend:8000/api/;
+    proxy_set_header Host $host;
+}
+location / {
+    proxy_pass http://frontend:3000;
+}
+```
+
+Переменные `NEXT_PUBLIC_API_*` в этом сценарии не задаются — фронт по умолчанию ходит на `/backend/*` своего origin.
+
+### Важно: trailing slash
+
+В `next.config.ts` включён `trailingSlash: true` — все URL фронта заканчиваются на `/` (для совместимости с Django, который добавляет `/` к API-маршрутам). Учтите это при настройке внешнего nginx/cloudflare.
 
 ## Скрипты
 

@@ -45,14 +45,20 @@ cp .env.example .env.local
 
 ### Переключение на реальный API
 
-В файле `.env.local` изменить одну строку:
+В `.env.local`:
 
 ```
 NEXT_PUBLIC_API_MODE=real
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_PROXY_TARGET=http://185.180.230.243/api
 ```
 
-Перезапустить `npm run dev`.
+Перезапустите `npm run dev`. Все клиентские запросы фронта будут проксироваться через `/backend/*` своего origin (см. `src/app/backend/[...path]/route.ts`), что снимает проблемы с CORS.
+
+Если бэкенд доступен напрямую (CORS настроен), можно вместо прокси задать абсолютный URL:
+
+```
+NEXT_PUBLIC_API_URL=https://api.example.com
+```
 
 ## Структура проекта
 
@@ -95,60 +101,50 @@ src/
 
 ### Эндпоинты, используемые фронтендом
 
-Фронтенд вызывает следующие эндпоинты (см. `src/lib/api/client.ts`):
+Базовый URL: `https://<host>/api/`. Фронт обращается через прокси `/backend/*` (см. секцию «Переключение на реальный API»).
 
-| Страница | Эндпоинт | Метод | Описание |
-|----------|----------|-------|----------|
-| Главная | `/api/issues/latest/` | GET | Свежий номер для боковой панели |
-| Архив за год | `/api/issues/?year=2026` | GET | Список номеров за год |
-| Архив (годы) | `/api/issues/years/` | GET | Список годов с номерами |
-| Страница номера | `/api/issues/{id}/` | GET | Номер со статьями по рубрикам |
-| Страница статьи | `/api/articles/{id}/` | GET | Полные метаданные статьи |
-| Рубрикатор (список) | `/api/sections/` | GET | Список рубрик |
-| Рубрикатор (статьи) | `/api/sections/{slug}/articles/?page=1` | GET | Статьи по рубрике (пагинация) |
-| Редколлегия | `/api/editorial-board/` | GET | Список членов редколлегии |
-| Поиск | `/api/search/?q={query}` | GET | Поиск по статьям |
+| Страница | Эндпоинт | Метод |
+|----------|----------|-------|
+| Список / архив | `/issues/` | GET (фильтр `?year=N`, статус опциональный) |
+| Страница номера | `/issues/{id}/` | GET |
+| Статьи номера | `/articles/?issue_id={id}` | GET |
+| Все статьи | `/articles/` | GET |
+| Страница статьи | `/articles/{id}/` | GET |
+| Список рубрик | `/sections/` | GET |
+| Конкретная рубрика | `/sections/{slug}/` | GET |
+| Статьи рубрики | `/sections/{slug}/articles/` | GET |
+| Редколлегия | `/editorial_board/` | GET |
+| Поиск | `/search/?q={query}` | GET (поддерживает `section`, `year_from`, `year_to`, `page`, `page_size`) |
 
-**Админские эндпоинты** (будут реализованы позже):
+**Админские эндпоинты** (требуют JWT в `Authorization: Bearer ...`):
 
 | Действие | Эндпоинт | Метод |
 |----------|----------|-------|
-| Создание номера | `/api/admin/issues/` | POST |
-| Обновление номера | `/api/admin/issues/{id}/` | PUT |
-| Публикация номера | `/api/admin/issues/{id}/publish/` | POST |
-| Создание статьи | `/api/admin/articles/` | POST |
-| Обновление статьи | `/api/admin/articles/{id}/` | PUT |
-| Загрузка файлов | `/api/admin/upload/` | POST |
+| Логин / refresh / logout | `/auth/login/`, `/auth/refresh/`, `/auth/logout/` | POST |
+| Создать номер | `/issues/` | POST |
+| Обновить номер | `/issues/{id}/` | PATCH |
+| Удалить номер | `/issues/{id}/` | DELETE |
+| Изменить статус | `/issues/{id}/update_status/` | PUT (`{status: "Draft"\|"Ready"\|"Published"}`) |
+| Загрузка обложки / PDF | `/issues/{id}/upload_cover/`, `/issues/{id}/upload_pdf/` | POST (`multipart/form-data`) |
+| Создать статью | `/articles/` | POST |
+| Обновить статью | `/articles/{id}/` | PATCH |
+| Удалить статью | `/articles/{id}/` | DELETE |
+| Загрузка PDF статьи | `/articles/{id}/upload_ready_pdf_file/` | POST (`multipart/form-data`) |
 
-### Минимум для запуска публичного сайта
-
-Чтобы публичный сайт заработал на реальных данных, достаточно реализовать **4 эндпоинта**:
-
-1. `GET /api/issues/latest/` — возвращает `IssueSummary`
-2. `GET /api/issues/{id}/` — возвращает `IssueFull` (номер со статьями)
-3. `GET /api/articles/{id}/` — возвращает `ArticleFull`
-4. `GET /api/issues/?year=N` — возвращает `IssueSummary[]`
+Полный реестр методов — в [`src/lib/api/client.ts`](src/lib/api/client.ts) (`api`, `auth`, `adminApi`).
 
 ### CORS
 
-Бэкенд должен разрешить CORS для:
+Если фронт идёт через прокси `/backend/*` (рекомендуется), CORS не нужен — все запросы same-origin.
 
-- `http://localhost:3000` (разработка)
-- `https://questionset.ru` (продакшн)
-
-Необходимые заголовки:
-
-```
-Access-Control-Allow-Origin: http://localhost:3000
-Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
-Access-Control-Allow-Headers: Content-Type, Authorization
-```
+Если фронт обращается к бэкенду напрямую (`NEXT_PUBLIC_API_URL=https://api.example.com`), бэкенд должен разрешить CORS для домена фронта.
 
 ### Загрузка файлов
 
-- PDF статей и номеров: `multipart/form-data` на `/api/admin/upload/`
-- Обложки номеров: аналогично
-- Фронтенд отображает файлы по URL из ответа API (поля `pdf_url`, `cover_url`, `xml_url`)
+- Обложка номера: `POST /issues/{id}/upload_cover/`, поле `cover_image` (image/*)
+- PDF номера: `POST /issues/{id}/upload_pdf/`, поле `pdf_file` (application/pdf)
+- PDF статьи: `POST /articles/{id}/upload_ready_pdf_file/`, поле `pdf_file`
+- Фронтенд отображает файлы по URL из ответа API (поля `pdf_file`, `cover_file`, `xml_url`)
 
 ## TypeScript типы
 
