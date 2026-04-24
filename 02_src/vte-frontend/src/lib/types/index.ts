@@ -1,4 +1,5 @@
-// Localized content
+// ── Localized content ───────────────────────────────────────────
+
 export interface LocalizedString {
   ru: string;
   en?: string;
@@ -9,87 +10,124 @@ export interface LocalizedText {
   en?: string;
 }
 
-// Enums
-export type ArticleType = 'scientific' | 'review' | 'book_review' | 'editorial';
-export type SectionSlug = 'economic-theory' | 'methodology' | 'theory-to-policy' | 'history-of-thought' | 'interdisciplinary' | 'economic-history' | 'reviews';
-export type IssueStatus = 'draft' | 'ready' | 'published';
+// ── Enums (capitalized — match backend StatusEnum / ArticleTypeEnum) ──
 
-// Entities
-export interface Author {
-  id: number;
-  full_name: LocalizedString;
-  affiliation: LocalizedString;
-  email?: string | null;
-  orcid?: string | null;
+export type ArticleType = 'Scientific' | 'Review' | 'Book_review' | 'Editorial';
+export type IssueStatus = 'Draft' | 'Ready' | 'Published';
+
+// ── Reference ───────────────────────────────────────────────────
+
+export interface Reference {
+  order: number;
+  text_ru: string;
+  text_en: string;
 }
 
+// ── Section ─────────────────────────────────────────────────────
+// Slug — произвольная строка (рубрики управляются через API,
+// в БД сейчас транслитерация русского).
+
 export interface Section {
-  slug: SectionSlug;
+  slug: string;
   name: LocalizedString;
 }
 
-export interface Reference {
-  text_ru: string;
-  text_en?: string;
-  order: number;
-}
+// ── Issue ───────────────────────────────────────────────────────
 
 export interface IssueSummary {
   id: number;
   year: number;
   number: number;
   sequential_number: number;
-  published_date: string;
-  cover_url?: string | null;
-  full_pdf_url?: string | null;
+  published_date: string | null;
+  cover_file: string | null;
+  pdf_file: string | null;
   status: IssueStatus;
   article_count: number;
 }
 
-export interface ArticleSummary {
-  id: number;
-  title: LocalizedString;
-  authors: Author[];
-  section: Section;
-  pages: string;
-  doi?: string | null;
-  pdf_url?: string | null;
-  pdf_size_kb?: number | null;
-  abstract?: LocalizedText | null;
-  article_type: ArticleType;
-  issue_id: number;
-  issue_year: number;
-  issue_number: number;
-  issue_sequential_number: number;
+// IssueFull — это Issue + список рубрик с массивами ID статей.
+// Чтобы получить сами статьи, делается отдельный GET /articles/?issue_id=X
+// и группируется на клиенте по section_name.
+
+export interface IssueSection {
+  slug: string;
+  name: LocalizedString;
+  articles: number[];
 }
 
 export interface IssueFull extends IssueSummary {
-  sections: {
-    section: Section;
-    articles: ArticleSummary[];
-  }[];
+  sections: IssueSection[];
 }
 
-export interface ArticleFull extends ArticleSummary {
-  keywords?: { ru: string[]; en: string[] };
-  udk?: string | null;
-  jel_codes?: string[];
-  references?: Reference[];
-  received_date?: string | null;
-  accepted_date?: string | null;
-  funding?: LocalizedText | null;
-  xml_url?: string | null;
+// ── Article ─────────────────────────────────────────────────────
+// authors — упрощённая модель: одна строка на язык
+// section_name — локализованное название рубрики (без slug)
+
+export interface Article {
+  id: number;
+  issue_id: number;
+  issue_year: number | null;
+  issue_number: number | null;
+  issue_sequential_number: number | null;
+  section_name: LocalizedString;
+  title: LocalizedString;
+  authors: LocalizedString;
+  pages: string;
+  doi: string;
+  pdf_file: string | null;
+  pdf_size_kb: number | null;
+  abstract: LocalizedText | null;
+  article_type: ArticleType;
+  keywords: { ru: string[]; en: string[] };
+  udk: string;
+  jel_codes: string[];
+  references: Reference[];
+  received_date: string | null;
+  accepted_date: string | null;
+  funding: LocalizedText;
+  xml_url: string | null;
 }
+
+// Совместимость со старыми именами в коде (точечно используется в страницах)
+export type ArticleSummary = Article;
+export type ArticleFull = Article;
+
+// ── EditorialBoardMember ────────────────────────────────────────
 
 export interface EditorialBoardMember {
   id: number;
   full_name: LocalizedString;
-  role?: string | null;
-  degree?: LocalizedString;
-  affiliation?: LocalizedString;
-  email?: string | null;
-  spin_code?: string | null;
-  orcid?: string | null;
-  scopus_id?: string | null;
+  role: LocalizedString;
+  degree: LocalizedString | null;
+  affiliation: LocalizedString | null;
+  email: string;
+  spin_code: string | null;
+  orcid: string;
+  scopus_id: string | null;
   order: number;
+}
+
+// ── Pagination ──────────────────────────────────────────────────
+
+export interface PaginatedArticleList {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Article[];
+}
+
+// ── Auth ────────────────────────────────────────────────────────
+
+export interface TokenPair {
+  access: string;
+  refresh: string;
+}
+
+// ── Static page (фронтовый fallback, эндпоинта нет в бэкенде) ──
+
+export interface StaticPage {
+  slug: string;
+  title: LocalizedString;
+  content: LocalizedText;
 }

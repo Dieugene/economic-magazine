@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { use } from "react";
 import Link from "next/link";
-import { Upload, ChevronRight, Save } from "lucide-react";
-import type { IssueStatus } from "@/lib/types";
-import { issueFullData, allArticleSummaries } from "@/lib/api/mock/data";
+import { useRouter } from "next/navigation";
+import { Upload, ChevronRight, Save, Trash2, Plus, FileText } from "lucide-react";
+import type { IssueFull, IssueStatus, Article } from "@/lib/types";
+import { adminApi, ApiError } from "@/lib/api/client";
+import DocumentTitle from "@/components/public/DocumentTitle";
 
 const statusLabels: Record<IssueStatus, string> = {
-  draft: "Черновик",
-  ready: "Готов",
-  published: "Опубликован",
+  Draft: "Черновик",
+  Ready: "Готов",
+  Published: "Опубликован",
 };
 
 export default function IssueDetailPage({
@@ -19,25 +21,148 @@ export default function IssueDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const issue = issueFullData;
+  const issueId = Number(id);
+  const router = useRouter();
 
-  const [year, setYear] = useState(issue.year);
-  const [number, setNumber] = useState(issue.number);
-  const [seqNumber, setSeqNumber] = useState(issue.sequential_number);
-  const [publishedDate, setPublishedDate] = useState(issue.published_date);
-  const [status, setStatus] = useState<IssueStatus>(issue.status);
+  const [issue, setIssue] = useState<IssueFull | null>(null);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loadError, setLoadError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [saveBusy, setSaveBusy] = useState(false);
 
-  // Flatten all articles from sections with order numbers
-  const allArticles = issue.sections.flatMap((s) => s.articles);
+  const [year, setYear] = useState<number>(0);
+  const [number, setNumber] = useState<number>(0);
+  const [seqNumber, setSeqNumber] = useState<number>(0);
+
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const [coverBusy, setCoverBusy] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  async function loadAll() {
+    try {
+      const data = await adminApi.getIssue(issueId);
+      setIssue(data);
+      setYear(data.year);
+      setNumber(data.number);
+      setSeqNumber(data.sequential_number);
+      try {
+        const arts = await adminApi.listArticles(issueId);
+        setArticles(arts);
+      } catch {
+        setArticles([]);
+      }
+      setLoadError("");
+    } catch (e) {
+      setLoadError(e instanceof ApiError ? e.message : "Ошибка загрузки номера");
+    }
+  }
+
+  useEffect(() => {
+    if (!isNaN(issueId)) loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [issueId]);
+
+  async function handleSave() {
+    if (!issue) return;
+    setSaveBusy(true);
+    setSaveError("");
+    try {
+      await adminApi.updateIssue(issueId, {
+        year,
+        number,
+        sequential_number: seqNumber,
+      });
+      await loadAll();
+    } catch (e) {
+      setSaveError(e instanceof ApiError ? e.message : "Ошибка сохранения");
+    } finally {
+      setSaveBusy(false);
+    }
+  }
+
+  async function handleStatusChange(newStatus: IssueStatus) {
+    if (!issue) return;
+    setSaveBusy(true);
+    setSaveError("");
+    try {
+      await adminApi.updateIssueStatus(issueId, newStatus);
+      await loadAll();
+    } catch (e) {
+      setSaveError(e instanceof ApiError ? e.message : "Ошибка изменения статуса");
+    } finally {
+      setSaveBusy(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm("Удалить номер? Это действие необратимо.")) return;
+    setSaveBusy(true);
+    try {
+      await adminApi.deleteIssue(issueId);
+      router.push("/admin/issues");
+    } catch (e) {
+      setSaveError(e instanceof ApiError ? e.message : "Ошибка удаления");
+      setSaveBusy(false);
+    }
+  }
+
+  async function handleCoverUpload(file: File) {
+    setCoverBusy(true);
+    setSaveError("");
+    try {
+      await adminApi.uploadIssueCover(issueId, file);
+      await loadAll();
+    } catch (e) {
+      setSaveError(e instanceof ApiError ? e.message : "Ошибка загрузки обложки");
+    } finally {
+      setCoverBusy(false);
+    }
+  }
+
+  async function handlePdfUpload(file: File) {
+    setPdfBusy(true);
+    setSaveError("");
+    try {
+      await adminApi.uploadIssuePdf(issueId, file);
+      await loadAll();
+    } catch (e) {
+      setSaveError(e instanceof ApiError ? e.message : "Ошибка загрузки PDF");
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
+  async function handleArticleDelete(articleId: number) {
+    if (!confirm("Удалить статью?")) return;
+    try {
+      await adminApi.deleteArticle(articleId);
+      await loadAll();
+    } catch (e) {
+      setSaveError(e instanceof ApiError ? e.message : "Ошибка удаления статьи");
+    }
+  }
+
+  if (loadError) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded p-4 text-sm text-red-700">
+        {loadError}
+      </div>
+    );
+  }
+  if (!issue) {
+    return <div className="text-gray-400">Загрузка...</div>;
+  }
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumbs */}
+      <DocumentTitle
+        ru={`Номер № ${issue.number} (${issue.sequential_number}) / ${issue.year}`}
+        en={`Issue No. ${issue.number} (${issue.sequential_number}) / ${issue.year}`}
+      />
+
       <nav className="flex items-center gap-1.5 text-sm text-gray-400">
-        <Link
-          href="/admin/issues"
-          className="hover:text-forest-600 transition-colors"
-        >
+        <Link href="/admin/issues" className="hover:text-forest-600 transition-colors">
           Номера
         </Link>
         <ChevronRight className="w-3.5 h-3.5" />
@@ -46,22 +171,33 @@ export default function IssueDetailPage({
         </span>
       </nav>
 
-      {/* Page title */}
-      <h1 className="text-xl font-semibold text-gray-800">
-        Редактирование номера № {issue.number} ({issue.sequential_number}) /{" "}
-        {issue.year}
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-gray-800">
+          Редактирование номера № {issue.number} ({issue.sequential_number}) / {issue.year}
+        </h1>
+        <button
+          onClick={handleDelete}
+          disabled={saveBusy}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-red-600 hover:bg-red-50 px-3 py-2 rounded border border-red-200 disabled:opacity-50"
+        >
+          <Trash2 className="w-4 h-4" />
+          Удалить номер
+        </button>
+      </div>
 
-      {/* Metadata form */}
+      {saveError && (
+        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+          {saveError}
+        </div>
+      )}
+
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
           Данные номера
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="field-label" htmlFor="issue-year">
-              Год
-            </label>
+            <label className="field-label" htmlFor="issue-year">Год</label>
             <input
               id="issue-year"
               type="number"
@@ -71,9 +207,7 @@ export default function IssueDetailPage({
             />
           </div>
           <div>
-            <label className="field-label" htmlFor="issue-number">
-              Номер в году
-            </label>
+            <label className="field-label" htmlFor="issue-number">Номер в году</label>
             <input
               id="issue-number"
               type="number"
@@ -83,9 +217,7 @@ export default function IssueDetailPage({
             />
           </div>
           <div>
-            <label className="field-label" htmlFor="issue-seq">
-              Сквозной номер
-            </label>
+            <label className="field-label" htmlFor="issue-seq">Сквозной номер</label>
             <input
               id="issue-seq"
               type="number"
@@ -95,133 +227,209 @@ export default function IssueDetailPage({
             />
           </div>
           <div>
-            <label className="field-label" htmlFor="issue-date">
-              Дата выхода
-            </label>
-            <input
-              id="issue-date"
-              type="date"
-              value={publishedDate}
-              onChange={(e) => setPublishedDate(e.target.value)}
-              className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-600/20 focus:border-forest-600"
-            />
+            <label className="field-label">Текущий статус</label>
+            <p className="px-3 py-2 text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded">
+              {statusLabels[issue.status]}
+            </p>
           </div>
-          <div>
-            <label className="field-label" htmlFor="issue-status">
-              Статус
-            </label>
-            <select
-              id="issue-status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as IssueStatus)}
-              className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-600/20 focus:border-forest-600"
-            >
-              <option value="draft">{statusLabels.draft}</option>
-              <option value="ready">{statusLabels.ready}</option>
-              <option value="published">{statusLabels.published}</option>
-            </select>
-          </div>
+        </div>
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            onClick={handleSave}
+            disabled={saveBusy}
+            className="inline-flex items-center gap-2 bg-forest-600 text-white text-sm font-medium px-4 py-2 rounded-sm hover:bg-forest-700 disabled:opacity-50 transition-colors"
+          >
+            <Save className="w-4 h-4" />
+            Сохранить данные
+          </button>
+          <span className="text-xs text-gray-500">
+            Дата выхода: {issue.published_date || "не задана"}
+          </span>
         </div>
       </div>
 
-      {/* Upload areas */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
+          Управление статусом
+        </h2>
+        <div className="flex flex-wrap gap-3">
+          {issue.status !== "Draft" && (
+            <button
+              onClick={() => handleStatusChange("Draft")}
+              disabled={saveBusy}
+              className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 disabled:opacity-50"
+            >
+              В черновик
+            </button>
+          )}
+          {issue.status !== "Ready" && (
+            <button
+              onClick={() => handleStatusChange("Ready")}
+              disabled={saveBusy}
+              className="px-4 py-2 text-sm bg-copper-50 border border-copper-300 text-copper-700 rounded hover:bg-copper-100 disabled:opacity-50"
+            >
+              Пометить готовым
+            </button>
+          )}
+          {issue.status !== "Published" && (
+            <button
+              onClick={() => handleStatusChange("Published")}
+              disabled={saveBusy}
+              className="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              Опубликовать
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Cover upload */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
             Обложка
           </h2>
-          <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center hover:border-forest-400 transition-colors cursor-pointer">
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/jpeg,image/png"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && handleCoverUpload(e.target.files[0])}
+          />
+          <button
+            onClick={() => coverInputRef.current?.click()}
+            disabled={coverBusy}
+            className="w-full border-2 border-dashed border-gray-200 rounded-lg p-8 text-center hover:border-forest-400 transition-colors disabled:opacity-50"
+          >
             <Upload className="w-8 h-8 text-gray-300 mx-auto mb-3" />
             <p className="text-sm text-gray-500">
-              Перетащите изображение сюда
+              {coverBusy ? "Загрузка..." : "Выбрать изображение"}
             </p>
-            <p className="text-xs text-gray-400 mt-1">JPG, PNG до 5 МБ</p>
-          </div>
-          {issue.cover_url && (
-            <p className="field-hint mt-3">
-              Текущий файл: {issue.cover_url}
+            <p className="text-xs text-gray-400 mt-1">JPG, PNG</p>
+          </button>
+          {issue.cover_file && (
+            <p className="text-xs text-gray-500 mt-3 truncate">
+              Текущий файл:{" "}
+              <a
+                href={issue.cover_file}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-forest-600 underline"
+              >
+                {issue.cover_file.split("/").pop()}
+              </a>
             </p>
           )}
         </div>
 
-        {/* PDF upload */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
             PDF номера
           </h2>
-          <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center hover:border-forest-400 transition-colors cursor-pointer">
+          <input
+            ref={pdfInputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && handlePdfUpload(e.target.files[0])}
+          />
+          <button
+            onClick={() => pdfInputRef.current?.click()}
+            disabled={pdfBusy}
+            className="w-full border-2 border-dashed border-gray-200 rounded-lg p-8 text-center hover:border-forest-400 transition-colors disabled:opacity-50"
+          >
             <Upload className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Перетащите PDF-файл сюда</p>
-            <p className="text-xs text-gray-400 mt-1">PDF до 50 МБ</p>
-          </div>
-          {issue.full_pdf_url && (
-            <p className="field-hint mt-3">
-              Текущий файл: полный PDF загружен
+            <p className="text-sm text-gray-500">
+              {pdfBusy ? "Загрузка..." : "Выбрать PDF-файл"}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">PDF</p>
+          </button>
+          {issue.pdf_file && (
+            <p className="text-xs text-gray-500 mt-3 truncate">
+              Текущий файл:{" "}
+              <a
+                href={issue.pdf_file}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-forest-600 underline"
+              >
+                {issue.pdf_file.split("/").pop()}
+              </a>
             </p>
           )}
         </div>
       </div>
 
-      {/* Articles section */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
             Статьи номера
           </h2>
-          <span className="text-xs text-gray-400">
-            {allArticles.length} статей
-          </span>
+          <Link
+            href={`/admin/articles/new?issue_id=${issueId}`}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-forest-600 hover:bg-forest-50 px-3 py-1.5 rounded border border-forest-300"
+          >
+            <Plus className="w-4 h-4" />
+            Добавить статью
+          </Link>
         </div>
 
-        <div className="divide-y divide-gray-100">
-          {allArticles.map((article, index) => (
-            <div
-              key={article.id}
-              className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
-            >
-              {/* Order number */}
-              <span className="w-7 h-7 flex-shrink-0 bg-gray-100 rounded text-xs font-medium text-gray-500 flex items-center justify-center">
-                {index + 1}
-              </span>
-
-              {/* Article info */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-800 truncate">
-                  {article.title.ru}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  с. {article.pages}
-                </p>
-              </div>
-
-              {/* Section badge */}
-              <span className="flex-shrink-0 text-xs bg-stone-100 text-gray-500 px-2 py-0.5 rounded hidden sm:inline-block">
-                {article.section.name.ru}
-              </span>
-
-              {/* Edit link */}
-              <Link
-                href={`/admin/articles/${article.id}`}
-                className="flex-shrink-0 text-forest-600 hover:text-forest-700 text-xs font-medium transition-colors"
+        {articles.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">
+            В номере пока нет статей
+          </p>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {articles.map((article, index) => (
+              <div
+                key={article.id}
+                className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
               >
-                Редактировать
-              </Link>
-            </div>
-          ))}
-        </div>
-      </div>
+                <span className="w-7 h-7 flex-shrink-0 bg-gray-100 rounded text-xs font-medium text-gray-500 flex items-center justify-center">
+                  {index + 1}
+                </span>
 
-      {/* Action buttons */}
-      <div className="flex items-center gap-3">
-        <button className="inline-flex items-center gap-2 bg-forest-600 text-white text-sm font-medium px-5 py-2.5 rounded-sm hover:bg-forest-700 transition-colors">
-          <Save className="w-4 h-4" />
-          Сохранить
-        </button>
-        {status === "ready" && (
-          <button className="inline-flex items-center gap-2 bg-copper-400 text-white text-sm font-medium px-5 py-2.5 rounded-sm hover:bg-copper-500 transition-colors">
-            Опубликовать номер
-          </button>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-800 truncate">
+                    {article.title.ru}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    с. {article.pages || "—"}
+                  </p>
+                </div>
+
+                <span className="flex-shrink-0 text-xs bg-stone-100 text-gray-500 px-2 py-0.5 rounded hidden sm:inline-block">
+                  {article.section_name?.ru ?? "—"}
+                </span>
+
+                {article.pdf_file && (
+                  <a
+                    href={article.pdf_file}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 text-gray-400 hover:text-forest-600 transition-colors"
+                    title="Открыть PDF"
+                  >
+                    <FileText className="w-4 h-4" />
+                  </a>
+                )}
+
+                <Link
+                  href={`/admin/articles/${article.id}`}
+                  className="flex-shrink-0 text-forest-600 hover:text-forest-700 text-xs font-medium transition-colors"
+                >
+                  Редактировать
+                </Link>
+                <button
+                  onClick={() => handleArticleDelete(article.id)}
+                  className="flex-shrink-0 text-gray-400 hover:text-red-600 transition-colors"
+                  title="Удалить"
+                  aria-label="Удалить статью"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

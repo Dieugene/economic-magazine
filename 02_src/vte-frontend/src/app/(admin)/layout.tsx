@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, Archive, FileText, Menu, Eye, Save } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Home, Archive, FileText, Menu, Eye, LogOut } from "lucide-react";
+import { auth, tokenStore } from "@/lib/api/client";
 
 const sidebarLinks = [
   { key: "home", label: "Главная", href: "/admin/issues", icon: Home },
@@ -22,7 +23,33 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Login page is public; everything else requires a token
+  // (pathname may or may not have trailing slash depending on Next config)
+  const isLoginPage = pathname === "/admin/login" || pathname === "/admin/login/";
+
+  useEffect(() => {
+    if (isLoginPage) {
+      setAuthChecked(true);
+      return;
+    }
+    if (!tokenStore.getAccess()) {
+      router.replace("/admin/login");
+      return;
+    }
+    setAuthChecked(true);
+  }, [isLoginPage, router]);
+
+  async function handleLogout() {
+    await auth.logout();
+    router.push("/admin/login");
+  }
+
+  if (isLoginPage) return <>{children}</>;
+  if (!authChecked) return null;
 
   return (
     <div className="min-h-screen flex bg-gray-50 text-gray-800 antialiased">
@@ -131,9 +158,12 @@ export default function AdminLayout({
                 <Eye className="w-4 h-4" />
                 Сайт
               </Link>
-              <button className="inline-flex items-center gap-1.5 text-sm font-medium text-white bg-forest-600 px-4 py-2 rounded-sm hover:bg-forest-700 transition-colors">
-                <Save className="w-4 h-4" />
-                Сохранить
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors px-3 py-2 border border-gray-200 rounded-sm"
+              >
+                <LogOut className="w-4 h-4" />
+                Выйти
               </button>
             </div>
           </div>

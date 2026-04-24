@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+
+type BreadcrumbLabel = string | { ru: string; en?: string };
 
 interface BreadcrumbItem {
-  label: string;
+  label: BreadcrumbLabel;
   href?: string;
 }
 
@@ -10,6 +15,10 @@ interface BreadcrumbsProps {
 }
 
 export default function Breadcrumbs({ items }: BreadcrumbsProps) {
+  const { t } = useLanguage();
+  const render = (label: BreadcrumbLabel) =>
+    typeof label === "string" ? label : t(label.ru, label.en);
+
   return (
     <div className="py-3">
       <nav className="text-xs text-gray-500">
@@ -25,14 +34,14 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
                     isLast ? undefined : "text-forest-600 font-medium"
                   }
                 >
-                  {item.label}
+                  {render(item.label)}
                 </span>
               ) : (
                 <Link
                   href={item.href}
                   className="text-forest-600 font-medium hover:text-copper-400 transition-colors"
                 >
-                  {item.label}
+                  {render(item.label)}
                 </Link>
               )}
             </span>

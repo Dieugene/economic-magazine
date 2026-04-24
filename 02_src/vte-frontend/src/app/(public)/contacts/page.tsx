@@ -1,53 +1,67 @@
+"use client";
+
 import Breadcrumbs from "@/components/public/Breadcrumbs";
+import PageHeading from "@/components/public/PageHeading";
+import DocumentTitle from "@/components/public/DocumentTitle";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function ContactsPage() {
+  const { t } = useLanguage();
+
   return (
     <>
+      <DocumentTitle ru="Контакты" en="Contacts" />
       <Breadcrumbs
         items={[
-          { label: "Главная", href: "/" },
-          { label: "Контакты" },
+          { label: { ru: "Главная", en: "Home" }, href: "/" },
+          { label: { ru: "Контакты", en: "Contacts" } },
         ]}
       />
 
       <section>
         <div className="w-[60px] h-[2px] bg-copper-400 mb-6" />
-        <h1 className="font-serif text-4xl sm:text-5xl font-bold text-forest-600 leading-tight mb-8">
-          Контакты
-        </h1>
+        <PageHeading
+          ru="Контакты"
+          en="Contacts"
+          level={1}
+          className="font-serif text-4xl sm:text-5xl font-bold text-forest-600 leading-tight mb-8"
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="bg-white border border-stone-400 rounded-sm p-6">
             <h2 className="font-serif text-xl font-semibold text-forest-600 mb-4">
-              Редакция журнала
+              {t("Редакция журнала", "Journal Editorial")}
             </h2>
             <div className="space-y-3 text-sm text-gray-600">
               <p>
                 <strong className="text-forest-700">
-                  {"\u00AB"}Вопросы теоретической экономики{"\u00BB"}
+                  {t(
+                    "«Вопросы теоретической экономики»",
+                    "“Issues of Economic Theory”"
+                  )}
                 </strong>
               </p>
-              <p>Издатель: Институт экономики РАН</p>
+              <p>{t("Издатель: Институт экономики РАН", "Publisher: Institute of Economics RAS")}</p>
               <p>ISSN: 2587-7666</p>
-              <p>Периодичность: 4 раза в год</p>
-              <p>Издается с декабря 2017 г.</p>
+              <p>{t("Периодичность: 4 раза в год", "Frequency: 4 times a year")}</p>
+              <p>{t("Издаётся с декабря 2017 г.", "Published since December 2017")}</p>
             </div>
           </div>
 
           <div className="bg-white border border-stone-400 rounded-sm p-6">
             <h2 className="font-serif text-xl font-semibold text-forest-600 mb-4">
-              Адрес
+              {t("Адрес", "Address")}
             </h2>
             <div className="space-y-3 text-sm text-gray-600">
               <p>
-                Нахимовский проспект, 32
+                {t("Нахимовский проспект, 32", "Nakhimovsky prospect, 32")}
                 <br />
-                Москва
+                {t("Москва", "Moscow")}
                 <br />
-                Россия
+                {t("Россия", "Russia")}
               </p>
               <p>
-                Сайт издателя:{" "}
+                {t("Сайт издателя:", "Publisher’s website:")}{" "}
                 <a
                   href="https://inecon.org/institut/ob-institute.html"
                   target="_blank"
@@ -62,11 +76,11 @@ export default function ContactsPage() {
 
           <div className="bg-white border border-stone-400 rounded-sm p-6">
             <h2 className="font-serif text-xl font-semibold text-forest-600 mb-4">
-              Электронная почта
+              {t("Электронная почта", "Email")}
             </h2>
             <div className="space-y-3 text-sm text-gray-600">
               <p>
-                Для авторов статей:{" "}
+                {t("Для авторов статей:", "For paper authors:")}{" "}
                 <a
                   href="mailto:editorqet@inecon.ru"
                   className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
@@ -75,7 +89,7 @@ export default function ContactsPage() {
                 </a>
               </p>
               <p>
-                Институт экономики РАН:{" "}
+                {t("Институт экономики РАН:", "Institute of Economics RAS:")}{" "}
                 <a
                   href="mailto:ieras@inecon.ru"
                   className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
@@ -88,7 +102,7 @@ export default function ContactsPage() {
 
           <div className="bg-stone-200 border border-stone-400 rounded-sm p-6">
             <h2 className="font-serif text-xl font-semibold text-forest-600 mb-4">
-              Телефон
+              {t("Телефон", "Phone")}
             </h2>
             <div className="space-y-3 text-sm text-gray-600">
               <p>
@@ -98,7 +112,7 @@ export default function ContactsPage() {
                 >
                   8 (499) 724-15-41
                 </a>
-                {" "}(тел./факс)
+                {" "}{t("(тел./факс)", "(tel./fax)")}
               </p>
             </div>
           </div>

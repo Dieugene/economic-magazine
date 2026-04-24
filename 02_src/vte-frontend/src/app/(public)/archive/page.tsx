@@ -1,5 +1,7 @@
 import { api } from '@/lib/api/client';
 import Breadcrumbs from '@/components/public/Breadcrumbs';
+import PageHeading from '@/components/public/PageHeading';
+import DocumentTitle from '@/components/public/DocumentTitle';
 import Link from 'next/link';
 
 export default async function ArchiveIndexPage() {
@@ -7,18 +9,17 @@ export default async function ArchiveIndexPage() {
 
   return (
     <>
+      <DocumentTitle ru="Архив номеров" en="Issue Archive" />
       <Breadcrumbs
         items={[
-          { label: 'Главная', href: '/' },
-          { label: 'Архив' },
+          { label: { ru: 'Главная', en: 'Home' }, href: '/' },
+          { label: { ru: 'Архив', en: 'Archive' } },
         ]}
       />
 
       <div className="mb-10">
         <div className="w-[60px] h-[2px] bg-copper-400 mb-6" />
-        <h2 className="font-serif text-3xl sm:text-4xl font-bold text-forest-600 leading-tight">
-          Архив номеров
-        </h2>
+        <PageHeading ru="Архив номеров" en="Issue Archive" />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

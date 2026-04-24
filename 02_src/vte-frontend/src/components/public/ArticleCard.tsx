@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface ArticleCardProps {
   authors: string;
@@ -23,6 +24,7 @@ export default function ArticleCard({
   abstract,
 }: ArticleCardProps) {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <div className="border border-stone-400 rounded-sm p-5 bg-white transition-all duration-200 hover:bg-stone-50 hover:border-copper-300">
@@ -35,8 +37,8 @@ export default function ArticleCard({
             </Link>
           </h4>
           <p className="text-sm text-gray-500 mt-2">
-            С.&nbsp;{pages.replace('-', '\u2013')}
-            {pdfSizeKb ? ` \u00B7 ${pdfSizeKb} КБ` : ''}
+            {t('С.', 'Pp.')}&nbsp;{pages.replace('-', '–')}
+            {pdfSizeKb ? ` · ${pdfSizeKb} ${t('КБ', 'KB')}` : ''}
           </p>
         </div>
         {pdfUrl && (
@@ -69,7 +71,7 @@ export default function ArticleCard({
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
-            <span>{open ? 'Скрыть аннотацию' : 'Аннотация'}</span>
+            <span>{open ? t('Скрыть аннотацию', 'Hide abstract') : t('Аннотация', 'Abstract')}</span>
           </button>
           <div
             className="overflow-hidden transition-all duration-350"

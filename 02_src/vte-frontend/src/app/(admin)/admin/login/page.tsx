@@ -2,29 +2,39 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { auth } from "@/lib/api/client";
+import DocumentTitle from "@/components/public/DocumentTitle";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (!username || !password) {
+    if (!login || !password) {
       setError("Заполните все поля");
       return;
     }
 
-    // Mock auth: accept any non-empty credentials
-    localStorage.setItem("vte_admin_token", "mock-token-" + Date.now());
-    router.push("/admin/issues");
+    setLoading(true);
+    try {
+      await auth.login(login, password);
+      router.push("/admin/issues");
+    } catch {
+      setError("Неверный логин или пароль");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-100">
+      <DocumentTitle ru="Вход в админ-панель" en="Admin Login" />
       <div className="w-full max-w-sm">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           {/* Logo */}
@@ -49,16 +59,16 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="field-label" htmlFor="username">
-                Имя пользователя
+              <label className="field-label" htmlFor="login">
+                Email
               </label>
               <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="login"
+                type="email"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
                 className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-600/20 focus:border-forest-600 transition-colors"
-                placeholder="admin"
+                placeholder="user@example.com"
                 autoComplete="username"
               />
             </div>
@@ -80,9 +90,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full bg-forest-600 text-white text-sm font-medium py-2.5 rounded hover:bg-forest-700 transition-colors"
+              disabled={loading}
+              className="w-full bg-forest-600 text-white text-sm font-medium py-2.5 rounded hover:bg-forest-700 disabled:opacity-50 transition-colors"
             >
-              Войти
+              {loading ? "Вход..." : "Войти"}
             </button>
           </form>
         </div>

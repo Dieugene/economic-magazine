@@ -16,27 +16,27 @@ interface LatestIssue {
   year: number;
   number: number;
   sequential_number: number;
-  published_date?: string;
+  published_date: string | null;
 }
 
 interface HomeContentProps {
-  latestIssue: LatestIssue;
+  latestIssue: LatestIssue | null;
 }
 
 const sections: Section[] = [
-  { num: 1, nameRu: "Экономическая теория", nameEn: "Economic Theory", slug: "economic-theory" },
-  { num: 2, nameRu: "Методология экономической науки", nameEn: "Methodology of Economics", slug: "methodology" },
-  { num: 3, nameRu: "От теории к экономической политике", nameEn: "From Theory to Economic Policy", slug: "theory-to-policy" },
-  { num: 4, nameRu: "История мысли", nameEn: "History of Thought", slug: "history-of-thought" },
-  { num: 5, nameRu: "Междисциплинарные исследования", nameEn: "Interdisciplinary Research", slug: "interdisciplinary" },
-  { num: 6, nameRu: "Экономическая история", nameEn: "Economic History", slug: "economic-history" },
-  { num: 7, nameRu: "Обзоры и рецензии", nameEn: "Reviews", slug: "reviews" },
+  { num: 1, nameRu: "Экономическая теория", nameEn: "Economic Theory", slug: "ekonomicheskaja-teorija" },
+  { num: 2, nameRu: "Методология экономической науки", nameEn: "Methodology of Economics", slug: "metodologija-ekonomicheskoj-nauki" },
+  { num: 3, nameRu: "От теории к экономической политике", nameEn: "From Theory to Economic Policy", slug: "ot-teorii-k-ekonomicheskoj-politike" },
+  { num: 4, nameRu: "История мысли", nameEn: "History of Thought", slug: "istorija-mysli" },
+  { num: 5, nameRu: "Междисциплинарные исследования", nameEn: "Interdisciplinary Research", slug: "mezhdistsiplinarnye-issledovanija" },
+  { num: 6, nameRu: "Экономическая история", nameEn: "Economic History", slug: "ekonomicheskaja-istorija" },
+  { num: 7, nameRu: "Обзоры и рецензии", nameEn: "Reviews", slug: "obzory-i-retsenzii" },
 ];
 
 export default function HomeContent({ latestIssue }: HomeContentProps) {
   const { lang, t } = useLanguage();
 
-  const publishedDate = latestIssue.published_date
+  const publishedDate = latestIssue?.published_date
     ? new Date(latestIssue.published_date).toLocaleDateString(
         lang === "en" ? "en-US" : "ru-RU",
         { day: "2-digit", month: "2-digit", year: "numeric" }
@@ -239,6 +239,7 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
         {/* Right sidebar (1/3 width) */}
         <aside className="lg:col-span-1">
           {/* Latest issue */}
+          {latestIssue && (
           <div className="bg-white border border-stone-400 rounded-sm overflow-hidden">
             <div className="bg-forest-600 px-5 py-3">
               <h3 className="text-sm font-medium text-white tracking-wide uppercase">
@@ -288,6 +289,7 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
               </div>
             </div>
           </div>
+          )}
 
           {/* For authors */}
           <div className="mt-6 bg-white border border-stone-400 rounded-sm p-5">

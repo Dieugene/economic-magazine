@@ -14,13 +14,13 @@ interface NavItem {
 }
 
 const rubricatorItems = [
-  { labelRu: "Экономическая теория", labelEn: "Economic Theory", href: "/sections/economic-theory" },
-  { labelRu: "Методология экономической науки", labelEn: "Methodology of Economics", href: "/sections/methodology" },
-  { labelRu: "От теории к экономической политике", labelEn: "From Theory to Economic Policy", href: "/sections/theory-to-policy" },
-  { labelRu: "История мысли", labelEn: "History of Thought", href: "/sections/history-of-thought" },
-  { labelRu: "Междисциплинарные исследования", labelEn: "Interdisciplinary Research", href: "/sections/interdisciplinary" },
-  { labelRu: "Экономическая история", labelEn: "Economic History", href: "/sections/economic-history" },
-  { labelRu: "Обзоры и рецензии", labelEn: "Reviews", href: "/sections/reviews" },
+  { labelRu: "Экономическая теория", labelEn: "Economic Theory", href: "/sections/ekonomicheskaja-teorija" },
+  { labelRu: "Методология экономической науки", labelEn: "Methodology of Economics", href: "/sections/metodologija-ekonomicheskoj-nauki" },
+  { labelRu: "От теории к экономической политике", labelEn: "From Theory to Economic Policy", href: "/sections/ot-teorii-k-ekonomicheskoj-politike" },
+  { labelRu: "История мысли", labelEn: "History of Thought", href: "/sections/istorija-mysli" },
+  { labelRu: "Междисциплинарные исследования", labelEn: "Interdisciplinary Research", href: "/sections/mezhdistsiplinarnye-issledovanija" },
+  { labelRu: "Экономическая история", labelEn: "Economic History", href: "/sections/ekonomicheskaja-istorija" },
+  { labelRu: "Обзоры и рецензии", labelEn: "Reviews", href: "/sections/obzory-i-retsenzii" },
 ];
 
 const archiveItems = [

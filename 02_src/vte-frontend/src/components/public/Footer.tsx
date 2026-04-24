@@ -145,7 +145,7 @@ export default function Footer() {
             )}
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/contacts" className="hover:text-white transition-colors">
+            <Link href="/privacy" className="hover:text-white transition-colors">
               {t("Политика персональных данных", "Privacy Policy")}
             </Link>
             <span className="hover:text-white transition-colors">
