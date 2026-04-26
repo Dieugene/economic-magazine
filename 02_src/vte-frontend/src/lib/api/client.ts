@@ -116,11 +116,12 @@ async function fetchApi<T>(path: string, options: FetchOptions = {}): Promise<T>
   }
 
   if (!res.ok) {
-    let body: unknown;
+    const text = await res.text();
+    let body: unknown = text;
     try {
-      body = await res.json();
+      body = JSON.parse(text);
     } catch {
-      body = await res.text();
+      // тело — не JSON, оставляем строку
     }
     throw new ApiError(res.status, `API error: ${res.status} ${res.statusText}`, body);
   }
