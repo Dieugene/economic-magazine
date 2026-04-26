@@ -4,6 +4,10 @@ import PageHeading from '@/components/public/PageHeading';
 import DocumentTitle from '@/components/public/DocumentTitle';
 import Link from 'next/link';
 
+// Серверный fetch к API — рендерим на каждый запрос, не на этапе билда,
+// чтобы билд не зависел от доступности бэкенда.
+export const dynamic = 'force-dynamic';
+
 export default async function ArchiveIndexPage() {
   const years = await api.getYears();
 

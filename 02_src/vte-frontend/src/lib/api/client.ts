@@ -10,10 +10,20 @@ import type {
   IssueStatus,
 } from '@/lib/types';
 
-// When unset, requests go to /backend on the same origin. In dev that
-// hits the Next.js API-route proxy at src/app/backend/[...path]/route.ts;
-// in production it should be served by the reverse proxy / nginx.
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/backend';
+// Server vs client base URL.
+//
+// Client (browser): hits same-origin `/backend/*`. The Next.js API-route at
+// src/app/backend/[...path]/route.ts (or an external nginx) forwards the
+// request to the real backend. Same-origin avoids CORS in dev.
+//
+// Server (Node.js, при SSR/RSC): относительный URL не работает, fetch требует
+// абсолютный. CORS на сервере не применяется — поэтому ходим напрямую на
+// бэкенд по `NEXT_PUBLIC_API_PROXY_TARGET` (тот же URL, который потребляет
+// и наш прокси-роут).
+const isServer = typeof window === 'undefined';
+const PROXY_TARGET = process.env.NEXT_PUBLIC_API_PROXY_TARGET;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL
+  || (isServer ? (PROXY_TARGET || 'http://localhost:8000/api') : '/backend');
 const USE_MOCKS = process.env.NEXT_PUBLIC_API_MODE === 'mock';
 
 // ── Token storage ────────────────────────────────────────────────
