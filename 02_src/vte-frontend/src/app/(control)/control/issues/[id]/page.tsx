@@ -100,7 +100,7 @@ export default function IssueDetailPage({
     setSaveBusy(true);
     try {
       await adminApi.deleteIssue(issueId);
-      router.push("/admin/issues");
+      router.push("/control/issues");
     } catch (e) {
       setSaveError(e instanceof ApiError ? e.message : "Ошибка удаления");
       setSaveBusy(false);
@@ -184,7 +184,7 @@ export default function IssueDetailPage({
       />
 
       <nav className="flex items-center gap-1.5 text-sm text-gray-400">
-        <Link href="/admin/issues" className="hover:text-forest-600 transition-colors">
+        <Link href="/control/issues" className="hover:text-forest-600 transition-colors">
           Номера
         </Link>
         <ChevronRight className="w-3.5 h-3.5" />
@@ -387,7 +387,7 @@ export default function IssueDetailPage({
             Статьи номера
           </h2>
           <Link
-            href={`/admin/articles/new?issue_id=${issueId}`}
+            href={`/control/articles/new?issue_id=${issueId}`}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-forest-600 hover:bg-forest-50 px-3 py-1.5 rounded border border-forest-300"
           >
             <Plus className="w-4 h-4" />
@@ -459,7 +459,7 @@ export default function IssueDetailPage({
                 )}
 
                 <Link
-                  href={`/admin/articles/${article.id}`}
+                  href={`/control/articles/${article.id}`}
                   className="flex-shrink-0 text-forest-600 hover:text-forest-700 text-xs font-medium transition-colors"
                 >
                   Редактировать

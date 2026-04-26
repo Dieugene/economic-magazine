@@ -7,12 +7,12 @@ import { Home, Archive, FileText, Menu, Eye, LogOut } from "lucide-react";
 import { auth, tokenStore } from "@/lib/api/client";
 
 const sidebarLinks = [
-  { key: "home", label: "Главная", href: "/admin/issues", icon: Home },
-  { key: "issues", label: "Номера", href: "/admin/issues", icon: Archive },
+  { key: "home", label: "Главная", href: "/control/issues", icon: Home },
+  { key: "issues", label: "Номера", href: "/control/issues", icon: Archive },
   {
     key: "articles",
     label: "Статьи",
-    href: "/admin/issues",
+    href: "/control/issues",
     icon: FileText,
   },
 ];
@@ -29,7 +29,7 @@ export default function AdminLayout({
 
   // Login page is public; everything else requires a token
   // (pathname may or may not have trailing slash depending on Next config)
-  const isLoginPage = pathname === "/admin/login" || pathname === "/admin/login/";
+  const isLoginPage = pathname === "/control/login" || pathname === "/control/login/";
 
   useEffect(() => {
     if (isLoginPage) {
@@ -37,7 +37,7 @@ export default function AdminLayout({
       return;
     }
     if (!tokenStore.getAccess()) {
-      router.replace("/admin/login");
+      router.replace("/control/login");
       return;
     }
     setAuthChecked(true);
@@ -45,7 +45,7 @@ export default function AdminLayout({
 
   async function handleLogout() {
     await auth.logout();
-    router.push("/admin/login");
+    router.push("/control/login");
   }
 
   if (isLoginPage) return <>{children}</>;
@@ -138,7 +138,7 @@ export default function AdminLayout({
               <div>
                 <nav className="text-xs text-gray-600 mb-1">
                   <Link
-                    href="/admin/issues"
+                    href="/control/issues"
                     className="hover:text-forest-600 transition-colors"
                   >
                     Главная

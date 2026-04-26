@@ -210,7 +210,7 @@ export default function ArticleFormPage({
     try {
       if (isNew) {
         const created = await adminApi.createArticle(payload);
-        router.replace(`/admin/articles/${created.id}`);
+        router.replace(`/control/articles/${created.id}`);
       } else {
         await adminApi.updateArticle(articleId!, payload);
         await loadArticle();
@@ -228,7 +228,7 @@ export default function ArticleFormPage({
     setBusy(true);
     try {
       await adminApi.deleteArticle(articleId);
-      router.push(`/admin/issues/${issueId}`);
+      router.push(`/control/issues/${issueId}`);
     } catch (e) {
       setSaveError(e instanceof ApiError ? e.message : "Ошибка удаления");
       setBusy(false);
@@ -287,12 +287,12 @@ export default function ArticleFormPage({
       {/* Breadcrumbs + actions */}
       <div className="flex items-center justify-between mb-6">
         <nav className="text-xs text-gray-600 flex items-center gap-1">
-          <Link href="/admin/issues" className="hover:text-forest-600">
+          <Link href="/control/issues" className="hover:text-forest-600">
             Номера
           </Link>
           <ChevronRight className="w-3 h-3" />
           {issueId ? (
-            <Link href={`/admin/issues/${issueId}`} className="hover:text-forest-600">
+            <Link href={`/control/issues/${issueId}`} className="hover:text-forest-600">
               Номер #{issueId}
             </Link>
           ) : (

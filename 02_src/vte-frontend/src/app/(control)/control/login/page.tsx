@@ -24,7 +24,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await auth.login(login, password);
-      router.push("/admin/issues");
+      router.push("/control/issues");
     } catch {
       setError("Неверный логин или пароль");
     } finally {

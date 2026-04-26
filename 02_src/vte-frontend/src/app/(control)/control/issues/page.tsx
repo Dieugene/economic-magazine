@@ -162,7 +162,7 @@ export default function IssuesPage() {
                   <td className="px-4 py-3 text-gray-500">{issue.article_count}</td>
                   <td className="px-4 py-3">
                     <Link
-                      href={`/admin/issues/${issue.id}`}
+                      href={`/control/issues/${issue.id}`}
                       className="text-forest-600 hover:text-forest-700 text-sm font-medium transition-colors"
                     >
                       Редактировать
