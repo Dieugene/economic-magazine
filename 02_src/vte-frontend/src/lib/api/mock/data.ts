@@ -297,12 +297,12 @@ const SECTION_ORDER = [
 ];
 
 function buildSections(articles: Article[]): IssueSection[] {
-  const grouped = new Map<string, number[]>();
+  const grouped = new Map<string, Article[]>();
   for (const a of articles) {
     const slug = sections.find((s) => s.name.ru === a.section_name.ru)?.slug;
     if (!slug) continue;
     if (!grouped.has(slug)) grouped.set(slug, []);
-    grouped.get(slug)!.push(a.id);
+    grouped.get(slug)!.push(a);
   }
   return SECTION_ORDER
     .filter((slug) => grouped.has(slug))

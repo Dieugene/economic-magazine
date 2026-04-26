@@ -239,10 +239,12 @@ export interface IssueUpdatePayload {
 }
 
 export interface ArticleCreatePayload {
-  issue_id: number;
-  section_name: { ru: string; en?: string };
+  issue_id?: number;
+  // section_slug — writeOnly поле для привязки статьи к рубрике (см. ArticleRequest в swagger).
+  section_slug: string;
   title: { ru: string; en?: string };
   authors: { ru: string; en?: string };
+  pages: string;
   doi: string;
   abstract?: { ru: string; en?: string } | null;
   article_type: 'Scientific' | 'Review' | 'Book_review' | 'Editorial';
@@ -250,7 +252,8 @@ export interface ArticleCreatePayload {
   udk: string;
   jel_codes?: string[];
   references: { order: number; text_ru: string; text_en: string }[];
-  funding?: { ru: string; en?: string };
+  received_date: string;
+  funding: { ru: string; en?: string };
   xml_url?: string | null;
 }
 
@@ -379,18 +382,43 @@ export const adminApi = {
     });
   },
 
-  uploadNewPdf: (file: File) => {
+  // Подача рукописи автором: загружает .docx и сопроводительные данные.
+  // Эндпоинт публичный (auth не обязателен), но JWT принимает.
+  submitManuscript: (data: {
+    authors: string;
+    workplace_title_and_address: string;
+    position_title: string;
+    city: string;
+    email: string;
+    phone_number: string;
+    docx_file: File;
+    degree?: string;
+    academic_title?: string;
+    funding?: string;
+    orcid_id?: string;
+    zip_with_additional_files?: File;
+  }) => {
     const fd = new FormData();
-    fd.append('pdf_file', file);
-    return fetchApi<Article>('/articles/upload_new_pdf_file/', {
+    for (const [k, v] of Object.entries(data)) {
+      if (v === undefined || v === null) continue;
+      fd.append(k, v as string | Blob);
+    }
+    return fetchApi<{ message: string }>('/articles/upload_new_pdf_file/', {
       method: 'POST',
       body: fd,
-      auth: true,
     });
   },
 
-  downloadTemplate: () =>
-    fetch(`${API_BASE}/articles/download_template/`).then((r) => r.blob()),
+  downloadTemplate: async (): Promise<Blob> => {
+    const token = tokenStore.getAccess();
+    const headers = new Headers();
+    if (token) headers.set('Authorization', `Bearer ${token}`);
+    const res = await fetch(`${API_BASE}/articles/download_template/`, { headers });
+    if (!res.ok) {
+      throw new ApiError(res.status, `API error: ${res.status} ${res.statusText}`);
+    }
+    return res.blob();
+  },
 
   // Sections
   createSection: (name: { ru: string; en: string }) =>
@@ -413,5 +441,21 @@ export const adminApi = {
     fetchApi<void>(`/sections/${slug}/`, {
       method: 'DELETE',
       auth: true,
+    }),
+
+  // ── Users ──────────────────────────────────────────────────────
+  changePassword: (oldPassword: string, newPassword: string) =>
+    fetchApi<{ message: string }>('/users/change_password/', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+      auth: true,
+    }),
+
+  requestPasswordReset: (email: string) =>
+    fetchApi<{ message: string }>('/users/send_email_to_password_reset/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
     }),
 };

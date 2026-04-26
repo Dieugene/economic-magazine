@@ -23,7 +23,5 @@ export default async function IssuePage({
     return <div className="py-16 text-center text-gray-500">Issue not found</div>;
   }
 
-  const articles = await api.getIssueArticles(issueSummary.id);
-
-  return <IssueView data={data} articles={articles} />;
+  return <IssueView data={data} />;
 }

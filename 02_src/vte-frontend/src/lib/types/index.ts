@@ -46,14 +46,13 @@ export interface IssueSummary {
   article_count: number;
 }
 
-// IssueFull — это Issue + список рубрик с массивами ID статей.
-// Чтобы получить сами статьи, делается отдельный GET /articles/?issue_id=X
-// и группируется на клиенте по section_name.
+// IssueFull — это Issue + список рубрик с уже встроенными статьями
+// (бэкенд возвращает полные объекты Article в sections[].articles).
 
 export interface IssueSection {
   slug: string;
   name: LocalizedString;
-  articles: number[];
+  articles: Article[];
 }
 
 export interface IssueFull extends IssueSummary {

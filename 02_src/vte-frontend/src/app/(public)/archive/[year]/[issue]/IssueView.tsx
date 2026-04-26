@@ -64,16 +64,13 @@ const SHORT_NAMES_EN: Record<string, string> = {
 
 interface IssueViewProps {
   data: IssueFull;
-  articles: Article[];
 }
 
-export default function IssueView({ data, articles }: IssueViewProps) {
+export default function IssueView({ data }: IssueViewProps) {
   const { lang, t } = useLanguage();
 
-  const articlesById: Record<number, Article> = Object.fromEntries(
-    articles.map((a) => [a.id, a]),
-  );
-  const lastPage = getLastPage(articles);
+  const allArticles: Article[] = data.sections.flatMap((sg) => sg.articles);
+  const lastPage = getLastPage(allArticles);
   const publishedDate = data.published_date ?? "";
   const numberLabel = lang === "en" ? "No." : "№";
 
@@ -136,9 +133,7 @@ export default function IssueView({ data, articles }: IssueViewProps) {
 
           {/* Sections with articles */}
           {data.sections.map((sectionGroup, sIdx) => {
-            const sectionArticles = sectionGroup.articles
-              .map((id) => articlesById[id])
-              .filter(Boolean) as Article[];
+            const sectionArticles = sectionGroup.articles;
             const sectionTitle = lang === "en" && sectionGroup.name.en
               ? sectionGroup.name.en
               : sectionGroup.name.ru;

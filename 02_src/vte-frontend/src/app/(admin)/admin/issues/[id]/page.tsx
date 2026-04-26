@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Upload, ChevronRight, Save, Trash2, Plus, FileText } from "lucide-react";
+import { Upload, ChevronRight, Save, Trash2, Plus, FileText, ChevronUp, ChevronDown } from "lucide-react";
 import type { IssueFull, IssueStatus, Article } from "@/lib/types";
 import { adminApi, ApiError } from "@/lib/api/client";
 import DocumentTitle from "@/components/public/DocumentTitle";
@@ -140,6 +140,28 @@ export default function IssueDetailPage({
       await loadAll();
     } catch (e) {
       setSaveError(e instanceof ApiError ? e.message : "Ошибка удаления статьи");
+    }
+  }
+
+  const [reorderBusy, setReorderBusy] = useState(false);
+
+  async function handleReorder(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= articles.length) return;
+    const next = [...articles];
+    [next[index], next[target]] = [next[target], next[index]];
+    // Optimistic update
+    setArticles(next);
+    setReorderBusy(true);
+    setSaveError("");
+    try {
+      await adminApi.reorderArticles(issueId, next.map((a) => a.id));
+    } catch (e) {
+      // Rollback on error
+      setArticles(articles);
+      setSaveError(e instanceof ApiError ? e.message : "Ошибка изменения порядка");
+    } finally {
+      setReorderBusy(false);
     }
   }
 
@@ -384,6 +406,29 @@ export default function IssueDetailPage({
                 key={article.id}
                 className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
               >
+                <div className="flex-shrink-0 flex flex-col">
+                  <button
+                    type="button"
+                    onClick={() => handleReorder(index, -1)}
+                    disabled={index === 0 || reorderBusy}
+                    aria-label="Переместить выше"
+                    title="Переместить выше"
+                    className="text-gray-400 hover:text-forest-600 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleReorder(index, 1)}
+                    disabled={index === articles.length - 1 || reorderBusy}
+                    aria-label="Переместить ниже"
+                    title="Переместить ниже"
+                    className="text-gray-400 hover:text-forest-600 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                </div>
+
                 <span className="w-7 h-7 flex-shrink-0 bg-gray-100 rounded text-xs font-medium text-gray-500 flex items-center justify-center">
                   {index + 1}
                 </span>

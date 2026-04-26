@@ -76,12 +76,16 @@ export default function ArticleFormPage({
   const [abstractEn, setAbstractEn] = useState("");
   const [keywordsRu, setKeywordsRu] = useState("");
   const [keywordsEn, setKeywordsEn] = useState("");
+  const [pages, setPages] = useState("");
   const [doi, setDoi] = useState("");
   const [udk, setUdk] = useState("");
   const [jelCodes, setJelCodes] = useState("");
   const [fundingRu, setFundingRu] = useState("");
   const [fundingEn, setFundingEn] = useState("");
   const [xmlUrl, setXmlUrl] = useState("");
+  const [receivedDate, setReceivedDate] = useState<string>(
+    () => new Date().toISOString().slice(0, 10)
+  );
   const [refs, setRefs] = useState<RefForm[]>([]);
   const [nextRefId, setNextRefId] = useState(1);
 
@@ -113,12 +117,14 @@ export default function ArticleFormPage({
       setAbstractEn(data.abstract?.en ?? "");
       setKeywordsRu(data.keywords?.ru?.join(", ") ?? "");
       setKeywordsEn(data.keywords?.en?.join(", ") ?? "");
+      setPages(data.pages ?? "");
       setDoi(data.doi ?? "");
       setUdk(data.udk ?? "");
       setJelCodes(data.jel_codes?.join(", ") ?? "");
       setFundingRu(data.funding?.ru ?? "");
       setFundingEn(data.funding?.en ?? "");
       setXmlUrl(data.xml_url ?? "");
+      setReceivedDate(data.received_date ?? new Date().toISOString().slice(0, 10));
       setRefs(
         (data.references ?? []).map((r, i) => ({
           id: i + 1,
@@ -161,23 +167,16 @@ export default function ArticleFormPage({
   }
 
   function buildPayload(): ArticleCreatePayload | null {
-    const section = sections.find((s) => s.slug === sectionSlug);
-    if (!section) {
+    if (!sectionSlug) {
       setSaveError("Выберите рубрику");
       return null;
     }
-    if (!issueId) {
-      setSaveError("Не указан ID номера");
-      return null;
-    }
     return {
-      issue_id: issueId,
-      section_name: {
-        ru: section.name.ru,
-        ...(section.name.en ? { en: section.name.en } : {}),
-      },
+      ...(issueId ? { issue_id: issueId } : {}),
+      section_slug: sectionSlug,
       title: { ru: titleRu, ...(titleEn ? { en: titleEn } : {}) },
       authors: { ru: authorsRu, ...(authorsEn ? { en: authorsEn } : {}) },
+      pages,
       doi,
       abstract:
         abstractRu || abstractEn
@@ -193,9 +192,8 @@ export default function ArticleFormPage({
       references: refs
         .filter((r) => r.text_ru || r.text_en)
         .map((r, i) => ({ order: i + 1, text_ru: r.text_ru, text_en: r.text_en })),
-      funding: fundingRu || fundingEn
-        ? { ru: fundingRu, ...(fundingEn ? { en: fundingEn } : {}) }
-        : undefined,
+      received_date: receivedDate,
+      funding: { ru: fundingRu, ...(fundingEn ? { en: fundingEn } : {}) },
       xml_url: xmlUrl || null,
     };
   }
@@ -343,7 +341,7 @@ export default function ArticleFormPage({
           </legend>
           <div className="p-5 pt-3 grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
-              <label htmlFor="issue-id" className={labelClass}>ID номера *</label>
+              <label htmlFor="issue-id" className={labelClass}>ID номера</label>
               <input
                 id="issue-id"
                 type="number"
@@ -351,8 +349,10 @@ export default function ArticleFormPage({
                 value={issueId || ""}
                 onChange={(e) => setIssueId(Number(e.target.value))}
                 disabled={!isNew}
-                required
               />
+              <p className={hintClass}>
+                Можно оставить пустым и позже привязать через карточку номера
+              </p>
             </div>
             <div>
               <label htmlFor="section-slug" className={labelClass}>Рубрика *</label>
@@ -541,6 +541,19 @@ export default function ArticleFormPage({
               />
             </div>
             <div>
+              <label htmlFor="pages" className={labelClass}>Страницы *</label>
+              <input
+                id="pages"
+                type="text"
+                className={inputClass}
+                value={pages}
+                onChange={(e) => setPages(e.target.value)}
+                placeholder="7-21"
+                required
+              />
+              <p className={hintClass}>Диапазон в номере, например «7-21»</p>
+            </div>
+            <div>
               <label htmlFor="udk" className={labelClass}>УДК *</label>
               <input
                 id="udk"
@@ -561,6 +574,20 @@ export default function ArticleFormPage({
                 onChange={(e) => setJelCodes(e.target.value)}
                 placeholder="A11, D83, O33"
               />
+            </div>
+            <div>
+              <label htmlFor="received-date" className={labelClass}>Дата получения *</label>
+              <input
+                id="received-date"
+                type="date"
+                className={inputClass}
+                value={receivedDate}
+                onChange={(e) => setReceivedDate(e.target.value)}
+                required
+              />
+              <p className={hintClass}>
+                Дата принятия проставляется бэкендом автоматически
+              </p>
             </div>
           </div>
         </fieldset>
