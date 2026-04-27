@@ -6,6 +6,7 @@ import type {
   EditorialBoardMember,
   PaginatedArticleList,
   TokenPair,
+  CurrentUser,
   StaticPage,
   IssueStatus,
 } from '@/lib/types';
@@ -231,6 +232,15 @@ export const auth = {
   },
 
   isAuthenticated: () => !!tokenStore.getAccess(),
+
+  // /users/me/ может ещё не существовать на бэке — возвращаем null при ошибке.
+  getCurrentUser: async (): Promise<CurrentUser | null> => {
+    try {
+      return await fetchApi<CurrentUser>('/users/me/', { auth: true });
+    } catch {
+      return null;
+    }
+  },
 };
 
 // ── Admin API (auto-auth via localStorage) ──────────────────────

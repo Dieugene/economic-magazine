@@ -1,4 +1,5 @@
-import { api } from "@/lib/api/client";
+import { notFound } from "next/navigation";
+import { api, ApiError } from "@/lib/api/client";
 import IssueView from "./IssueView";
 
 export default async function IssuePage({
@@ -11,17 +12,24 @@ export default async function IssuePage({
   const yearNum = Number(year);
   const numberNum = Number(issueParam);
 
-  const allIssues = await api.getIssues(yearNum);
+  let allIssues;
+  try {
+    allIssues = await api.getIssues(yearNum);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) notFound();
+    throw e;
+  }
   const issueSummary = allIssues.find((i) => i.number === numberNum);
+  if (!issueSummary) notFound();
 
-  if (!issueSummary) {
-    return <div className="py-16 text-center text-gray-500">Issue not found</div>;
+  let data;
+  try {
+    data = await api.getIssue(issueSummary.id);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) notFound();
+    throw e;
   }
-
-  const data = await api.getIssue(issueSummary.id);
-  if (!data) {
-    return <div className="py-16 text-center text-gray-500">Issue not found</div>;
-  }
+  if (!data) notFound();
 
   return <IssueView data={data} />;
 }

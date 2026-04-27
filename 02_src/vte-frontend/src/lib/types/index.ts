@@ -123,6 +123,14 @@ export interface TokenPair {
   refresh: string;
 }
 
+// /users/me/ — поля опциональные: бэкенд может расширять контракт
+export interface CurrentUser {
+  id: number;
+  email?: string;
+  full_name?: string;
+  role?: string;
+}
+
 // ── Static page (фронтовый fallback, эндпоинта нет в бэкенде) ──
 
 export interface StaticPage {

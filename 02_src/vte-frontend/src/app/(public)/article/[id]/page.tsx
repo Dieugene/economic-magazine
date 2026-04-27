@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { api } from "@/lib/api/client";
+import { api, ApiError } from "@/lib/api/client";
 import ArticleView from "./ArticleView";
 
 export default async function ArticlePage({
@@ -12,7 +12,13 @@ export default async function ArticlePage({
 
   if (isNaN(articleId)) notFound();
 
-  const article = await api.getArticle(articleId);
+  let article;
+  try {
+    article = await api.getArticle(articleId);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) notFound();
+    throw e;
+  }
   if (!article) notFound();
 
   return <ArticleView article={article} />;

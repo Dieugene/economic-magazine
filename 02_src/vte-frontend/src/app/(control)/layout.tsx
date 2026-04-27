@@ -3,18 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Archive, FileText, Menu, Eye, LogOut } from "lucide-react";
+import { Archive, Menu, Eye, LogOut } from "lucide-react";
 import { auth, tokenStore } from "@/lib/api/client";
+import type { CurrentUser } from "@/lib/types";
 
 const sidebarLinks = [
-  { key: "home", label: "Главная", href: "/control/issues", icon: Home },
   { key: "issues", label: "Номера", href: "/control/issues", icon: Archive },
-  {
-    key: "articles",
-    label: "Статьи",
-    href: "/control/issues",
-    icon: FileText,
-  },
 ];
 
 export default function AdminLayout({
@@ -26,6 +20,7 @@ export default function AdminLayout({
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   // Login page is public; everything else requires a token
   // (pathname may or may not have trailing slash depending on Next config)
@@ -41,6 +36,7 @@ export default function AdminLayout({
       return;
     }
     setAuthChecked(true);
+    auth.getCurrentUser().then(setCurrentUser);
   }, [isLoginPage, router]);
 
   async function handleLogout() {
@@ -107,8 +103,12 @@ export default function AdminLayout({
               <span className="text-forest-900 text-xs font-bold">АП</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm truncate">Администратор</p>
-              <p className="text-xs text-white/60">admin@questionset.ru</p>
+              <p className="text-white text-sm truncate">
+                {currentUser?.full_name || currentUser?.email || "Пользователь"}
+              </p>
+              {currentUser?.email && currentUser?.full_name && (
+                <p className="text-xs text-white/60 truncate">{currentUser.email}</p>
+              )}
             </div>
           </div>
         </div>

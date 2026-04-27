@@ -264,9 +264,11 @@ export default function IssueDetailPage({
             <Save className="w-4 h-4" />
             Сохранить данные
           </button>
-          <span className="text-xs text-gray-500">
-            Дата выхода: {issue.published_date || "не задана"}
-          </span>
+          {issue.published_date && (
+            <span className="text-xs text-gray-500">
+              Дата выхода: {issue.published_date}
+            </span>
+          )}
         </div>
       </div>
 
