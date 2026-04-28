@@ -318,22 +318,6 @@ export const adminApi = {
       auth: true,
     }),
 
-  addArticles: (issueId: number, articleIds: number[]) =>
-    fetchApi<IssueSummary>(`/issues/${issueId}/add_articles/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ articles_ids: articleIds }),
-      auth: true,
-    }),
-
-  removeArticles: (issueId: number, articleIds: number[]) =>
-    fetchApi<IssueSummary>(`/issues/${issueId}/remove_articles/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ articles_ids: articleIds }),
-      auth: true,
-    }),
-
   reorderArticles: (issueId: number, articleIds: number[]) =>
     fetchApi<IssueSummary>(`/issues/${issueId}/reorder_articles/`, {
       method: 'PUT',
