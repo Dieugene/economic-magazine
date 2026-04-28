@@ -159,7 +159,11 @@ export default function IssuesPage() {
                       {statusLabels[issue.status]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{issue.article_count}</td>
+                  <td className="px-4 py-3 text-gray-500">
+                    {issue.sections
+                      ? issue.sections.reduce((sum, s) => sum + s.articles.length, 0)
+                      : issue.article_count}
+                  </td>
                   <td className="px-4 py-3">
                     <Link
                       href={`/control/issues/${issue.id}`}

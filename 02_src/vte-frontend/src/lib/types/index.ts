@@ -43,7 +43,10 @@ export interface IssueSummary {
   cover_file: string | null;
   pdf_file: string | null;
   status: IssueStatus;
+  // Backend's denormalized counter is unreliable (often returns 0 even when
+  // sections contain articles). Prefer counting from sections when available.
   article_count: number;
+  sections?: IssueSection[];
 }
 
 // IssueFull — это Issue + список рубрик с уже встроенными статьями

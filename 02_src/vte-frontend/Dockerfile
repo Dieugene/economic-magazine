@@ -10,11 +10,15 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Defaults — can be overridden by build args. Runtime env vars also work
-# for NEXT_PUBLIC_API_MODE / NEXT_PUBLIC_API_PROXY_TARGET because the
-# Next.js API-route at /backend reads them server-side at request time.
+# Defaults — can be overridden by build args. The /backend proxy reads its
+# target from runtime env, but the client bundle embeds PROXY_TARGET at build
+# time (used to strip the internal origin from absolute URLs that backend
+# emits via request.build_absolute_uri). If your deployment uses a different
+# backend hostname, pass it via --build-arg.
 ARG NEXT_PUBLIC_API_MODE=real
+ARG NEXT_PUBLIC_API_PROXY_TARGET=http://backend:8000/api
 ENV NEXT_PUBLIC_API_MODE=$NEXT_PUBLIC_API_MODE
+ENV NEXT_PUBLIC_API_PROXY_TARGET=$NEXT_PUBLIC_API_PROXY_TARGET
 
 RUN npm run build
 

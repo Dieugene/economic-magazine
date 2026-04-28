@@ -27,6 +27,27 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL
   || (isServer ? (PROXY_TARGET || 'http://localhost:8000/api') : '/backend');
 const USE_MOCKS = process.env.NEXT_PUBLIC_API_MODE === 'mock';
 
+// Backend uses request.build_absolute_uri() to construct file URLs (cover_file,
+// pdf_file и т.д.), embedding whatever Host the request came in on. When we hit
+// it via the Docker hostname (browser through /backend/* proxy or SSR fetch),
+// those URLs come back as `http://backend:8000/...` and are unreachable from
+// the browser. Node's fetch silently drops user-set Host headers (forbidden
+// header), so we can't override at request time. Instead, strip the internal
+// origin from JSON response bodies so URLs become relative (`/media/...`) and
+// resolve against the page origin in the browser.
+//
+// Heuristic: only strip when the proxy target hostname has no dots — that
+// signals an internal Docker hostname (e.g. `backend`). For public IPs/domains
+// (`185.180.230.243`, `example.com`) URLs are reachable from the browser as-is,
+// so leave them alone. This keeps `npm run dev` against a remote backend working.
+const INTERNAL_ORIGIN = (() => {
+  if (!PROXY_TARGET) return null;
+  try {
+    const u = new URL(PROXY_TARGET);
+    return u.hostname.includes('.') ? null : u.origin;
+  } catch { return null; }
+})();
+
 // ── Token storage ────────────────────────────────────────────────
 
 const ACCESS_KEY = 'vte_admin_access';
@@ -129,7 +150,9 @@ async function fetchApi<T>(path: string, options: FetchOptions = {}): Promise<T>
 
   // 204 No Content
   if (res.status === 204) return undefined as T;
-  return res.json();
+  const text = await res.text();
+  const cleaned = INTERNAL_ORIGIN ? text.split(INTERNAL_ORIGIN).join('') : text;
+  return JSON.parse(cleaned) as T;
 }
 
 // ── Public API ──────────────────────────────────────────────────

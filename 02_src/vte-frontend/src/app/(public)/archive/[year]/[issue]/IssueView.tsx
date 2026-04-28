@@ -105,7 +105,7 @@ export default function IssueView({ data }: IssueViewProps) {
                 </>
               )}
               <span>
-                {data.article_count} {t("статей", "articles")}
+                {allArticles.length} {t("статей", "articles")}
               </span>
               {lastPage > 0 && (
                 <>
@@ -187,7 +187,7 @@ export default function IssueView({ data }: IssueViewProps) {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">{t("Статей:", "Articles:")}</span>
-                    <span className="text-forest-600 font-medium">{data.article_count}</span>
+                    <span className="text-forest-600 font-medium">{allArticles.length}</span>
                   </div>
                   {lastPage > 0 && (
                     <div className="flex justify-between">
