@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "@/lib/api/client";
+import { auth, ApiError } from "@/lib/api/client";
 import DocumentTitle from "@/components/public/DocumentTitle";
 
 export default function LoginPage() {
@@ -25,8 +25,16 @@ export default function LoginPage() {
     try {
       await auth.login(login, password);
       router.push("/control/issues");
-    } catch {
-      setError("Неверный логин или пароль");
+    } catch (e) {
+      if (e instanceof ApiError) {
+        if (e.status === 401 || e.status === 400) {
+          setError("Неверный логин или пароль");
+        } else {
+          setError(`Ошибка сервера (HTTP ${e.status}). Свяжитесь с администратором.`);
+        }
+      } else {
+        setError("Сетевая ошибка. Проверьте соединение.");
+      }
     } finally {
       setLoading(false);
     }
