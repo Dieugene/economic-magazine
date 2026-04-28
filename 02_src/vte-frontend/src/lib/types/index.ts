@@ -123,12 +123,14 @@ export interface TokenPair {
   refresh: string;
 }
 
-// /users/me/ — поля опциональные: бэкенд может расширять контракт
+// /users/me/ — текущий профиль авторизованного пользователя
 export interface CurrentUser {
   id: number;
-  email?: string;
-  full_name?: string;
+  login: string;
   role?: string;
+  is_staff?: boolean;
+  is_active?: boolean;
+  date_joined?: string;
 }
 
 // ── Static page (фронтовый fallback, эндпоинта нет в бэкенде) ──

@@ -104,10 +104,10 @@ export default function AdminLayout({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm truncate">
-                {currentUser?.full_name || currentUser?.email || "Пользователь"}
+                {currentUser?.login || "Пользователь"}
               </p>
-              {currentUser?.email && currentUser?.full_name && (
-                <p className="text-xs text-white/60 truncate">{currentUser.email}</p>
+              {currentUser?.role && (
+                <p className="text-xs text-white/60 truncate">{currentUser.role}</p>
               )}
             </div>
           </div>
