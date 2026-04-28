@@ -212,7 +212,10 @@ export default function ArticleFormPage({
         const created = await adminApi.createArticle(payload);
         router.replace(`/control/articles/${created.id}`);
       } else {
-        await adminApi.updateArticle(articleId!, payload);
+        // issue_id is read-only after creation (backend ignores it on PATCH)
+        const { issue_id: _ignored, ...patch } = payload;
+        void _ignored;
+        await adminApi.updateArticle(articleId!, patch);
         await loadArticle();
       }
     } catch (err) {
@@ -718,7 +721,7 @@ export default function ArticleFormPage({
                       rel="noopener noreferrer"
                       className="text-forest-600 underline"
                     >
-                      {article.pdf_file.split("/").pop()}
+                      {decodeURIComponent(article.pdf_file.split("/").pop() ?? "")}
                     </a>
                     {article.pdf_size_kb && ` (${article.pdf_size_kb} КБ)`}
                   </p>

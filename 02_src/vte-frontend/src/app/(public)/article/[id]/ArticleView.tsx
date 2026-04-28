@@ -51,7 +51,9 @@ export default function ArticleView({ article }: { article: Article }) {
     ? "Issues of Economic Theory"
     : "Вопросы теоретической экономики";
   const pagesPrefix = lang === "en" ? "Pp." : "С.";
-  const citationString = `${authorsForLang}. ${titleForLang} // ${journalFull}. ${article.issue_year}. ${lang === "en" ? "No." : "№"} ${article.issue_number} (${article.issue_sequential_number}). ${pagesPrefix} ${article.pages}.${article.doi ? ` DOI: ${article.doi}.` : ""}`;
+  // Авторы могут уже заканчиваться точкой («Дитковский Е.») — не дублируем её.
+  const authorsClean = authorsForLang.replace(/\.+\s*$/, "").trim();
+  const citationString = `${authorsClean}. ${titleForLang} // ${journalFull}. ${article.issue_year}. ${lang === "en" ? "No." : "№"} ${article.issue_number} (${article.issue_sequential_number}). ${pagesPrefix} ${article.pages}.${article.doi ? ` DOI: ${article.doi}.` : ""}`;
 
   return (
     <>

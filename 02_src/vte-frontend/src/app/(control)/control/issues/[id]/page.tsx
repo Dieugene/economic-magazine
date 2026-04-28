@@ -339,7 +339,7 @@ export default function IssueDetailPage({
                 rel="noopener noreferrer"
                 className="text-forest-600 underline"
               >
-                {issue.cover_file.split("/").pop()}
+                {decodeURIComponent(issue.cover_file.split("/").pop() ?? "")}
               </a>
             </p>
           )}
@@ -376,7 +376,7 @@ export default function IssueDetailPage({
                 rel="noopener noreferrer"
                 className="text-forest-600 underline"
               >
-                {issue.pdf_file.split("/").pop()}
+                {decodeURIComponent(issue.pdf_file.split("/").pop() ?? "")}
               </a>
             </p>
           )}
