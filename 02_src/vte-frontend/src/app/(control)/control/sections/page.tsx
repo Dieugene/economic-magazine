@@ -52,14 +52,13 @@ export default function SectionsAdminPage() {
             <tr>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Название (RU)</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Title (EN)</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Slug</th>
               <th className="px-4 py-3 w-16"></th>
             </tr>
           </thead>
           <tbody>
             {sections.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-center py-8 text-gray-500">
+                <td colSpan={3} className="text-center py-8 text-gray-500">
                   Рубрик пока нет
                 </td>
               </tr>
@@ -79,7 +78,6 @@ export default function SectionsAdminPage() {
                   <tr key={s.slug} className="border-b border-gray-100 last:border-0">
                     <td className="px-4 py-3 text-gray-800">{s.name.ru}</td>
                     <td className="px-4 py-3 text-gray-600">{s.name.en}</td>
-                    <td className="px-4 py-3 text-gray-400 font-mono text-xs">{s.slug}</td>
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={() => setEditingSlug(s.slug)}
@@ -233,7 +231,6 @@ function SectionEditRow({
           className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
         />
       </td>
-      <td className="px-4 py-2 text-gray-400 font-mono text-xs">{section.slug}</td>
       <td className="px-4 py-2 text-right">
         <div className="inline-flex gap-1">
           <button
