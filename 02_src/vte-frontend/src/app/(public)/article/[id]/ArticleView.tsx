@@ -48,13 +48,9 @@ export default function ArticleView({ article }: { article: Article }) {
     .filter(Boolean)
     .join(", ");
   const sectionForLang = lang === "en" && article.section_name.en ? article.section_name.en : article.section_name.ru;
-  const abstractForLang = article.abstract
-    ? lang === "en" && article.abstract.en ? article.abstract.en : article.abstract.ru
-    : null;
   const fundingForLang = article.funding
     ? lang === "en" && article.funding.en ? article.funding.en : article.funding.ru
     : null;
-  const keywordsForLang = lang === "en" && article.keywords?.en?.length ? article.keywords.en : article.keywords?.ru;
 
   const issueNumberLabel = `${lang === "en" ? "No." : "№"} ${article.issue_number} (${article.issue_sequential_number})`;
 
@@ -460,12 +456,6 @@ export default function ArticleView({ article }: { article: Article }) {
                   <div>
                     <dt className="text-gray-500 text-xs">JEL</dt>
                     <dd className="text-forest-600">{article.jel_codes.join(", ")}</dd>
-                  </div>
-                )}
-                {keywordsForLang && keywordsForLang.length > 0 && (
-                  <div>
-                    <dt className="text-gray-500 text-xs">{t("Ключевые слова", "Keywords")}</dt>
-                    <dd className="text-forest-600">{keywordsForLang.join(", ")}</dd>
                   </div>
                 )}
                 <div>
