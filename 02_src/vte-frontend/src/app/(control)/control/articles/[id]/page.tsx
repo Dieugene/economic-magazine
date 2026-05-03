@@ -9,13 +9,14 @@ import {
   Save,
   Trash2,
   Plus,
-  X,
   Upload,
   ChevronRight,
   BookOpen,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { adminApi, api, ApiError, type ArticleCreatePayload } from "@/lib/api/client";
-import type { Article, ArticleType, Section } from "@/lib/types";
+import type { Article, ArticleType, Author, Affiliation, Section } from "@/lib/types";
 import DocumentTitle from "@/components/public/DocumentTitle";
 
 const inputClass =
@@ -25,11 +26,17 @@ const selectClass = inputClass;
 const labelClass = "text-[13px] font-medium text-gray-600 mb-1.5 block";
 const hintClass = "text-xs text-gray-500 mt-1";
 
-interface RefForm {
-  id: number;
-  text_ru: string;
-  text_en: string;
-}
+const emptyAffiliation = (): Affiliation => ({
+  organization_name: { ru: "", en: "" },
+  position: { ru: "", en: "" },
+});
+
+const emptyAuthor = (): Author => ({
+  full_name: { ru: "", en: "" },
+  email: "",
+  affiliations: [emptyAffiliation()],
+  orcid: "",
+});
 
 const ARTICLE_TYPES: { value: ArticleType; label: string }[] = [
   { value: "Scientific", label: "Научная статья" },
@@ -70,8 +77,7 @@ export default function ArticleFormPage({
   const [articleType, setArticleType] = useState<ArticleType>("Scientific");
   const [titleRu, setTitleRu] = useState("");
   const [titleEn, setTitleEn] = useState("");
-  const [authorsRu, setAuthorsRu] = useState("");
-  const [authorsEn, setAuthorsEn] = useState("");
+  const [authors, setAuthors] = useState<Author[]>([]);
   const [abstractRu, setAbstractRu] = useState("");
   const [abstractEn, setAbstractEn] = useState("");
   const [keywordsRu, setKeywordsRu] = useState("");
@@ -86,8 +92,11 @@ export default function ArticleFormPage({
   const [receivedDate, setReceivedDate] = useState<string>(
     () => new Date().toISOString().slice(0, 10)
   );
-  const [refs, setRefs] = useState<RefForm[]>([]);
-  const [nextRefId, setNextRefId] = useState(1);
+  const [acceptedDate, setAcceptedDate] = useState<string>(
+    () => new Date().toISOString().slice(0, 10)
+  );
+  const [referencesRu, setReferencesRu] = useState("");
+  const [referencesEn, setReferencesEn] = useState("");
 
   // PDF upload
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -111,8 +120,7 @@ export default function ArticleFormPage({
       setArticleType(data.article_type);
       setTitleRu(data.title.ru ?? "");
       setTitleEn(data.title.en ?? "");
-      setAuthorsRu(data.authors.ru ?? "");
-      setAuthorsEn(data.authors.en ?? "");
+      setAuthors(data.authors ?? []);
       setAbstractRu(data.abstract?.ru ?? "");
       setAbstractEn(data.abstract?.en ?? "");
       setKeywordsRu(data.keywords?.ru?.join(", ") ?? "");
@@ -125,14 +133,12 @@ export default function ArticleFormPage({
       setFundingEn(data.funding?.en ?? "");
       setXmlUrl(data.xml_url ?? "");
       setReceivedDate(data.received_date ?? new Date().toISOString().slice(0, 10));
-      setRefs(
-        (data.references ?? []).map((r, i) => ({
-          id: i + 1,
-          text_ru: r.text_ru,
-          text_en: r.text_en,
-        }))
-      );
-      setNextRefId((data.references?.length ?? 0) + 1);
+      setAcceptedDate(data.accepted_date ?? new Date().toISOString().slice(0, 10));
+      // Бэк хранит references как массив [{ru, en}, ...]. Склеиваем
+      // по строкам для блочного UX (два больших textarea).
+      const refs = data.references ?? [];
+      setReferencesRu(refs.map((r) => r.ru).join("\n"));
+      setReferencesEn(refs.map((r) => r.en).join("\n"));
       setLoadError("");
     } catch (e) {
       setLoadError(e instanceof ApiError ? e.message : "Ошибка загрузки статьи");
@@ -155,15 +161,77 @@ export default function ArticleFormPage({
     }
   }, [article, sections, sectionSlug]);
 
-  function addRef() {
-    setRefs((prev) => [...prev, { id: nextRefId, text_ru: "", text_en: "" }]);
-    setNextRefId((n) => n + 1);
+  // ── Author helpers ─────────────────────────────────────────────
+  function moveAuthor(idx: number, dir: -1 | 1) {
+    setAuthors((prev) => {
+      const to = idx + dir;
+      if (to < 0 || to >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[to]] = [next[to], next[idx]];
+      return next;
+    });
   }
-  function removeRef(rid: number) {
-    setRefs((prev) => prev.filter((r) => r.id !== rid));
+  function removeAuthor(idx: number) {
+    if (!confirm("Удалить автора? Действие необратимо до сохранения.")) return;
+    setAuthors((prev) => prev.filter((_, i) => i !== idx));
   }
-  function updateRef(rid: number, field: "text_ru" | "text_en", value: string) {
-    setRefs((prev) => prev.map((r) => (r.id === rid ? { ...r, [field]: value } : r)));
+  function addAuthor() {
+    setAuthors((prev) => [...prev, emptyAuthor()]);
+  }
+  function updateAuthor(idx: number, patch: Partial<Author>) {
+    setAuthors((prev) => prev.map((a, i) => (i === idx ? { ...a, ...patch } : a)));
+  }
+
+  // ── Affiliation helpers (within a given author) ────────────────
+  function moveAffiliation(authorIdx: number, affIdx: number, dir: -1 | 1) {
+    setAuthors((prev) =>
+      prev.map((a, i) => {
+        if (i !== authorIdx) return a;
+        const to = affIdx + dir;
+        if (to < 0 || to >= a.affiliations.length) return a;
+        const next = [...a.affiliations];
+        [next[affIdx], next[to]] = [next[to], next[affIdx]];
+        return { ...a, affiliations: next };
+      })
+    );
+  }
+  function removeAffiliation(authorIdx: number, affIdx: number) {
+    if (!confirm("Удалить аффилиацию?")) return;
+    setAuthors((prev) =>
+      prev.map((a, i) =>
+        i === authorIdx
+          ? { ...a, affiliations: a.affiliations.filter((_, j) => j !== affIdx) }
+          : a
+      )
+    );
+  }
+  function addAffiliation(authorIdx: number) {
+    setAuthors((prev) =>
+      prev.map((a, i) =>
+        i === authorIdx ? { ...a, affiliations: [...a.affiliations, emptyAffiliation()] } : a
+      )
+    );
+  }
+  function updateAffiliation(authorIdx: number, affIdx: number, patch: Partial<Affiliation>) {
+    setAuthors((prev) =>
+      prev.map((a, i) =>
+        i === authorIdx
+          ? {
+              ...a,
+              affiliations: a.affiliations.map((aff, j) =>
+                j === affIdx ? { ...aff, ...patch } : aff
+              ),
+            }
+          : a
+      )
+    );
+  }
+
+  // Бэк требует и `ru`, и `en` в каждой LocalizedString — отправляем оба
+  // как есть. Если человек оставил `en` пустым, бэк ответит 400; форма
+  // помечает все английские поля звёздочкой, чтобы это было очевидно.
+  function cleanLocalized(s: { ru: string; en?: string }) {
+    return { ru: s.ru.trim(), en: (s.en ?? "").trim() };
   }
 
   function buildPayload(): ArticleCreatePayload | null {
@@ -171,17 +239,31 @@ export default function ArticleFormPage({
       setSaveError("Выберите рубрику");
       return null;
     }
+    // Degree — опциональное. Бэк не принимает `null`; если оба языка пустые,
+    // опускаем ключ `degree` целиком.
+    const cleanedAuthors: Author[] = authors.map((a) => {
+      const degRu = a.degree?.ru?.trim() ?? "";
+      const degEn = a.degree?.en?.trim() ?? "";
+      const author: Author = {
+        full_name: cleanLocalized(a.full_name),
+        email: a.email.trim(),
+        orcid: a.orcid.trim(),
+        affiliations: a.affiliations.map((aff) => ({
+          organization_name: cleanLocalized(aff.organization_name),
+          position: cleanLocalized(aff.position),
+        })),
+      };
+      if (degRu || degEn) author.degree = cleanLocalized({ ru: degRu, en: degEn });
+      return author;
+    });
     return {
       ...(issueId ? { issue_id: issueId } : {}),
       section_slug: sectionSlug,
-      title: { ru: titleRu, ...(titleEn ? { en: titleEn } : {}) },
-      authors: { ru: authorsRu, ...(authorsEn ? { en: authorsEn } : {}) },
+      title: { ru: titleRu, en: titleEn },
+      authors: cleanedAuthors,
       pages,
       doi,
-      abstract:
-        abstractRu || abstractEn
-          ? { ru: abstractRu, ...(abstractEn ? { en: abstractEn } : {}) }
-          : null,
+      abstract: { ru: abstractRu, en: abstractEn },
       article_type: articleType,
       keywords: {
         ru: keywordsRu.split(",").map((s) => s.trim()).filter(Boolean),
@@ -189,13 +271,45 @@ export default function ArticleFormPage({
       },
       udk,
       jel_codes: jelCodes.split(",").map((s) => s.trim()).filter(Boolean),
-      references: refs
-        .filter((r) => r.text_ru || r.text_en)
-        .map((r, i) => ({ order: i + 1, text_ru: r.text_ru, text_en: r.text_en })),
+      // Режем оба textarea по строкам и парим по индексу. Если строки в ru/en
+      // расходятся по количеству — добиваем пустыми строками с короткой
+      // стороны. Заказчик отвечает за выравнивание построчно.
+      references: (() => {
+        const ruLines = referencesRu.split("\n").map((s) => s.trim());
+        const enLines = referencesEn.split("\n").map((s) => s.trim());
+        const max = Math.max(ruLines.length, enLines.length);
+        const items: { ru: string; en: string }[] = [];
+        for (let i = 0; i < max; i++) {
+          const ru = ruLines[i] ?? "";
+          const en = enLines[i] ?? "";
+          if (!ru && !en) continue;
+          items.push({ ru, en });
+        }
+        return items;
+      })(),
       received_date: receivedDate,
-      funding: { ru: fundingRu, ...(fundingEn ? { en: fundingEn } : {}) },
+      accepted_date: acceptedDate,
+      funding: { ru: fundingRu, en: fundingEn },
       xml_url: xmlUrl || null,
     };
+  }
+
+  // Бэк отдаёт IssueFull.sections только для slug'ов, явно перечисленных
+  // в sections_slugs выпуска. После сохранения статьи дописываем туда slug
+  // её рубрики, иначе номер «не увидит» эту рубрику и публичная страница
+  // не покажет ни статьи, ни счётчик.
+  async function ensureIssueHasSection(targetIssueId: number, slug: string) {
+    if (!targetIssueId || !slug) return;
+    try {
+      const issue = await adminApi.getIssue(targetIssueId);
+      const existing = issue.sections?.map((s) => s.slug) ?? [];
+      if (existing.includes(slug)) return;
+      await adminApi.updateIssue(targetIssueId, {
+        sections_slugs: [...existing, slug],
+      });
+    } catch {
+      // Не валим сохранение статьи из-за ошибки синхронизации привязки.
+    }
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -208,14 +322,18 @@ export default function ArticleFormPage({
       return;
     }
     try {
+      let targetIssueId = issueId;
       if (isNew) {
         const created = await adminApi.createArticle(payload);
+        targetIssueId = created.issue_id ?? issueId;
+        await ensureIssueHasSection(targetIssueId, sectionSlug);
         router.replace(`/control/articles/${created.id}`);
       } else {
         // issue_id is read-only after creation (backend ignores it on PATCH)
         const { issue_id: _ignored, ...patch } = payload;
         void _ignored;
         await adminApi.updateArticle(articleId!, patch);
+        await ensureIssueHasSection(targetIssueId, sectionSlug);
         await loadArticle();
       }
     } catch (err) {
@@ -411,7 +529,7 @@ export default function ArticleFormPage({
             </div>
             <div>
               <label htmlFor="title-en" className={labelClass}>
-                Название (английский)<LangBadge lang="EN" />
+                Название (английский) *<LangBadge lang="EN" />
               </label>
               <input
                 id="title-en"
@@ -419,6 +537,7 @@ export default function ArticleFormPage({
                 className={inputClass}
                 value={titleEn}
                 onChange={(e) => setTitleEn(e.target.value)}
+                required
               />
             </div>
           </div>
@@ -430,34 +549,295 @@ export default function ArticleFormPage({
             Авторы
           </legend>
           <div className="p-5 pt-3 space-y-4">
-            <div>
-              <label htmlFor="authors-ru" className={labelClass}>
-                Авторы (русский) *<LangBadge lang="RU" />
-              </label>
-              <textarea
-                id="authors-ru"
-                className={textareaClass}
-                rows={2}
-                placeholder="И.И. Иванов, П.П. Петров"
-                value={authorsRu}
-                onChange={(e) => setAuthorsRu(e.target.value)}
-                required
-              />
-              <p className={hintClass}>Перечислите всех авторов через запятую</p>
-            </div>
-            <div>
-              <label htmlFor="authors-en" className={labelClass}>
-                Authors (English)<LangBadge lang="EN" />
-              </label>
-              <textarea
-                id="authors-en"
-                className={textareaClass}
-                rows={2}
-                placeholder="I.I. Ivanov, P.P. Petrov"
-                value={authorsEn}
-                onChange={(e) => setAuthorsEn(e.target.value)}
-              />
-            </div>
+            {authors.length === 0 && (
+              <p className="text-sm text-gray-500 italic">
+                Авторов пока нет. Добавьте хотя бы одного.
+              </p>
+            )}
+            {authors.map((author, aIdx) => (
+              <div
+                key={aIdx}
+                className="border border-stone-300 rounded p-4 bg-stone-50"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Автор № {aIdx + 1}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => moveAuthor(aIdx, -1)}
+                      disabled={aIdx === 0}
+                      className="p-1 text-gray-400 hover:text-forest-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                      aria-label="Переместить выше"
+                      title="Переместить выше"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveAuthor(aIdx, 1)}
+                      disabled={aIdx === authors.length - 1}
+                      className="p-1 text-gray-400 hover:text-forest-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                      aria-label="Переместить ниже"
+                      title="Переместить ниже"
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeAuthor(aIdx)}
+                      className="p-1 text-gray-400 hover:text-red-600 ml-2"
+                      aria-label="Удалить автора"
+                      title="Удалить автора"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelClass}>
+                      ФИО (русский) *<LangBadge lang="RU" />
+                    </label>
+                    <input
+                      type="text"
+                      className={inputClass}
+                      placeholder="И.И. Иванов"
+                      value={author.full_name.ru}
+                      onChange={(e) =>
+                        updateAuthor(aIdx, {
+                          full_name: { ...author.full_name, ru: e.target.value },
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>
+                      Full name (English) *<LangBadge lang="EN" />
+                    </label>
+                    <input
+                      type="text"
+                      className={inputClass}
+                      placeholder="I.I. Ivanov"
+                      value={author.full_name.en ?? ""}
+                      onChange={(e) =>
+                        updateAuthor(aIdx, {
+                          full_name: { ...author.full_name, en: e.target.value },
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Email *</label>
+                    <input
+                      type="email"
+                      className={inputClass}
+                      placeholder="ivanov@example.com"
+                      value={author.email}
+                      onChange={(e) => updateAuthor(aIdx, { email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>ORCID *</label>
+                    <input
+                      type="text"
+                      className={inputClass}
+                      placeholder="0000-0000-0000-0000"
+                      value={author.orcid}
+                      onChange={(e) => updateAuthor(aIdx, { orcid: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>
+                      Учёная степень (русский){author.degree?.en ? " *" : ""}<LangBadge lang="RU" />
+                    </label>
+                    <input
+                      type="text"
+                      className={inputClass}
+                      placeholder="д-р экон. наук, профессор"
+                      value={author.degree?.ru ?? ""}
+                      onChange={(e) => {
+                        const ru = e.target.value;
+                        const en = author.degree?.en ?? "";
+                        updateAuthor(aIdx, {
+                          degree: ru || en ? { ru, en } : null,
+                        });
+                      }}
+                      required={!!author.degree?.en}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>
+                      Degree (English){author.degree?.ru ? " *" : ""}<LangBadge lang="EN" />
+                    </label>
+                    <input
+                      type="text"
+                      className={inputClass}
+                      placeholder="Doctor of Economics, Professor"
+                      value={author.degree?.en ?? ""}
+                      onChange={(e) => {
+                        const en = e.target.value;
+                        const ru = author.degree?.ru ?? "";
+                        updateAuthor(aIdx, {
+                          degree: ru || en ? { ru, en } : null,
+                        });
+                      }}
+                      required={!!author.degree?.ru}
+                    />
+                  </div>
+                </div>
+
+                {/* Affiliations sub-list */}
+                <div className="mt-4">
+                  <p className="text-xs font-medium text-gray-600 uppercase tracking-wider mb-2">
+                    Аффилиации
+                  </p>
+                  <div className="space-y-3">
+                    {author.affiliations.map((aff, affIdx) => (
+                      <div
+                        key={affIdx}
+                        className="border border-stone-300 rounded p-3 bg-white"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-gray-500">
+                            № {affIdx + 1}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => moveAffiliation(aIdx, affIdx, -1)}
+                              disabled={affIdx === 0}
+                              className="p-1 text-gray-400 hover:text-forest-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                              aria-label="Переместить выше"
+                              title="Переместить выше"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveAffiliation(aIdx, affIdx, 1)}
+                              disabled={affIdx === author.affiliations.length - 1}
+                              className="p-1 text-gray-400 hover:text-forest-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                              aria-label="Переместить ниже"
+                              title="Переместить ниже"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeAffiliation(aIdx, affIdx)}
+                              className="p-1 text-gray-400 hover:text-red-600 ml-1"
+                              aria-label="Удалить аффилиацию"
+                              title="Удалить аффилиацию"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <div>
+                            <label className={labelClass}>
+                              Должность (русский) *<LangBadge lang="RU" />
+                            </label>
+                            <input
+                              type="text"
+                              className={inputClass}
+                              placeholder="главный научный сотрудник"
+                              value={aff.position.ru}
+                              onChange={(e) =>
+                                updateAffiliation(aIdx, affIdx, {
+                                  position: { ...aff.position, ru: e.target.value },
+                                })
+                              }
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className={labelClass}>
+                              Position (English) *<LangBadge lang="EN" />
+                            </label>
+                            <input
+                              type="text"
+                              className={inputClass}
+                              placeholder="Senior Researcher"
+                              value={aff.position.en ?? ""}
+                              onChange={(e) =>
+                                updateAffiliation(aIdx, affIdx, {
+                                  position: { ...aff.position, en: e.target.value },
+                                })
+                              }
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className={labelClass}>
+                              Организация (русский) *<LangBadge lang="RU" />
+                            </label>
+                            <input
+                              type="text"
+                              className={inputClass}
+                              placeholder="Институт экономики РАН"
+                              value={aff.organization_name.ru}
+                              onChange={(e) =>
+                                updateAffiliation(aIdx, affIdx, {
+                                  organization_name: {
+                                    ...aff.organization_name,
+                                    ru: e.target.value,
+                                  },
+                                })
+                              }
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className={labelClass}>
+                              Organization (English) *<LangBadge lang="EN" />
+                            </label>
+                            <input
+                              type="text"
+                              className={inputClass}
+                              placeholder="Institute of Economics RAS"
+                              value={aff.organization_name.en ?? ""}
+                              onChange={(e) =>
+                                updateAffiliation(aIdx, affIdx, {
+                                  organization_name: {
+                                    ...aff.organization_name,
+                                    en: e.target.value,
+                                  },
+                                })
+                              }
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => addAffiliation(aIdx)}
+                      className="inline-flex items-center gap-1.5 text-xs text-forest-600 border border-dashed border-forest-300 rounded px-2 py-1 hover:bg-forest-50"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Добавить аффилиацию
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addAuthor}
+              className="inline-flex items-center gap-1.5 text-sm text-forest-600 border border-dashed border-forest-300 rounded px-3 py-2 hover:bg-forest-50"
+            >
+              <Plus className="w-4 h-4" />
+              Добавить автора
+            </button>
           </div>
         </fieldset>
 
@@ -481,7 +861,7 @@ export default function ArticleFormPage({
             </div>
             <div>
               <label htmlFor="abstract-en" className={labelClass}>
-                Аннотация (английский)<LangBadge lang="EN" />
+                Аннотация (английский){abstractRu ? " *" : ""}<LangBadge lang="EN" />
               </label>
               <textarea
                 id="abstract-en"
@@ -489,7 +869,12 @@ export default function ArticleFormPage({
                 rows={4}
                 value={abstractEn}
                 onChange={(e) => setAbstractEn(e.target.value)}
+                required={!!abstractRu}
               />
+              <p className={hintClass}>
+                Если заполняете аннотацию, нужны обе версии — иначе бэк
+                отвергнет.
+              </p>
             </div>
           </div>
         </fieldset>
@@ -568,7 +953,7 @@ export default function ArticleFormPage({
               />
             </div>
             <div>
-              <label htmlFor="jel" className={labelClass}>JEL коды</label>
+              <label htmlFor="jel" className={labelClass}>JEL коды *</label>
               <input
                 id="jel"
                 type="text"
@@ -576,7 +961,9 @@ export default function ArticleFormPage({
                 value={jelCodes}
                 onChange={(e) => setJelCodes(e.target.value)}
                 placeholder="A11, D83, O33"
+                required
               />
+              <p className={hintClass}>Хотя бы один код, разделяйте запятой</p>
             </div>
             <div>
               <label htmlFor="received-date" className={labelClass}>Дата получения *</label>
@@ -588,9 +975,17 @@ export default function ArticleFormPage({
                 onChange={(e) => setReceivedDate(e.target.value)}
                 required
               />
-              <p className={hintClass}>
-                Дата принятия проставляется бэкендом автоматически
-              </p>
+            </div>
+            <div>
+              <label htmlFor="accepted-date" className={labelClass}>Дата принятия *</label>
+              <input
+                id="accepted-date"
+                type="date"
+                className={inputClass}
+                value={acceptedDate}
+                onChange={(e) => setAcceptedDate(e.target.value)}
+                required
+              />
             </div>
           </div>
         </fieldset>
@@ -615,7 +1010,7 @@ export default function ArticleFormPage({
             </div>
             <div>
               <label htmlFor="funding-en" className={labelClass}>
-                Funding (English)<LangBadge lang="EN" />
+                Funding (English){fundingRu ? " *" : ""}<LangBadge lang="EN" />
               </label>
               <textarea
                 id="funding-en"
@@ -623,7 +1018,11 @@ export default function ArticleFormPage({
                 rows={2}
                 value={fundingEn}
                 onChange={(e) => setFundingEn(e.target.value)}
+                required={!!fundingRu}
               />
+              <p className={hintClass}>
+                Если статья без финансирования — оставьте оба поля пустыми.
+              </p>
             </div>
           </div>
         </fieldset>
@@ -633,46 +1032,42 @@ export default function ArticleFormPage({
           <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Литература / References
           </legend>
-          <div className="p-5 pt-3 space-y-3">
-            {refs.map((ref, idx) => (
-              <div key={ref.id} className="border border-stone-300 rounded p-3 bg-stone-50">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-gray-600">№ {idx + 1}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeRef(ref.id)}
-                    className="text-gray-400 hover:text-red-600"
-                    aria-label="Удалить запись"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <textarea
-                    className={textareaClass}
-                    rows={2}
-                    placeholder="Текст ссылки на русском"
-                    value={ref.text_ru}
-                    onChange={(e) => updateRef(ref.id, "text_ru", e.target.value)}
-                  />
-                  <textarea
-                    className={textareaClass}
-                    rows={2}
-                    placeholder="Reference text in English"
-                    value={ref.text_en}
-                    onChange={(e) => updateRef(ref.id, "text_en", e.target.value)}
-                  />
-                </div>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addRef}
-              className="inline-flex items-center gap-1.5 text-sm text-forest-600 border border-dashed border-forest-300 rounded px-3 py-2 hover:bg-forest-50"
-            >
-              <Plus className="w-4 h-4" />
-              Добавить ссылку
-            </button>
+          <div className="p-5 pt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="references-ru" className={labelClass}>
+                Литература (русский)<LangBadge lang="RU" />
+              </label>
+              <textarea
+                id="references-ru"
+                className={`${inputClass} resize-y font-mono`}
+                rows={30}
+                placeholder={"1. Рубинштейн А.Я. Теория опекаемых благ. СПб.: Алетейя, 2018.\n2. ..."}
+                value={referencesRu}
+                onChange={(e) => setReferencesRu(e.target.value)}
+              />
+              <p className={hintClass}>
+                Один блок текста, по строке на источник. Каждая строка слева
+                парится по индексу со строкой справа — следите, чтобы
+                количество строк совпадало.
+              </p>
+            </div>
+            <div>
+              <label htmlFor="references-en" className={labelClass}>
+                References (English) *<LangBadge lang="EN" />
+              </label>
+              <textarea
+                id="references-en"
+                className={`${inputClass} resize-y font-mono`}
+                rows={30}
+                placeholder={"1. Rubinstein A.Ya. Theory of Patronized Goods. St. Petersburg: Aletheia, 2018.\n2. ..."}
+                value={referencesEn}
+                onChange={(e) => setReferencesEn(e.target.value)}
+              />
+              <p className={hintClass}>
+                Английский перевод обязателен для каждого источника.
+                Переносы строк сохраняются при отображении.
+              </p>
+            </div>
           </div>
         </fieldset>
 

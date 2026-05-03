@@ -15,12 +15,24 @@ export interface LocalizedText {
 export type ArticleType = 'Scientific' | 'Review' | 'Book_review' | 'Editorial';
 export type IssueStatus = 'Draft' | 'Ready' | 'Published';
 
-// ── Reference ───────────────────────────────────────────────────
+// ── Author ──────────────────────────────────────────────────────
+// Структурированный автор статьи. Передаётся как массив на бэкенд
+// в поле Article.authors (JSONField).
 
-export interface Reference {
-  order: number;
-  text_ru: string;
-  text_en: string;
+export interface Affiliation {
+  organization_name: LocalizedString;
+  position: LocalizedString;
+}
+
+export interface Author {
+  full_name: LocalizedString;
+  email: string;
+  // Опциональное поле. На фронте `null` = «степени нет» (для удобства state);
+  // в payload бэк не принимает null, поэтому buildPayload опускает ключ
+  // `degree` целиком, если оба языка пустые.
+  degree?: LocalizedString | null;
+  affiliations: Affiliation[];
+  orcid: string;
 }
 
 // ── Section ─────────────────────────────────────────────────────
@@ -43,9 +55,7 @@ export interface IssueSummary {
   cover_file: string | null;
   pdf_file: string | null;
   status: IssueStatus;
-  // Backend's denormalized counter is unreliable (often returns 0 even when
-  // sections contain articles). Prefer counting from sections when available.
-  article_count: number;
+  articles_count: number;
   sections?: IssueSection[];
 }
 
@@ -74,7 +84,7 @@ export interface Article {
   issue_sequential_number: number | null;
   section_name: LocalizedString;
   title: LocalizedString;
-  authors: LocalizedString;
+  authors: Author[];
   pages: string;
   doi: string;
   pdf_file: string | null;
@@ -84,7 +94,10 @@ export interface Article {
   keywords: { ru: string[]; en: string[] };
   udk: string;
   jel_codes: string[];
-  references: Reference[];
+  // Бэкенд хранит литературу как массив объектов { ru, en } (по одной ссылке
+  // на элемент). UI собирает этот массив из двух больших textarea, режа по
+  // строкам — заказчик хочет именно блочный ввод, не поэлементный.
+  references: { ru: string; en: string }[];
   received_date: string | null;
   accepted_date: string | null;
   funding: LocalizedText;

@@ -80,7 +80,10 @@ export default function SearchForm() {
               </p>
               {results.map((article) => {
                 const titleForLang = lang === "en" && article.title.en ? article.title.en : article.title.ru;
-                const authorsForLang = lang === "en" && article.authors.en ? article.authors.en : article.authors.ru;
+                const authorsForLang = (article.authors ?? [])
+                  .map((a) => (lang === "en" && a.full_name?.en ? a.full_name.en : a.full_name?.ru))
+                  .filter(Boolean)
+                  .join(", ");
                 const sectionForLang = lang === "en" && article.section_name.en ? article.section_name.en : article.section_name.ru;
                 return (
                   <Link

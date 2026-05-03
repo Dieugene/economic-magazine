@@ -2,6 +2,7 @@ import type {
   IssueSummary,
   IssueFull,
   Article,
+  Author,
   Section,
   EditorialBoardMember,
   PaginatedArticleList,
@@ -287,16 +288,17 @@ export interface ArticleCreatePayload {
   // section_slug — writeOnly поле для привязки статьи к рубрике (см. ArticleRequest в swagger).
   section_slug: string;
   title: { ru: string; en?: string };
-  authors: { ru: string; en?: string };
+  authors: Author[];
   pages: string;
   doi: string;
-  abstract?: { ru: string; en?: string } | null;
+  abstract: { ru: string; en: string };
   article_type: 'Scientific' | 'Review' | 'Book_review' | 'Editorial';
   keywords: { ru: string[]; en: string[] };
   udk: string;
   jel_codes?: string[];
-  references: { order: number; text_ru: string; text_en: string }[];
+  references: { ru: string; en: string }[];
   received_date: string;
+  accepted_date: string;
   funding: { ru: string; en?: string };
   xml_url?: string | null;
 }

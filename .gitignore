@@ -5,9 +5,12 @@
 # Development tooling (local only)
 .agents/
 .claude/
+.cowork/
 01_tasks/
 AGENTS.md
 DEVELOPER_WORKFLOW.md
+CLAUDE.md
+CLAUDE_CONTEXT.md
 
 # Temporary/old files
 .old/

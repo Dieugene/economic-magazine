@@ -150,7 +150,10 @@ export default function IssueView({ data }: IssueViewProps) {
 
                 {sectionArticles.map((article, aIdx) => {
                   const titleForLang = lang === "en" && article.title.en ? article.title.en : article.title.ru;
-                  const authorsForLang = lang === "en" && article.authors.en ? article.authors.en : article.authors.ru;
+                  const authorsForLang = (article.authors ?? [])
+                    .map((a) => (lang === "en" && a.full_name?.en ? a.full_name.en : a.full_name?.ru))
+                    .filter(Boolean)
+                    .join(", ");
                   const abstractForLang = article.abstract
                     ? lang === "en" && article.abstract.en ? article.abstract.en : article.abstract.ru
                     : null;

@@ -1,11 +1,11 @@
 import type {
   Article,
+  Author,
   Section,
   IssueSummary,
   IssueFull,
   IssueSection,
   EditorialBoardMember,
-  Reference,
   ArticleType,
   PaginatedArticleList,
 } from '@/lib/types';
@@ -27,17 +27,32 @@ const sectionBySlug = (slug: string): Section =>
 
 // ── References for article 1 ──────────────────────────────────────
 
-export const referencesArticle1: Reference[] = [
-  { order: 1, text_ru: 'Рубинштейн А.Я. Теория опекаемых благ. СПб.: Алетейя, 2018.', text_en: 'Rubinstein A.Ya. Theory of Patronized Goods. St. Petersburg: Aletheia, 2018.' },
-  { order: 2, text_ru: 'Полтерович В.М. Позитивное сотрудничество: факторы и механизмы эволюции // Вопросы экономики. 2016. № 11. С. 5–23.', text_en: 'Polterovich V.M. Positive Collaboration: Factors and Mechanisms of Evolution // Voprosy Ekonomiki. 2016. No. 11. Pp. 5–23.' },
-  { order: 3, text_ru: 'Дасгупта П. Экономический прогресс и идея социального капитала // Экономический вестник. 2004. Т. 3, № 2. С. 36–54.', text_en: 'Dasgupta P. Economic Progress and the Idea of Social Capital // Economic Bulletin. 2004. Vol. 3, No. 2. Pp. 36–54.' },
-  { order: 4, text_ru: 'Макаров В.Л. Экономика знаний: уроки для России // Вестник Российской академии наук. 2003. Т. 73, № 5. С. 450–456.', text_en: 'Makarov V.L. Knowledge Economy: Lessons for Russia // Herald of the Russian Academy of Sciences. 2003. Vol. 73, No. 5. Pp. 450–456.' },
-  { order: 5, text_ru: 'Merton R.K. The Sociology of Science: Theoretical and Empirical Investigations. Chicago: University of Chicago Press, 1973.', text_en: 'Merton R.K. The Sociology of Science: Theoretical and Empirical Investigations. Chicago: University of Chicago Press, 1973.' },
-  { order: 6, text_ru: 'David P.A. The Economic Logic of "Open Science" and the Balance between Private Property Rights and the Public Domain in Scientific Data and Information // Stanford Working Paper. 2003. No. 02-30.', text_en: 'David P.A. The Economic Logic of "Open Science" and the Balance between Private Property Rights and the Public Domain in Scientific Data and Information // Stanford Working Paper. 2003. No. 02-30.' },
-  { order: 7, text_ru: 'Hess C., Ostrom E. Understanding Knowledge as a Commons: From Theory to Practice. Cambridge, MA: MIT Press, 2007.', text_en: 'Hess C., Ostrom E. Understanding Knowledge as a Commons: From Theory to Practice. Cambridge, MA: MIT Press, 2007.' },
+export const referencesArticle1: { ru: string; en: string }[] = [
+  { ru: '1. Рубинштейн А.Я. Теория опекаемых благ. СПб.: Алетейя, 2018.', en: '1. Rubinstein A.Ya. Theory of Patronized Goods. St. Petersburg: Aletheia, 2018.' },
+  { ru: '2. Полтерович В.М. Позитивное сотрудничество: факторы и механизмы эволюции // Вопросы экономики. 2016. № 11. С. 5–23.', en: '2. Polterovich V.M. Positive Collaboration: Factors and Mechanisms of Evolution // Voprosy Ekonomiki. 2016. No. 11. Pp. 5–23.' },
+  { ru: '3. Дасгупта П. Экономический прогресс и идея социального капитала // Экономический вестник. 2004. Т. 3, № 2. С. 36–54.', en: '3. Dasgupta P. Economic Progress and the Idea of Social Capital // Economic Bulletin. 2004. Vol. 3, No. 2. Pp. 36–54.' },
+  { ru: '4. Макаров В.Л. Экономика знаний: уроки для России // Вестник Российской академии наук. 2003. Т. 73, № 5. С. 450–456.', en: '4. Makarov V.L. Knowledge Economy: Lessons for Russia // Herald of the Russian Academy of Sciences. 2003. Vol. 73, No. 5. Pp. 450–456.' },
+  { ru: '5. Merton R.K. The Sociology of Science: Theoretical and Empirical Investigations. Chicago: University of Chicago Press, 1973.', en: '5. Merton R.K. The Sociology of Science: Theoretical and Empirical Investigations. Chicago: University of Chicago Press, 1973.' },
+  { ru: '6. David P.A. The Economic Logic of "Open Science" and the Balance between Private Property Rights and the Public Domain in Scientific Data and Information // Stanford Working Paper. 2003. No. 02-30.', en: '6. David P.A. The Economic Logic of "Open Science" and the Balance between Private Property Rights and the Public Domain in Scientific Data and Information // Stanford Working Paper. 2003. No. 02-30.' },
+  { ru: '7. Hess C., Ostrom E. Understanding Knowledge as a Commons: From Theory to Practice. Cambridge, MA: MIT Press, 2007.', en: '7. Hess C., Ostrom E. Understanding Knowledge as a Commons: From Theory to Practice. Cambridge, MA: MIT Press, 2007.' },
 ];
 
 // ── Article builder ───────────────────────────────────────────────
+
+// Парсит строку «И.И. Иванов, П.П. Петров» → массив Author с пустыми
+// остальными полями. Для моков этого достаточно — публичный рендер
+// просто склеит full_name обратно через запятую.
+function parseAuthors(authorsRu: string, authorsEn?: string): Author[] {
+  const ruNames = authorsRu.split(',').map((s) => s.trim()).filter(Boolean);
+  const enNames = (authorsEn ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+  return ruNames.map((ru, i) => ({
+    full_name: { ru, ...(enNames[i] ? { en: enNames[i] } : {}) },
+    email: '',
+    degree: null,
+    affiliations: [],
+    orcid: '',
+  }));
+}
 
 function mkArticle(
   id: number,
@@ -65,7 +80,7 @@ function mkArticle(
     issue_sequential_number: issueSeq,
     section_name: section.name,
     title: { ru: titleRu, ...(titleEn ? { en: titleEn } : {}) },
-    authors: { ru: authorsRu, ...(authorsEn ? { en: authorsEn } : {}) },
+    authors: parseAuthors(authorsRu, authorsEn),
     pages,
     doi,
     pdf_file: doiSuffix
@@ -253,35 +268,35 @@ export const issueSummary1: IssueSummary = {
   published_date: '2026-02-27',
   cover_file: '/covers/vte_2026_1.jpg',
   pdf_file: 'https://journals.rcsi.science/vte/issue/download/2026_1/full.pdf',
-  status: 'Published', article_count: 12,
+  status: 'Published', articles_count: 12,
 };
 export const issueSummary2: IssueSummary = {
   id: 2, year: 2025, number: 4, sequential_number: 29,
   published_date: '2025-11-10',
   cover_file: '/covers/vte_2025_4.jpg',
   pdf_file: 'https://questionset.ru/files/arch/2025/2025-N4/VTE_2025_4.pdf',
-  status: 'Published', article_count: 12,
+  status: 'Published', articles_count: 12,
 };
 export const issueSummary3: IssueSummary = {
   id: 3, year: 2025, number: 3, sequential_number: 28,
   published_date: '2025-08-20',
   cover_file: '/covers/vte_2025_3.jpg',
   pdf_file: 'https://questionset.ru/files/arch/2025/2025-N3/VTE_2025_3.pdf',
-  status: 'Published', article_count: 12,
+  status: 'Published', articles_count: 12,
 };
 export const issueSummary4: IssueSummary = {
   id: 4, year: 2025, number: 2, sequential_number: 27,
   published_date: '2025-05-15',
   cover_file: '/covers/vte_2025_2.jpg',
   pdf_file: 'https://questionset.ru/files/arch/2025/2025-N2/VTE_2025_2.pdf',
-  status: 'Published', article_count: 10,
+  status: 'Published', articles_count: 10,
 };
 export const issueSummary5: IssueSummary = {
   id: 5, year: 2025, number: 1, sequential_number: 26,
   published_date: '2025-02-20',
   cover_file: '/covers/vte_2025_1.jpg',
   pdf_file: 'https://questionset.ru/files/arch/2025/2025-N1/VTE_2025_1.pdf',
-  status: 'Published', article_count: 12,
+  status: 'Published', articles_count: 12,
 };
 
 // ── IssueFull (sections list with article IDs) ───────────────────
@@ -455,7 +470,8 @@ export function getMockData(path: string, _init?: RequestInit): unknown {
       : undefined;
 
     const results = allArticleSummaries.filter((a) => {
-      if (q && !a.title.ru.toLowerCase().includes(q) && !a.authors.ru.toLowerCase().includes(q)) return false;
+      const authorsRu = a.authors.map((au) => au.full_name.ru).join(', ').toLowerCase();
+      if (q && !a.title.ru.toLowerCase().includes(q) && !authorsRu.includes(q)) return false;
       if (sectionNameFilter && a.section_name.ru !== sectionNameFilter) return false;
       if (yearFrom && a.issue_year !== null && a.issue_year < yearFrom) return false;
       if (yearTo && a.issue_year !== null && a.issue_year > yearTo) return false;

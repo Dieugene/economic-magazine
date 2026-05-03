@@ -49,7 +49,10 @@ export default function SectionView({ section, articles }: SectionViewProps) {
           <div className="space-y-4">
             {articles.map((article) => {
               const titleForLang = lang === "en" && article.title.en ? article.title.en : article.title.ru;
-              const authorsForLang = lang === "en" && article.authors.en ? article.authors.en : article.authors.ru;
+              const authorsForLang = (article.authors ?? [])
+                .map((a) => (lang === "en" && a.full_name?.en ? a.full_name.en : a.full_name?.ru))
+                .filter(Boolean)
+                .join(", ");
               return (
                 <Link
                   key={article.id}
