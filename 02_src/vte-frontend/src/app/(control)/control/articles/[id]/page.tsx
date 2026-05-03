@@ -294,21 +294,27 @@ export default function ArticleFormPage({
     };
   }
 
-  // Бэк отдаёт IssueFull.sections только для slug'ов, явно перечисленных
-  // в sections_slugs выпуска. После сохранения статьи дописываем туда slug
-  // её рубрики, иначе номер «не увидит» эту рубрику и публичная страница
-  // не покажет ни статьи, ни счётчик.
-  async function ensureIssueHasSection(targetIssueId: number, slug: string) {
-    if (!targetIssueId || !slug) return;
+  // Бэк отвергает создание/обновление статьи в рубрике, не подписанной к
+  // номеру (sections_slugs). Поэтому привязку рубрики к номеру нужно делать
+  // ДО POST/PATCH статьи. Возвращает true, если шаг прошёл (или не нужен),
+  // false если упал — тогда сохранение статьи смысла не имеет.
+  async function ensureIssueHasSection(targetIssueId: number, slug: string): Promise<boolean> {
+    if (!targetIssueId || !slug) return true;
     try {
       const issue = await adminApi.getIssue(targetIssueId);
       const existing = issue.sections?.map((s) => s.slug) ?? [];
-      if (existing.includes(slug)) return;
+      if (existing.includes(slug)) return true;
       await adminApi.updateIssue(targetIssueId, {
         sections_slugs: [...existing, slug],
       });
-    } catch {
-      // Не валим сохранение статьи из-за ошибки синхронизации привязки.
+      return true;
+    } catch (e) {
+      setSaveError(
+        e instanceof ApiError
+          ? `Не удалось привязать рубрику к номеру: ${e.message}`
+          : "Не удалось привязать рубрику к номеру"
+      );
+      return false;
     }
   }
 
@@ -322,18 +328,26 @@ export default function ArticleFormPage({
       return;
     }
     try {
-      let targetIssueId = issueId;
+      // Бэк отвергает create/patch статьи, если выбранная рубрика не подписана
+      // к номеру. Поэтому привязку рубрики делаем ДО save статьи. Если она
+      // не сработала — saveError уже выставлен внутри ensureIssueHasSection,
+      // и сохранять статью бессмысленно.
+      const targetIssueId = isNew ? issueId : issueId;
+      if (targetIssueId) {
+        const ok = await ensureIssueHasSection(targetIssueId, sectionSlug);
+        if (!ok) {
+          setBusy(false);
+          return;
+        }
+      }
       if (isNew) {
         const created = await adminApi.createArticle(payload);
-        targetIssueId = created.issue_id ?? issueId;
-        await ensureIssueHasSection(targetIssueId, sectionSlug);
         router.replace(`/control/articles/${created.id}`);
       } else {
         // issue_id is read-only after creation (backend ignores it on PATCH)
         const { issue_id: _ignored, ...patch } = payload;
         void _ignored;
         await adminApi.updateArticle(articleId!, patch);
-        await ensureIssueHasSection(targetIssueId, sectionSlug);
         await loadArticle();
       }
     } catch (err) {
