@@ -126,19 +126,20 @@ export default function IssuesPage() {
               <th className="text-left px-4 py-3 font-medium text-gray-500">Дата выхода</th>
               <th className="text-left px-4 py-3 font-medium text-gray-500">Статус</th>
               <th className="text-left px-4 py-3 font-medium text-gray-500">Статей</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500">Рубрик</th>
               <th className="text-left px-4 py-3 font-medium text-gray-500">Действия</th>
             </tr>
           </thead>
           <tbody>
             {issues === null ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
                   Загрузка...
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
                   Номера не найдены
                 </td>
               </tr>
@@ -162,8 +163,9 @@ export default function IssuesPage() {
                   <td className="px-4 py-3 text-gray-500">
                     {issue.sections
                       ? issue.sections.reduce((sum, s) => sum + s.articles.length, 0)
-                      : issue.article_count}
+                      : issue.articles_count}
                   </td>
+                  <td className="px-4 py-3 text-gray-500">{issue.sections?.length ?? 0}</td>
                   <td className="px-4 py-3">
                     <Link
                       href={`/control/issues/${issue.id}`}
