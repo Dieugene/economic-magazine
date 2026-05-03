@@ -340,6 +340,7 @@ export default function IssueDetailPage({
                   <input
                     type="checkbox"
                     checked={checked}
+                    disabled={saveBusy}
                     onChange={(e) => {
                       setSelectedSlugs((prev) =>
                         e.target.checked

@@ -210,6 +210,7 @@ function SectionEditRow({
       onSaved();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Ошибка сохранения");
+    } finally {
       setBusy(false);
     }
   }
@@ -226,6 +227,7 @@ function SectionEditRow({
       </td>
       <td className="px-4 py-2">
         <input
+          required
           value={en}
           onChange={(e) => setEn(e.target.value)}
           className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
