@@ -332,7 +332,7 @@ export default function ArticleFormPage({
       // к номеру. Поэтому привязку рубрики делаем ДО save статьи. Если она
       // не сработала — saveError уже выставлен внутри ensureIssueHasSection,
       // и сохранять статью бессмысленно.
-      const targetIssueId = isNew ? issueId : issueId;
+      const targetIssueId = issueId;
       if (targetIssueId) {
         const ok = await ensureIssueHasSection(targetIssueId, sectionSlug);
         if (!ok) {
