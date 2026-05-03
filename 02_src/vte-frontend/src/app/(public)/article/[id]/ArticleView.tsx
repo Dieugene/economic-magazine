@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import Breadcrumbs from "@/components/public/Breadcrumbs";
-import AbstractTabs from "@/components/public/AbstractTabs";
 import DocumentTitle from "@/components/public/DocumentTitle";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import type { Article, ArticleType } from "@/lib/types";
+import type { Article, ArticleType, LocalizedString } from "@/lib/types";
 
 const TYPE_LABELS: Record<ArticleType, { ru: string; en: string }> = {
   Scientific: { ru: "Научная статья", en: "Scientific article" },
@@ -13,6 +12,23 @@ const TYPE_LABELS: Record<ArticleType, { ru: string; en: string }> = {
   Book_review: { ru: "Рецензия", en: "Book review" },
   Editorial: { ru: "От редактора", en: "Editorial" },
 };
+
+function pickLang(s: LocalizedString | null | undefined, lang: "ru" | "en"): string {
+  if (!s) return "";
+  return lang === "en" && s.en ? s.en : (s.ru ?? "");
+}
+
+function pickWithFallback(
+  value: { ru?: string; en?: string } | null | undefined,
+  lang: "ru" | "en"
+): { text: string; isFallback: boolean } | null {
+  if (!value) return null;
+  const primary = lang === "en" ? value.en : value.ru;
+  const secondary = lang === "en" ? value.ru : value.en;
+  if (primary && primary.trim()) return { text: primary, isFallback: false };
+  if (secondary && secondary.trim()) return { text: secondary, isFallback: true };
+  return null;
+}
 
 function formatDate(dateStr: string, lang: "ru" | "en"): string {
   const d = new Date(dateStr);
@@ -26,15 +42,11 @@ function formatDate(dateStr: string, lang: "ru" | "en"): string {
 export default function ArticleView({ article }: { article: Article }) {
   const { lang, t } = useLanguage();
 
-  const referencesRu = article.references
-    ?.filter((r) => r.text_ru)
-    .sort((a, b) => a.order - b.order);
-  const referencesEn = article.references
-    ?.filter((r) => r.text_en)
-    .sort((a, b) => a.order - b.order);
-
   const titleForLang = lang === "en" && article.title.en ? article.title.en : article.title.ru;
-  const authorsForLang = lang === "en" && article.authors.en ? article.authors.en : article.authors.ru;
+  const authorsForLang = (article.authors ?? [])
+    .map((a) => pickLang(a.full_name, lang))
+    .filter(Boolean)
+    .join(", ");
   const sectionForLang = lang === "en" && article.section_name.en ? article.section_name.en : article.section_name.ru;
   const abstractForLang = article.abstract
     ? lang === "en" && article.abstract.en ? article.abstract.en : article.abstract.ru
@@ -96,11 +108,6 @@ export default function ArticleView({ article }: { article: Article }) {
                 {article.title.en}
               </p>
             )}
-            {lang === "en" && article.title.ru && (
-              <p className="font-serif text-xl text-gray-500 italic leading-snug mb-6">
-                {article.title.ru}
-              </p>
-            )}
 
             {/* DOI + pages + UDK + JEL info bar */}
             <div className="bg-stone-200 border border-stone-400 rounded-sm p-4 mb-6 text-sm">
@@ -138,20 +145,59 @@ export default function ArticleView({ article }: { article: Article }) {
             </div>
 
             {/* Authors */}
-            <div className="mb-8">
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-                {t("Авторы", "Authors")}
-              </h3>
-              <div className="p-4 bg-white border border-stone-400 rounded-sm">
-                <p className="font-medium text-forest-700">{authorsForLang}</p>
-                {lang === "ru" && article.authors.en && (
-                  <p className="text-sm text-gray-500 italic mt-1">{article.authors.en}</p>
-                )}
-                {lang === "en" && article.authors.ru && (
-                  <p className="text-sm text-gray-500 italic mt-1">{article.authors.ru}</p>
-                )}
+            {article.authors && article.authors.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                  {t("Авторы", "Authors")}
+                </h3>
+                <div className="bg-white border border-stone-400 rounded-sm divide-y divide-stone-200">
+                  {article.authors.map((author, idx) => {
+                    const fullName = pickLang(author.full_name, lang);
+                    const degree = pickLang(author.degree, lang);
+                    return (
+                      <div key={idx} className="p-4 text-sm leading-relaxed">
+                        <p className="font-medium text-forest-700 text-base">{fullName}</p>
+                        {degree && (
+                          <p className="text-gray-600 mt-0.5">{degree}</p>
+                        )}
+                        <div className="text-gray-600 mt-1 space-y-0.5">
+                          {author.orcid && (
+                            <p>
+                              ORCID:{" "}
+                              <a
+                                href={`https://orcid.org/${author.orcid}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-teal-600 hover:text-copper-400 transition-colors"
+                              >
+                                {author.orcid}
+                              </a>
+                            </p>
+                          )}
+                          {author.email && <p>{author.email}</p>}
+                        </div>
+                        {author.affiliations && author.affiliations.length > 0 && (
+                          <ul className="mt-2 text-gray-700 space-y-0.5">
+                            {author.affiliations.map((aff, j) => {
+                              const position = pickLang(aff.position, lang);
+                              const org = pickLang(aff.organization_name, lang);
+                              const sep = position && org ? ", " : "";
+                              return (
+                                <li key={j}>
+                                  {position}
+                                  {sep}
+                                  {org}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Dates */}
             {(article.received_date || article.accepted_date) && (
@@ -176,16 +222,53 @@ export default function ArticleView({ article }: { article: Article }) {
             )}
           </div>
 
-          {/* Abstract (single language based on UI lang) */}
-          {abstractForLang && (
-            <AbstractTabs
-              abstract_ru={article.abstract?.ru ?? ""}
-              abstract_en={article.abstract?.en}
-              keywords_ru={article.keywords?.ru}
-              keywords_en={article.keywords?.en}
-            />
-          )}
-          {/* AbstractTabs already supports both languages internally */}
+          {/* Abstract */}
+          {(() => {
+            const abstract = pickWithFallback(article.abstract, lang);
+            const keywords = lang === "en" && article.keywords?.en?.length
+              ? { items: article.keywords.en, isFallback: false }
+              : article.keywords?.ru?.length
+                ? { items: article.keywords.ru, isFallback: lang === "en" }
+                : null;
+            if (!abstract && !keywords) return null;
+            return (
+              <div className="mb-8 bg-white border border-stone-400 rounded-sm p-6">
+                <h3 className="font-serif text-2xl font-semibold text-forest-600 mb-4">
+                  {t("Аннотация", "Abstract")}
+                  {abstract?.isFallback && (
+                    <span className="ml-3 text-xs font-normal text-gray-500 italic">
+                      {lang === "en" ? "(in Russian)" : "(на английском)"}
+                    </span>
+                  )}
+                </h3>
+                {abstract && (
+                  <p className="text-[15px] text-gray-700 leading-relaxed">{abstract.text}</p>
+                )}
+                {keywords && (
+                  <div className="mt-5">
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                      {t("Ключевые слова", "Keywords")}
+                      {keywords.isFallback && (
+                        <span className="ml-2 normal-case font-normal italic">
+                          {lang === "en" ? "(in Russian)" : "(на английском)"}
+                        </span>
+                      )}
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {keywords.items.map((kw) => (
+                        <span
+                          key={kw}
+                          className="inline-block text-xs bg-stone-200 text-gray-600 px-2.5 py-1 rounded-sm"
+                        >
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Funding */}
           {fundingForLang && (
@@ -197,33 +280,65 @@ export default function ArticleView({ article }: { article: Article }) {
             </div>
           )}
 
-          {/* Bibliography (Russian) */}
-          {referencesRu && referencesRu.length > 0 && (
-            <div className="mb-8">
-              <h3 className="font-serif text-2xl font-semibold text-forest-600 mb-4">
-                {t("Литература", "Bibliography")}
-              </h3>
-              <ol className="space-y-3 text-sm text-gray-700 leading-relaxed list-decimal list-outside pl-5">
-                {referencesRu.map((ref) => (
-                  <li key={ref.order}>{ref.text_ru}</li>
-                ))}
-              </ol>
-            </div>
-          )}
+          {/* References */}
+          {(() => {
+            const refsArr = article.references ?? [];
+            const primaryKey = lang === "en" ? "en" : "ru";
+            const secondaryKey = lang === "en" ? "ru" : "en";
+            const primary = refsArr.map((r) => r[primaryKey]).filter(Boolean).join("\n");
+            const secondary = refsArr.map((r) => r[secondaryKey]).filter(Boolean).join("\n");
+            const text = primary || secondary;
+            const isFallback = !primary && !!secondary;
+            if (!text) return null;
+            return (
+              <div className="mb-8">
+                <h3 className="font-serif text-2xl font-semibold text-forest-600 mb-4">
+                  {t("Литература", "References")}
+                  {isFallback && (
+                    <span className="ml-3 text-xs font-normal text-gray-500 italic">
+                      {lang === "en" ? "(in Russian)" : "(на английском)"}
+                    </span>
+                  )}
+                </h3>
+                <p className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed">{text}</p>
+              </div>
+            );
+          })()}
 
-          {/* References (English) */}
-          {referencesEn && referencesEn.length > 0 && (
-            <div className="mb-8">
-              <h3 className="font-serif text-2xl font-semibold text-forest-600 mb-4">
-                References
-              </h3>
-              <ol className="space-y-3 text-sm text-gray-700 leading-relaxed list-decimal list-outside pl-5">
-                {referencesEn.map((ref) => (
-                  <li key={ref.order}>{ref.text_en}</li>
-                ))}
-              </ol>
-            </div>
-          )}
+          {/* Copyright */}
+          {(() => {
+            const authorsCopy = (article.authors ?? [])
+              .map((a) => {
+                const name = pickLang(a.full_name, lang).trim();
+                if (!name) return null;
+                const parts = name.split(/\s+/);
+                if (lang === "en") {
+                  if (parts.length >= 2) {
+                    const first = parts[0][0] + ".";
+                    const last = parts.slice(1).join(" ");
+                    return `${first} ${last}`;
+                  }
+                  return name;
+                }
+                if (parts.length >= 2) {
+                  const surname = parts[0];
+                  const initials = parts.slice(1).map((p) => p[0] + ".").join(" ");
+                  return `${initials} ${surname}`;
+                }
+                return name;
+              })
+              .filter(Boolean)
+              .join(", ");
+            const journalCopy = lang === "en"
+              ? "Institute of Economics of the Russian Academy of Sciences «Issues of Economic Theory»"
+              : "ФГБУН Институт экономики РАН «Вопросы теоретической экономики»";
+            return (
+              <div className="mb-6 text-xs text-gray-500 leading-relaxed">
+                {authorsCopy && <p>© {authorsCopy}, {article.issue_year}</p>}
+                <p>© {journalCopy}, {article.issue_year}</p>
+              </div>
+            );
+          })()}
 
           {/* Citation block */}
           <div className="p-5 bg-forest-50 border border-forest-200 rounded-sm">
@@ -280,6 +395,17 @@ export default function ArticleView({ article }: { article: Article }) {
                   </a>
                 )}
               </div>
+              <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+                {t("Лицензия", "License")}:{" "}
+                <a
+                  href="https://creativecommons.org/licenses/by/4.0/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-teal-600 hover:text-copper-400 transition-colors"
+                >
+                  Creative Commons 4.0 BY
+                </a>
+              </p>
             </div>
 
             {/* Metadata card */}
