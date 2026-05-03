@@ -303,26 +303,9 @@ export default function ArticleView({ article }: { article: Article }) {
 
           {/* Copyright */}
           {(() => {
+            // Имена в БД хранятся уже в форме «Фамилия И.И.» / «Surname I.I.» — берём as-is.
             const authorsCopy = (article.authors ?? [])
-              .map((a) => {
-                const name = pickLang(a.full_name, lang).trim();
-                if (!name) return null;
-                const parts = name.split(/\s+/);
-                if (lang === "en") {
-                  if (parts.length >= 2) {
-                    const first = parts[0][0] + ".";
-                    const last = parts.slice(1).join(" ");
-                    return `${first} ${last}`;
-                  }
-                  return name;
-                }
-                if (parts.length >= 2) {
-                  const surname = parts[0];
-                  const initials = parts.slice(1).map((p) => p[0] + ".").join(" ");
-                  return `${initials} ${surname}`;
-                }
-                return name;
-              })
+              .map((a) => pickLang(a.full_name, lang).trim())
               .filter(Boolean)
               .join(", ");
             const journalCopy = lang === "en"
