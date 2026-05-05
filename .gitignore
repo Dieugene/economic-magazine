@@ -12,6 +12,9 @@ DEVELOPER_WORKFLOW.md
 CLAUDE.md
 CLAUDE_CONTEXT.md
 
+# Local working notes (may contain credentials)
+00_docs/specs/backlog.txt
+
 # Temporary/old files
 .old/
 *.bak
@@ -22,6 +25,10 @@ CLAUDE_CONTEXT.md
 # Project data and logs (generated during work)
 03_data/
 04_logs/
+
+# QA fixtures (binary, regenerable) — track only the manifest
+00_docs/qa/fixtures/*
+!00_docs/qa/fixtures/README.md
 
 # OS
 .DS_Store
