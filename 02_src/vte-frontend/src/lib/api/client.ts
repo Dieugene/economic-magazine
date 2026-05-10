@@ -450,29 +450,6 @@ export const adminApi = {
     return res.blob();
   },
 
-  // Sections
-  createSection: (name: { ru: string; en: string }) =>
-    fetchApi<Section>('/sections/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-      auth: true,
-    }),
-
-  updateSection: (slug: string, name: { ru: string; en: string }) =>
-    fetchApi<Section>(`/sections/${slug}/`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-      auth: true,
-    }),
-
-  deleteSection: (slug: string) =>
-    fetchApi<void>(`/sections/${slug}/`, {
-      method: 'DELETE',
-      auth: true,
-    }),
-
   // ── Users ──────────────────────────────────────────────────────
   changePassword: (oldPassword: string, newPassword: string) =>
     fetchApi<{ message: string }>('/users/change_password/', {
