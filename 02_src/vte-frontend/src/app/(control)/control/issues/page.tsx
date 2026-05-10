@@ -177,6 +177,7 @@ export default function IssuesPage() {
 
       {createOpen && (
         <CreateIssueModal
+          existingIssues={issues ?? []}
           onClose={() => setCreateOpen(false)}
           onCreated={() => {
             setCreateOpen(false);
@@ -189,9 +190,11 @@ export default function IssuesPage() {
 }
 
 function CreateIssueModal({
+  existingIssues,
   onClose,
   onCreated,
 }: {
+  existingIssues: IssueSummary[];
   onClose: () => void;
   onCreated: () => void;
 }) {
@@ -204,6 +207,15 @@ function CreateIssueModal({
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    const duplicate = existingIssues.find(
+      (i) => i.year === year && i.number === number,
+    );
+    if (duplicate) {
+      toast.error(
+        `Выпуск ${year} № ${number} уже существует (id=${duplicate.id}). Измените номер.`,
+      );
+      return;
+    }
     setBusy(true);
     try {
       await adminApi.createIssue({
