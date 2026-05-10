@@ -103,6 +103,10 @@ export default function ArticleFormPage({
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
 
+  // Статус выпуска нужен только для информационного баннера на форме статьи
+  // в Published-номере: «всё редактируется». Сама форма не блокируется.
+  const [issueStatus, setIssueStatus] = useState<string | null>(null);
+
   async function loadSections() {
     try {
       const data = await api.getSections();
@@ -151,6 +155,25 @@ export default function ArticleFormPage({
     if (!isNew) loadArticle();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [articleId]);
+
+  useEffect(() => {
+    if (!issueId) {
+      setIssueStatus(null);
+      return;
+    }
+    let cancelled = false;
+    adminApi
+      .getIssue(issueId)
+      .then((iss) => {
+        if (!cancelled) setIssueStatus(iss.status);
+      })
+      .catch(() => {
+        if (!cancelled) setIssueStatus(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [issueId]);
 
   // When sections load, set the dropdown value to match the article's section
   useEffect(() => {
@@ -417,6 +440,14 @@ export default function ArticleFormPage({
           </span>
         </div>
       </div>
+
+      {issueStatus === "Published" && (
+        <div className="rounded border border-amber-200 bg-amber-50 px-4 py-3 mb-6 text-sm text-amber-800">
+          Номер опубликован, но статья остаётся редактируемой. Меняйте поля,
+          PDF, ссылку XML — изменения уйдут на публичную страницу сразу после
+          сохранения.
+        </div>
+      )}
 
       {/* Breadcrumbs + actions */}
       <div className="flex items-center justify-between mb-6">

@@ -10,6 +10,7 @@ import type { IssueFull, IssueStatus, Article, Section } from "@/lib/types";
 import { adminApi, api } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
 import DocumentTitle from "@/components/public/DocumentTitle";
+import DateInput from "@/components/admin/DateInput";
 
 const statusLabels: Record<IssueStatus, string> = {
   Draft: "Черновик",
@@ -34,6 +35,7 @@ export default function IssueDetailPage({
   const [year, setYear] = useState<number>(0);
   const [number, setNumber] = useState<number>(0);
   const [seqNumber, setSeqNumber] = useState<number>(0);
+  const [publishedDate, setPublishedDate] = useState<string>("");
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -50,6 +52,7 @@ export default function IssueDetailPage({
       setYear(data.year);
       setNumber(data.number);
       setSeqNumber(data.sequential_number);
+      setPublishedDate(data.published_date ?? "");
       setSelectedSlugs(data.sections?.map((s) => s.slug) ?? []);
       try {
         const arts = await adminApi.listArticles(issueId);
@@ -81,6 +84,7 @@ export default function IssueDetailPage({
         number,
         sequential_number: seqNumber,
         sections_slugs: selectedSlugs,
+        published_date: publishedDate || null,
       });
       await loadAll();
       toast.success("Выпуск сохранён");
@@ -253,6 +257,12 @@ export default function IssueDetailPage({
               className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-600/20 focus:border-forest-600"
             />
           </div>
+          <DateInput
+            id="issue-published-date"
+            label="Дата выхода"
+            value={publishedDate}
+            onChange={setPublishedDate}
+          />
           <div>
             <label className="field-label">Текущий статус</label>
             <p className="px-3 py-2 text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded">
@@ -269,13 +279,16 @@ export default function IssueDetailPage({
             <Save className="w-4 h-4" />
             Сохранить данные
           </button>
-          {issue.published_date && (
-            <span className="text-xs text-gray-500">
-              Дата выхода: {issue.published_date}
-            </span>
-          )}
         </div>
       </div>
+
+      {issue.status === "Published" && (
+        <div className="rounded border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Номер опубликован, но остаётся полностью редактируемым. Меняйте
+          метаданные, рубрики, обложку, PDF, ссылку на XML, состав статей —
+          изменения попадут на публичную страницу сразу после сохранения.
+        </div>
+      )}
 
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
