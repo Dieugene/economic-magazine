@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { adminApi, api, type ArticleCreatePayload } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
+import { findOverlaps } from "@/lib/utils/pages";
 import type { Article, ArticleType, Author, Affiliation, Section } from "@/lib/types";
 import DocumentTitle from "@/components/public/DocumentTitle";
 
@@ -315,6 +316,29 @@ export default function ArticleFormPage({
     }
   }
 
+  // Проверяем, не перекрывается ли диапазон страниц с другими статьями того же
+  // выпуска. Не блокирует сохранение — просто показывает warning toast.
+  async function checkPagesOverlap(savedArticleId: number, savedIssueId: number, savedPages: string) {
+    if (!savedIssueId || !savedPages) return;
+    try {
+      const all = await adminApi.listArticles(savedIssueId);
+      const overlaps = findOverlaps(
+        { id: savedArticleId, pages: savedPages },
+        all.map((a) => ({ id: a.id, pages: a.pages, title: a.title.ru }))
+      );
+      if (overlaps.length === 0) return;
+      const list = overlaps
+        .map((o) => `«${o.title}» (с. ${o.pages})`)
+        .join("; ");
+      toast.warning(
+        `Диапазон страниц перекрывается со ${overlaps.length === 1 ? "статьёй" : "статьями"}: ${list}`,
+        { description: "Сохранено, но проверьте порядок страниц в номере." }
+      );
+    } catch {
+      // Молча игнорируем — это не критичная проверка, статья уже сохранена.
+    }
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -339,6 +363,7 @@ export default function ArticleFormPage({
       if (isNew) {
         const created = await adminApi.createArticle(payload);
         toast.success("Статья создана");
+        await checkPagesOverlap(created.id, created.issue_id, created.pages);
         router.replace(`/control/articles/${created.id}`);
       } else {
         // issue_id is read-only after creation (backend ignores it on PATCH)
@@ -347,6 +372,7 @@ export default function ArticleFormPage({
         await adminApi.updateArticle(articleId!, patch);
         await loadArticle();
         toast.success("Статья сохранена");
+        await checkPagesOverlap(articleId!, issueId, payload.pages);
       }
     } catch (err) {
       toast.error(parseApiError(err), { description: "Не удалось сохранить статью" });
