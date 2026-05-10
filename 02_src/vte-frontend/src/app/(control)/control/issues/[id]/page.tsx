@@ -4,7 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Upload, ChevronRight, Save, Trash2, Plus, FileText } from "lucide-react";
+import {
+  Upload,
+  ChevronRight,
+  Save,
+  Trash2,
+  Plus,
+  FileText,
+  FileCheck,
+  FileX,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { IssueFull, IssueStatus, Article, Section } from "@/lib/types";
 import { adminApi, api } from "@/lib/api/client";
@@ -179,6 +188,27 @@ export default function IssueDetailPage({
     return <div className="text-gray-400">Загрузка...</div>;
   }
 
+  // Превентивная защита публикации: бэк отвергает 400 если у выпуска или
+  // любой статьи нет PDF. Считаем причины блокировки заранее, чтобы
+  // показать редактору ДО клика, что именно мешает опубликовать.
+  const articlesWithoutPdf = articles.filter((a) => a.pdf_file === null);
+  const publishBlockReasons: string[] = [];
+  if (issue.pdf_file === null) {
+    publishBlockReasons.push("Не загружен PDF выпуска");
+  }
+  if (articlesWithoutPdf.length > 0) {
+    const titlesShown = articlesWithoutPdf
+      .slice(0, 3)
+      .map((a) => `«${a.title.ru || `ID ${a.id}`}»`)
+      .join("; ");
+    const rest = articlesWithoutPdf.length - 3;
+    const suffix = rest > 0 ? `; и ещё ${rest}` : "";
+    publishBlockReasons.push(
+      `PDF не загружен у статьи: ${titlesShown}${suffix}`
+    );
+  }
+  const canPublish = publishBlockReasons.length === 0;
+
   return (
     <div className="space-y-6">
       <DocumentTitle
@@ -302,13 +332,35 @@ export default function IssueDetailPage({
             </button>
           )}
           {issue.status !== "Published" && (
-            <button
-              onClick={() => handleStatusChange("Published")}
-              disabled={saveBusy}
-              className="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-            >
-              Опубликовать
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => handleStatusChange("Published")}
+                disabled={saveBusy || !canPublish}
+                title={
+                  canPublish
+                    ? undefined
+                    : `Невозможно опубликовать: ${publishBlockReasons.join("; ")}`
+                }
+                className="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed self-start"
+              >
+                Опубликовать
+              </button>
+              {!canPublish && (
+                <div
+                  role="status"
+                  className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+                >
+                  <p className="font-medium mb-0.5">
+                    Публикация заблокирована:
+                  </p>
+                  <ul className="list-disc pl-4 space-y-0.5">
+                    {publishBlockReasons.map((reason) => (
+                      <li key={reason}>{reason}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -477,6 +529,24 @@ export default function IssueDetailPage({
                 <span className="flex-shrink-0 text-xs bg-stone-100 text-gray-500 px-2 py-0.5 rounded hidden sm:inline-block">
                   {article.section_name?.ru ?? "—"}
                 </span>
+
+                {article.pdf_file ? (
+                  <span
+                    className="flex-shrink-0 text-emerald-600"
+                    aria-label="PDF загружен"
+                    title="PDF загружен"
+                  >
+                    <FileCheck className="w-4 h-4" />
+                  </span>
+                ) : (
+                  <span
+                    className="flex-shrink-0 text-red-600"
+                    aria-label="PDF не загружен"
+                    title="PDF не загружен"
+                  >
+                    <FileX className="w-4 h-4" />
+                  </span>
+                )}
 
                 {article.pdf_file && (
                   <a
