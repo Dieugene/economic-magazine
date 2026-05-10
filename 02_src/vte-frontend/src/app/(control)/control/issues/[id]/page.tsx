@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Upload, ChevronRight, Save, Trash2, Plus, FileText, ChevronUp, ChevronDown } from "lucide-react";
+import { Upload, ChevronRight, Save, Trash2, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 import type { IssueFull, IssueStatus, Article, Section } from "@/lib/types";
 import { adminApi, api } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
+import { comparePages } from "@/lib/utils/pages";
 import DocumentTitle from "@/components/public/DocumentTitle";
 
 const statusLabels: Record<IssueStatus, string> = {
@@ -53,7 +54,7 @@ export default function IssueDetailPage({
       setSelectedSlugs(data.sections?.map((s) => s.slug) ?? []);
       try {
         const arts = await adminApi.listArticles(issueId);
-        setArticles(arts);
+        setArticles([...arts].sort((a, b) => comparePages(a.pages, b.pages)));
       } catch {
         setArticles([]);
       }
@@ -152,27 +153,6 @@ export default function IssueDetailPage({
       toast.success("Статья удалена");
     } catch (e) {
       toast.error(parseApiError(e), { description: "Не удалось удалить статью" });
-    }
-  }
-
-  const [reorderBusy, setReorderBusy] = useState(false);
-
-  async function handleReorder(index: number, direction: -1 | 1) {
-    const target = index + direction;
-    if (target < 0 || target >= articles.length) return;
-    const next = [...articles];
-    [next[index], next[target]] = [next[target], next[index]];
-    // Optimistic update
-    setArticles(next);
-    setReorderBusy(true);
-    try {
-      await adminApi.reorderArticles(issueId, next.map((a) => a.id));
-    } catch (e) {
-      // Rollback on error
-      setArticles(articles);
-      toast.error(parseApiError(e), { description: "Не удалось изменить порядок" });
-    } finally {
-      setReorderBusy(false);
     }
   }
 
@@ -452,34 +432,14 @@ export default function IssueDetailPage({
           </p>
         ) : (
           <div className="divide-y divide-gray-100">
+            <p className="text-xs text-gray-400 mb-2">
+              Статьи отсортированы по диапазону страниц.
+            </p>
             {articles.map((article, index) => (
               <div
                 key={article.id}
                 className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
               >
-                <div className="flex-shrink-0 flex flex-col">
-                  <button
-                    type="button"
-                    onClick={() => handleReorder(index, -1)}
-                    disabled={index === 0 || reorderBusy}
-                    aria-label="Переместить выше"
-                    title="Переместить выше"
-                    className="text-gray-400 hover:text-forest-600 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronUp className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleReorder(index, 1)}
-                    disabled={index === articles.length - 1 || reorderBusy}
-                    aria-label="Переместить ниже"
-                    title="Переместить ниже"
-                    className="text-gray-400 hover:text-forest-600 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-                </div>
-
                 <span className="w-7 h-7 flex-shrink-0 bg-gray-100 rounded text-xs font-medium text-gray-500 flex items-center justify-center">
                   {index + 1}
                 </span>

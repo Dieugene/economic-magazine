@@ -5,6 +5,7 @@ import JournalCover from "@/components/public/JournalCover";
 import ArticleCard from "@/components/public/ArticleCard";
 import DocumentTitle from "@/components/public/DocumentTitle";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { comparePages } from "@/lib/utils/pages";
 import type { Article, IssueFull } from "@/lib/types";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
@@ -133,7 +134,9 @@ export default function IssueView({ data }: IssueViewProps) {
 
           {/* Sections with articles */}
           {data.sections.map((sectionGroup, sIdx) => {
-            const sectionArticles = sectionGroup.articles;
+            const sectionArticles = [...sectionGroup.articles].sort((a, b) =>
+              comparePages(a.pages, b.pages)
+            );
             const sectionTitle = lang === "en" && sectionGroup.name.en
               ? sectionGroup.name.en
               : sectionGroup.name.ru;
