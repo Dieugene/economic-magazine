@@ -1,6 +1,7 @@
 import Header from "@/components/public/Header";
 import Navigation from "@/components/public/Navigation";
 import Footer from "@/components/public/Footer";
+import CookieBanner from "@/components/public/CookieBanner";
 
 export default function PublicLayout({
   children,
@@ -15,6 +16,7 @@ export default function PublicLayout({
         {children}
       </main>
       <Footer />
+      <CookieBanner />
     </>
   );
 }
