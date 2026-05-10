@@ -322,22 +322,16 @@ export default function ArticleFormPage({
 
   // Бэк отвергает создание/обновление статьи в рубрике, не подписанной к
   // номеру (sections_slugs). Поэтому привязку рубрики к номеру нужно делать
-  // ДО POST/PATCH статьи. Возвращает true, если шаг прошёл (или не нужен),
-  // false если упал — тогда сохранение статьи смысла не имеет.
-  async function ensureIssueHasSection(targetIssueId: number, slug: string): Promise<boolean> {
-    if (!targetIssueId || !slug) return true;
-    try {
-      const issue = await adminApi.getIssue(targetIssueId);
-      const existing = issue.sections?.map((s) => s.slug) ?? [];
-      if (existing.includes(slug)) return true;
-      await adminApi.updateIssue(targetIssueId, {
-        sections_slugs: [...existing, slug],
-      });
-      return true;
-    } catch (e) {
-      toast.error(parseApiError(e), { description: "Не удалось привязать рубрику к номеру" });
-      return false;
-    }
+  // ДО POST/PATCH статьи. Если шаг падает — пробрасываем ошибку, итоговый
+  // toast покажет вызывающий handler.
+  async function ensureIssueHasSection(targetIssueId: number, slug: string): Promise<void> {
+    if (!targetIssueId || !slug) return;
+    const issue = await adminApi.getIssue(targetIssueId);
+    const existing = issue.sections?.map((s) => s.slug) ?? [];
+    if (existing.includes(slug)) return;
+    await adminApi.updateIssue(targetIssueId, {
+      sections_slugs: [...existing, slug],
+    });
   }
 
   // Проверяем, не перекрывается ли диапазон страниц с другими статьями того же
@@ -373,16 +367,10 @@ export default function ArticleFormPage({
     }
     try {
       // Бэк отвергает create/patch статьи, если выбранная рубрика не подписана
-      // к номеру. Поэтому привязку рубрики делаем ДО save статьи. Если она
-      // не сработала — toast уже показан внутри ensureIssueHasSection,
-      // и сохранять статью бессмысленно.
-      const targetIssueId = issueId;
-      if (targetIssueId) {
-        const ok = await ensureIssueHasSection(targetIssueId, sectionSlug);
-        if (!ok) {
-          setBusy(false);
-          return;
-        }
+      // к номеру. Поэтому привязку рубрики делаем ДО save статьи; ошибка
+      // долетит до общего catch и поднимется как один итоговый toast.
+      if (issueId) {
+        await ensureIssueHasSection(issueId, sectionSlug);
       }
       if (isNew) {
         const created = await adminApi.createArticle(payload);
