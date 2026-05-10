@@ -336,21 +336,29 @@ export default function ArticleFormPage({
 
   // Проверяем, не перекрывается ли диапазон страниц с другими статьями того же
   // выпуска. Не блокирует сохранение — просто показывает warning toast.
+  // Дополнительно фильтруем результат listArticles по issue_id (страховка от
+  // регрессий бэка вида Bug-71, когда эндпоинт начинал отдавать чужие статьи).
   async function checkPagesOverlap(savedArticleId: number, savedIssueId: number, savedPages: string) {
     if (!savedIssueId || !savedPages) return;
     try {
       const all = await adminApi.listArticles(savedIssueId);
+      const own = all.filter((a) => a.issue_id === savedIssueId);
       const overlaps = findOverlaps(
         { id: savedArticleId, pages: savedPages },
-        all.map((a) => ({ id: a.id, pages: a.pages, title: a.title.ru }))
+        own.map((a) => ({ id: a.id, pages: a.pages, title: a.title.ru }))
       );
       if (overlaps.length === 0) return;
       const list = overlaps
         .map((o) => `«${o.title}» (с. ${o.pages})`)
         .join("; ");
+      // duration 8s — warning должен оставаться видимым достаточно долго,
+      // чтобы редактор заметил и прочитал список перекрытий рядом с success-toast.
       toast.warning(
         `Диапазон страниц перекрывается со ${overlaps.length === 1 ? "статьёй" : "статьями"}: ${list}`,
-        { description: "Сохранено, но проверьте порядок страниц в номере." }
+        {
+          description: "Сохранено, но проверьте порядок страниц в номере.",
+          duration: 8000,
+        }
       );
     } catch {
       // Молча игнорируем — это не критичная проверка, статья уже сохранена.
