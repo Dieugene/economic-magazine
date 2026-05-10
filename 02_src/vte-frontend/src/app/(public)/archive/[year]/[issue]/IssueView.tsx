@@ -7,6 +7,7 @@ import DocumentTitle from "@/components/public/DocumentTitle";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { comparePages } from "@/lib/utils/pages";
 import type { Article, IssueFull } from "@/lib/types";
+import { formatDateRu } from "@/lib/utils/date";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 
@@ -20,18 +21,17 @@ const MONTHS_EN = [
 ];
 
 function formatDate(dateStr: string, lang: "ru" | "en"): string {
-  const d = new Date(dateStr);
+  // Парсим строку ISO YYYY-MM-DD вручную — без new Date(), чтобы не уехать
+  // на сутки из-за UTC-парсинга в браузерах с отрицательным offset.
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (!m) return "";
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
   const months = lang === "en" ? MONTHS_EN : MONTHS_RU;
   return lang === "en"
-    ? `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
-    : `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-function formatDateShort(dateStr: string): string {
-  const d = new Date(dateStr);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  return `${dd}.${mm}.${d.getFullYear()}`;
+    ? `${months[mo - 1]} ${d}, ${y}`
+    : `${d} ${months[mo - 1]} ${y}`;
 }
 
 function getLastPage(articles: Article[]): number {
@@ -204,7 +204,7 @@ export default function IssueView({ data }: IssueViewProps) {
                   {publishedDate && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">{t("Дата:", "Date:")}</span>
-                      <span className="text-forest-600 font-medium">{formatDateShort(publishedDate)}</span>
+                      <span className="text-forest-600 font-medium">{formatDateRu(publishedDate)}</span>
                     </div>
                   )}
                 </div>
