@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Archive, Menu, Eye, LogOut, BookOpen } from "lucide-react";
+import { Toaster } from "sonner";
 import { auth, tokenStore } from "@/lib/api/client";
 import type { CurrentUser } from "@/lib/types";
 
@@ -45,7 +46,14 @@ export default function AdminLayout({
     router.push("/control/login");
   }
 
-  if (isLoginPage) return <>{children}</>;
+  if (isLoginPage) {
+    return (
+      <>
+        {children}
+        <Toaster position="top-right" richColors closeButton />
+      </>
+    );
+  }
   if (!authChecked) return null;
 
   return (
@@ -173,6 +181,7 @@ export default function AdminLayout({
         {/* Page content */}
         <main className="flex-1 p-6">{children}</main>
       </div>
+      <Toaster position="top-right" richColors closeButton />
     </div>
   );
 }

@@ -5,8 +5,10 @@ import { use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Upload, ChevronRight, Save, Trash2, Plus, FileText, ChevronUp, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 import type { IssueFull, IssueStatus, Article, Section } from "@/lib/types";
-import { adminApi, api, ApiError } from "@/lib/api/client";
+import { adminApi, api } from "@/lib/api/client";
+import { parseApiError } from "@/lib/api/errors";
 import DocumentTitle from "@/components/public/DocumentTitle";
 
 const statusLabels: Record<IssueStatus, string> = {
@@ -27,7 +29,6 @@ export default function IssueDetailPage({
   const [issue, setIssue] = useState<IssueFull | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loadError, setLoadError] = useState("");
-  const [saveError, setSaveError] = useState("");
   const [saveBusy, setSaveBusy] = useState(false);
 
   const [year, setYear] = useState<number>(0);
@@ -58,7 +59,7 @@ export default function IssueDetailPage({
       }
       setLoadError("");
     } catch (e) {
-      setLoadError(e instanceof ApiError ? e.message : "Ошибка загрузки номера");
+      setLoadError(parseApiError(e));
     }
   }
 
@@ -74,7 +75,6 @@ export default function IssueDetailPage({
   async function handleSave() {
     if (!issue) return;
     setSaveBusy(true);
-    setSaveError("");
     try {
       await adminApi.updateIssue(issueId, {
         year,
@@ -83,8 +83,9 @@ export default function IssueDetailPage({
         sections_slugs: selectedSlugs,
       });
       await loadAll();
+      toast.success("Выпуск сохранён");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка сохранения");
+      toast.error(parseApiError(e), { description: "Не удалось сохранить номер" });
     } finally {
       setSaveBusy(false);
     }
@@ -93,12 +94,12 @@ export default function IssueDetailPage({
   async function handleStatusChange(newStatus: IssueStatus) {
     if (!issue) return;
     setSaveBusy(true);
-    setSaveError("");
     try {
       await adminApi.updateIssueStatus(issueId, newStatus);
       await loadAll();
+      toast.success(`Статус изменён: ${statusLabels[newStatus]}`);
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка изменения статуса");
+      toast.error(parseApiError(e), { description: "Не удалось изменить статус" });
     } finally {
       setSaveBusy(false);
     }
@@ -109,21 +110,22 @@ export default function IssueDetailPage({
     setSaveBusy(true);
     try {
       await adminApi.deleteIssue(issueId);
+      toast.success("Номер удалён");
       router.push("/control/issues");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка удаления");
+      toast.error(parseApiError(e), { description: "Не удалось удалить номер" });
       setSaveBusy(false);
     }
   }
 
   async function handleCoverUpload(file: File) {
     setCoverBusy(true);
-    setSaveError("");
     try {
       await adminApi.uploadIssueCover(issueId, file);
       await loadAll();
+      toast.success("Обложка загружена");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка загрузки обложки");
+      toast.error(parseApiError(e), { description: "Не удалось загрузить обложку" });
     } finally {
       setCoverBusy(false);
     }
@@ -131,12 +133,12 @@ export default function IssueDetailPage({
 
   async function handlePdfUpload(file: File) {
     setPdfBusy(true);
-    setSaveError("");
     try {
       await adminApi.uploadIssuePdf(issueId, file);
       await loadAll();
+      toast.success("PDF загружен");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка загрузки PDF");
+      toast.error(parseApiError(e), { description: "Не удалось загрузить PDF" });
     } finally {
       setPdfBusy(false);
     }
@@ -147,8 +149,9 @@ export default function IssueDetailPage({
     try {
       await adminApi.deleteArticle(articleId);
       await loadAll();
+      toast.success("Статья удалена");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка удаления статьи");
+      toast.error(parseApiError(e), { description: "Не удалось удалить статью" });
     }
   }
 
@@ -162,13 +165,12 @@ export default function IssueDetailPage({
     // Optimistic update
     setArticles(next);
     setReorderBusy(true);
-    setSaveError("");
     try {
       await adminApi.reorderArticles(issueId, next.map((a) => a.id));
     } catch (e) {
       // Rollback on error
       setArticles(articles);
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка изменения порядка");
+      toast.error(parseApiError(e), { description: "Не удалось изменить порядок" });
     } finally {
       setReorderBusy(false);
     }
@@ -215,12 +217,6 @@ export default function IssueDetailPage({
           Удалить номер
         </button>
       </div>
-
-      {saveError && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-          {saveError}
-        </div>
-      )}
 
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">

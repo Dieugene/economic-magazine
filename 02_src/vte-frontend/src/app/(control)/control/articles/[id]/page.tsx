@@ -15,7 +15,9 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
-import { adminApi, api, ApiError, type ArticleCreatePayload } from "@/lib/api/client";
+import { toast } from "sonner";
+import { adminApi, api, type ArticleCreatePayload } from "@/lib/api/client";
+import { parseApiError } from "@/lib/api/errors";
 import type { Article, ArticleType, Author, Affiliation, Section } from "@/lib/types";
 import DocumentTitle from "@/components/public/DocumentTitle";
 
@@ -68,7 +70,6 @@ export default function ArticleFormPage({
   const [sections, setSections] = useState<Section[]>([]);
   const [article, setArticle] = useState<Article | null>(null);
   const [loadError, setLoadError] = useState("");
-  const [saveError, setSaveError] = useState("");
   const [busy, setBusy] = useState(false);
 
   // Form state
@@ -141,7 +142,7 @@ export default function ArticleFormPage({
       setReferencesEn(refs.map((r) => r.en).join("\n"));
       setLoadError("");
     } catch (e) {
-      setLoadError(e instanceof ApiError ? e.message : "Ошибка загрузки статьи");
+      setLoadError(parseApiError(e));
     }
   }
 
@@ -236,7 +237,7 @@ export default function ArticleFormPage({
 
   function buildPayload(): ArticleCreatePayload | null {
     if (!sectionSlug) {
-      setSaveError("Выберите рубрику");
+      toast.error("Выберите рубрику");
       return null;
     }
     // Degree — опциональное. Бэк не принимает `null`; если оба языка пустые,
@@ -309,11 +310,7 @@ export default function ArticleFormPage({
       });
       return true;
     } catch (e) {
-      setSaveError(
-        e instanceof ApiError
-          ? `Не удалось привязать рубрику к номеру: ${e.message}`
-          : "Не удалось привязать рубрику к номеру"
-      );
+      toast.error(parseApiError(e), { description: "Не удалось привязать рубрику к номеру" });
       return false;
     }
   }
@@ -321,7 +318,6 @@ export default function ArticleFormPage({
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setSaveError("");
     const payload = buildPayload();
     if (!payload) {
       setBusy(false);
@@ -330,7 +326,7 @@ export default function ArticleFormPage({
     try {
       // Бэк отвергает create/patch статьи, если выбранная рубрика не подписана
       // к номеру. Поэтому привязку рубрики делаем ДО save статьи. Если она
-      // не сработала — saveError уже выставлен внутри ensureIssueHasSection,
+      // не сработала — toast уже показан внутри ensureIssueHasSection,
       // и сохранять статью бессмысленно.
       const targetIssueId = issueId;
       if (targetIssueId) {
@@ -342,6 +338,7 @@ export default function ArticleFormPage({
       }
       if (isNew) {
         const created = await adminApi.createArticle(payload);
+        toast.success("Статья создана");
         router.replace(`/control/articles/${created.id}`);
       } else {
         // issue_id is read-only after creation (backend ignores it on PATCH)
@@ -349,9 +346,10 @@ export default function ArticleFormPage({
         void _ignored;
         await adminApi.updateArticle(articleId!, patch);
         await loadArticle();
+        toast.success("Статья сохранена");
       }
     } catch (err) {
-      setSaveError(err instanceof ApiError ? err.message : "Ошибка сохранения");
+      toast.error(parseApiError(err), { description: "Не удалось сохранить статью" });
     } finally {
       setBusy(false);
     }
@@ -363,25 +361,26 @@ export default function ArticleFormPage({
     setBusy(true);
     try {
       await adminApi.deleteArticle(articleId);
+      toast.success("Статья удалена");
       router.push(`/control/issues/${issueId}`);
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка удаления");
+      toast.error(parseApiError(e), { description: "Не удалось удалить статью" });
       setBusy(false);
     }
   }
 
   async function handlePdfUpload(file: File) {
     if (!articleId) {
-      setSaveError("Сначала сохраните статью");
+      toast.error("Сначала сохраните статью");
       return;
     }
     setPdfBusy(true);
-    setSaveError("");
     try {
       await adminApi.uploadArticleReadyPdf(articleId, file);
       await loadArticle();
+      toast.success("PDF загружен");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка загрузки PDF");
+      toast.error(parseApiError(e), { description: "Не удалось загрузить PDF" });
     } finally {
       setPdfBusy(false);
     }
@@ -461,12 +460,6 @@ export default function ArticleFormPage({
           )}
         </div>
       </div>
-
-      {saveError && (
-        <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-          {saveError}
-        </div>
-      )}
 
       <form className="space-y-8 max-w-5xl" onSubmit={handleSave}>
         {/* Section 1: Basic info */}
