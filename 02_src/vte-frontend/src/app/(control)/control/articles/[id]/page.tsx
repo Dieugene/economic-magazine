@@ -299,6 +299,7 @@ export default function ArticleFormPage({
       // Режем оба textarea по строкам и парим по индексу. Если строки в ru/en
       // расходятся по количеству — добиваем пустыми строками с короткой
       // стороны. Заказчик отвечает за выравнивание построчно.
+      // Контракт бэка: либо null, либо массив объектов с обязательными ключами ru/en.
       references: (() => {
         const ruLines = referencesRu.split("\n").map((s) => s.trim());
         const enLines = referencesEn.split("\n").map((s) => s.trim());
@@ -310,7 +311,7 @@ export default function ArticleFormPage({
           if (!ru && !en) continue;
           items.push({ ru, en });
         }
-        return items;
+        return items.length > 0 ? items : null;
       })(),
       received_date: receivedDate,
       accepted_date: acceptedDate,

@@ -96,9 +96,9 @@ export interface Article {
   udk: string;
   jel_codes: string[];
   // Бэкенд хранит литературу как массив объектов { ru, en } (по одной ссылке
-  // на элемент). UI собирает этот массив из двух больших textarea, режа по
-  // строкам — заказчик хочет именно блочный ввод, не поэлементный.
-  references: { ru: string; en: string }[];
+  // на элемент) либо null. UI собирает этот массив из двух больших textarea,
+  // режа по строкам — заказчик хочет именно блочный ввод, не поэлементный.
+  references: { ru: string; en: string }[] | null;
   received_date: string | null;
   accepted_date: string | null;
   funding: LocalizedText;
