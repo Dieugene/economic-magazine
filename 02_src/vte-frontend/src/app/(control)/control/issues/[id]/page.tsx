@@ -322,11 +322,7 @@ export default function IssueDetailPage({
         </h2>
         {allSections.length === 0 ? (
           <p className="text-sm text-gray-500">
-            Справочник рубрик пуст. Добавьте рубрики на странице{" "}
-            <Link href="/control/sections" className="text-forest-600 hover:underline">
-              Рубрикатор
-            </Link>
-            .
+            Справочник рубрик пуст.
           </p>
         ) : (
           <div className="space-y-2">

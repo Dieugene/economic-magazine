@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Archive, Menu, Eye, LogOut, BookOpen } from "lucide-react";
+import { Archive, Menu, Eye, LogOut } from "lucide-react";
 import { auth, tokenStore } from "@/lib/api/client";
 import type { CurrentUser } from "@/lib/types";
 
 const sidebarLinks = [
   { key: "issues", label: "Номера", href: "/control/issues", icon: Archive },
-  { key: "sections", label: "Рубрикатор", href: "/control/sections", icon: BookOpen },
 ];
 
 export default function AdminLayout({
