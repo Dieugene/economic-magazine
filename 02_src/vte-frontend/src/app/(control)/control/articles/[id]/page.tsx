@@ -494,7 +494,7 @@ export default function ArticleFormPage({
         <div className="flex items-center gap-3">
           {!isNew && articleId && (
             <Link
-              href={`/article/${articleId}`}
+              href={`/control/articles/${articleId}/preview`}
               target="_blank"
               className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-forest-600 transition-colors px-3 py-2 border border-gray-200 rounded-sm"
             >
