@@ -102,9 +102,17 @@ export default function IssueDetailPage({
     try {
       await adminApi.updateIssueStatus(issueId, newStatus);
       await loadAll();
-      toast.success(`Статус изменён: ${statusLabels[newStatus]}`);
+      const successMsg =
+        newStatus === "Published"
+          ? "Номер опубликован"
+          : `Статус изменён: ${statusLabels[newStatus]}`;
+      toast.success(successMsg);
     } catch (e) {
-      toast.error(parseApiError(e), { description: "Не удалось изменить статус" });
+      const errorDesc =
+        newStatus === "Published"
+          ? "Не удалось опубликовать"
+          : "Не удалось изменить статус";
+      toast.error(parseApiError(e), { description: errorDesc });
     } finally {
       setSaveBusy(false);
     }
