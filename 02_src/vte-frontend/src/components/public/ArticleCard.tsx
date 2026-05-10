@@ -73,14 +73,19 @@ export default function ArticleCard({
             </svg>
             <span>{open ? t('Скрыть аннотацию', 'Hide abstract') : t('Аннотация', 'Abstract')}</span>
           </button>
-          <div
-            className="overflow-hidden transition-all duration-350"
-            style={{ maxHeight: open ? '500px' : '0px' }}
-          >
-            <p className="text-sm text-gray-600 leading-relaxed mt-2 pl-4 border-l-2 border-stone-400">
-              {abstract}
-            </p>
-          </div>
+          {open && (
+            <div className="mt-2 pl-4 border-l-2 border-stone-400">
+              <p className="text-sm text-gray-600 leading-relaxed line-clamp-8 break-words [overflow-wrap:anywhere]">
+                {abstract}
+              </p>
+              <Link
+                href={href}
+                className="inline-block mt-2 text-sm text-copper-500 hover:text-copper-600 transition-colors"
+              >
+                {t('Читать далее →', 'Read more →')}
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </div>

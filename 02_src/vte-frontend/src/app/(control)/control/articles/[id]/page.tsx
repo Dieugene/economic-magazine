@@ -15,7 +15,10 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
-import { adminApi, api, ApiError, type ArticleCreatePayload } from "@/lib/api/client";
+import { toast } from "sonner";
+import { adminApi, api, type ArticleCreatePayload } from "@/lib/api/client";
+import { parseApiError } from "@/lib/api/errors";
+import { findOverlaps } from "@/lib/utils/pages";
 import type { Article, ArticleType, Author, Affiliation, Section } from "@/lib/types";
 import DocumentTitle from "@/components/public/DocumentTitle";
 
@@ -68,7 +71,6 @@ export default function ArticleFormPage({
   const [sections, setSections] = useState<Section[]>([]);
   const [article, setArticle] = useState<Article | null>(null);
   const [loadError, setLoadError] = useState("");
-  const [saveError, setSaveError] = useState("");
   const [busy, setBusy] = useState(false);
 
   // Form state
@@ -101,6 +103,10 @@ export default function ArticleFormPage({
   // PDF upload
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+
+  // Статус выпуска нужен только для информационного баннера на форме статьи
+  // в Published-номере: «всё редактируется». Сама форма не блокируется.
+  const [issueStatus, setIssueStatus] = useState<string | null>(null);
 
   async function loadSections() {
     try {
@@ -141,7 +147,7 @@ export default function ArticleFormPage({
       setReferencesEn(refs.map((r) => r.en).join("\n"));
       setLoadError("");
     } catch (e) {
-      setLoadError(e instanceof ApiError ? e.message : "Ошибка загрузки статьи");
+      setLoadError(parseApiError(e));
     }
   }
 
@@ -150,6 +156,25 @@ export default function ArticleFormPage({
     if (!isNew) loadArticle();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [articleId]);
+
+  useEffect(() => {
+    if (!issueId) {
+      setIssueStatus(null);
+      return;
+    }
+    let cancelled = false;
+    adminApi
+      .getIssue(issueId)
+      .then((iss) => {
+        if (!cancelled) setIssueStatus(iss.status);
+      })
+      .catch(() => {
+        if (!cancelled) setIssueStatus(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [issueId]);
 
   // When sections load, set the dropdown value to match the article's section
   useEffect(() => {
@@ -236,7 +261,7 @@ export default function ArticleFormPage({
 
   function buildPayload(): ArticleCreatePayload | null {
     if (!sectionSlug) {
-      setSaveError("Выберите рубрику");
+      toast.error("Выберите рубрику");
       return null;
     }
     // Degree — опциональное. Бэк не принимает `null`; если оба языка пустые,
@@ -274,6 +299,7 @@ export default function ArticleFormPage({
       // Режем оба textarea по строкам и парим по индексу. Если строки в ru/en
       // расходятся по количеству — добиваем пустыми строками с короткой
       // стороны. Заказчик отвечает за выравнивание построчно.
+      // Контракт бэка: либо null, либо массив объектов с обязательными ключами ru/en.
       references: (() => {
         const ruLines = referencesRu.split("\n").map((s) => s.trim());
         const enLines = referencesEn.split("\n").map((s) => s.trim());
@@ -285,7 +311,7 @@ export default function ArticleFormPage({
           if (!ru && !en) continue;
           items.push({ ru, en });
         }
-        return items;
+        return items.length > 0 ? items : null;
       })(),
       received_date: receivedDate,
       accepted_date: acceptedDate,
@@ -309,19 +335,37 @@ export default function ArticleFormPage({
       });
       return true;
     } catch (e) {
-      setSaveError(
-        e instanceof ApiError
-          ? `Не удалось привязать рубрику к номеру: ${e.message}`
-          : "Не удалось привязать рубрику к номеру"
-      );
+      toast.error(parseApiError(e), { description: "Не удалось привязать рубрику к номеру" });
       return false;
+    }
+  }
+
+  // Проверяем, не перекрывается ли диапазон страниц с другими статьями того же
+  // выпуска. Не блокирует сохранение — просто показывает warning toast.
+  async function checkPagesOverlap(savedArticleId: number, savedIssueId: number, savedPages: string) {
+    if (!savedIssueId || !savedPages) return;
+    try {
+      const all = await adminApi.listArticles(savedIssueId);
+      const overlaps = findOverlaps(
+        { id: savedArticleId, pages: savedPages },
+        all.map((a) => ({ id: a.id, pages: a.pages, title: a.title.ru }))
+      );
+      if (overlaps.length === 0) return;
+      const list = overlaps
+        .map((o) => `«${o.title}» (с. ${o.pages})`)
+        .join("; ");
+      toast.warning(
+        `Диапазон страниц перекрывается со ${overlaps.length === 1 ? "статьёй" : "статьями"}: ${list}`,
+        { description: "Сохранено, но проверьте порядок страниц в номере." }
+      );
+    } catch {
+      // Молча игнорируем — это не критичная проверка, статья уже сохранена.
     }
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setSaveError("");
     const payload = buildPayload();
     if (!payload) {
       setBusy(false);
@@ -330,7 +374,7 @@ export default function ArticleFormPage({
     try {
       // Бэк отвергает create/patch статьи, если выбранная рубрика не подписана
       // к номеру. Поэтому привязку рубрики делаем ДО save статьи. Если она
-      // не сработала — saveError уже выставлен внутри ensureIssueHasSection,
+      // не сработала — toast уже показан внутри ensureIssueHasSection,
       // и сохранять статью бессмысленно.
       const targetIssueId = issueId;
       if (targetIssueId) {
@@ -342,6 +386,8 @@ export default function ArticleFormPage({
       }
       if (isNew) {
         const created = await adminApi.createArticle(payload);
+        toast.success("Статья создана");
+        await checkPagesOverlap(created.id, created.issue_id, created.pages);
         router.replace(`/control/articles/${created.id}`);
       } else {
         // issue_id is read-only after creation (backend ignores it on PATCH)
@@ -349,9 +395,11 @@ export default function ArticleFormPage({
         void _ignored;
         await adminApi.updateArticle(articleId!, patch);
         await loadArticle();
+        toast.success("Статья сохранена");
+        await checkPagesOverlap(articleId!, issueId, payload.pages);
       }
     } catch (err) {
-      setSaveError(err instanceof ApiError ? err.message : "Ошибка сохранения");
+      toast.error(parseApiError(err), { description: "Не удалось сохранить статью" });
     } finally {
       setBusy(false);
     }
@@ -363,25 +411,26 @@ export default function ArticleFormPage({
     setBusy(true);
     try {
       await adminApi.deleteArticle(articleId);
+      toast.success("Статья удалена");
       router.push(`/control/issues/${issueId}`);
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка удаления");
+      toast.error(parseApiError(e), { description: "Не удалось удалить статью" });
       setBusy(false);
     }
   }
 
   async function handlePdfUpload(file: File) {
     if (!articleId) {
-      setSaveError("Сначала сохраните статью");
+      toast.error("Сначала сохраните статью");
       return;
     }
     setPdfBusy(true);
-    setSaveError("");
     try {
       await adminApi.uploadArticleReadyPdf(articleId, file);
       await loadArticle();
+      toast.success("PDF загружен");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка загрузки PDF");
+      toast.error(parseApiError(e), { description: "Не удалось загрузить PDF" });
     } finally {
       setPdfBusy(false);
     }
@@ -418,6 +467,14 @@ export default function ArticleFormPage({
           </span>
         </div>
       </div>
+
+      {issueStatus === "Published" && (
+        <div className="rounded border border-amber-200 bg-amber-50 px-4 py-3 mb-6 text-sm text-amber-800">
+          Номер опубликован, но статья остаётся редактируемой. Меняйте поля,
+          PDF, ссылку XML — изменения уйдут на публичную страницу сразу после
+          сохранения.
+        </div>
+      )}
 
       {/* Breadcrumbs + actions */}
       <div className="flex items-center justify-between mb-6">
@@ -461,12 +518,6 @@ export default function ArticleFormPage({
           )}
         </div>
       </div>
-
-      {saveError && (
-        <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-          {saveError}
-        </div>
-      )}
 
       <form className="space-y-8 max-w-5xl" onSubmit={handleSave}>
         {/* Section 1: Basic info */}

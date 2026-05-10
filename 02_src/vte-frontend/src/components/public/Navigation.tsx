@@ -31,13 +31,20 @@ const archiveItems = [
   { labelRu: "2022", labelEn: "2022", href: "/archive/2022" },
 ];
 
+const authorsItems = [
+  { labelRu: "Подать статью", labelEn: "Submit a Paper", href: "/authors/submit" },
+  { labelRu: "Порядок подачи и оформления статей", labelEn: "Procedure for Paper Submission", href: "/authors/submission" },
+  { labelRu: "Авторское соглашение", labelEn: "Copyright Agreement", href: "/authors/copyright-agreement" },
+  { labelRu: "Порядок рецензирования статей", labelEn: "Procedure for Paper Review", href: "/authors/review" },
+];
+
 const navItems: NavItem[] = [
   { key: "about", labelRu: "О журнале", labelEn: "About", href: "/" },
   { key: "editorial", labelRu: "Редколлегия", labelEn: "Editorial Board", href: "/editorial-board" },
   { key: "rubrics", labelRu: "Рубрикатор", labelEn: "Sections", href: "/sections", dropdown: rubricatorItems },
   { key: "archive", labelRu: "Архив", labelEn: "Archive", href: "/archive", dropdown: archiveItems },
-  { key: "authors", labelRu: "Авторам", labelEn: "For Authors", href: "/authors" },
-  { key: "ethics", labelRu: "Этика публикаций", labelEn: "Publication Ethics", href: "/ethics" },
+  { key: "authors", labelRu: "Авторам", labelEn: "For Authors", href: "/authors", dropdown: authorsItems },
+  { key: "ethics", labelRu: "Этика научных публикаций", labelEn: "Ethics of Scientific Publications", href: "/ethics" },
   { key: "contacts", labelRu: "Контакты", labelEn: "Contacts", href: "/contacts" },
 ];
 

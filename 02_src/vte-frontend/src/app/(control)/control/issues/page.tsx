@@ -3,9 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus, X } from "lucide-react";
+import { toast } from "sonner";
 import type { IssueSummary, IssueStatus } from "@/lib/types";
-import { adminApi, ApiError } from "@/lib/api/client";
+import { adminApi } from "@/lib/api/client";
+import { parseApiError } from "@/lib/api/errors";
 import DocumentTitle from "@/components/public/DocumentTitle";
+import DateInput from "@/components/admin/DateInput";
+import { formatDateRu } from "@/lib/utils/date";
 
 const statusLabels: Record<IssueStatus, string> = {
   Draft: "Черновик",
@@ -21,7 +25,6 @@ const statusColors: Record<IssueStatus, string> = {
 
 export default function IssuesPage() {
   const [issues, setIssues] = useState<IssueSummary[] | null>(null);
-  const [error, setError] = useState("");
   const [yearFilter, setYearFilter] = useState<number | "all">("all");
   const [statusFilter, setStatusFilter] = useState<IssueStatus | "all">("all");
   const [createOpen, setCreateOpen] = useState(false);
@@ -30,9 +33,8 @@ export default function IssuesPage() {
     try {
       const data = await adminApi.listIssues();
       setIssues(data);
-      setError("");
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Ошибка загрузки списка номеров");
+      toast.error(parseApiError(e), { description: "Не удалось загрузить список номеров" });
       setIssues([]);
     }
   }
@@ -72,12 +74,6 @@ export default function IssuesPage() {
           Создать номер
         </button>
       </div>
-
-      {error && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-          {error}
-        </div>
-      )}
 
       {/* Filters */}
       <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -152,7 +148,7 @@ export default function IssuesPage() {
                   <td className="px-4 py-3 text-gray-800">{issue.year}</td>
                   <td className="px-4 py-3 text-gray-800">№ {issue.number}</td>
                   <td className="px-4 py-3 text-gray-500">{issue.sequential_number}</td>
-                  <td className="px-4 py-3 text-gray-500">{issue.published_date || "—"}</td>
+                  <td className="px-4 py-3 text-gray-500">{formatDateRu(issue.published_date) || "—"}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-block px-2 py-0.5 text-xs font-medium rounded ${statusColors[issue.status]}`}
@@ -205,18 +201,23 @@ function CreateIssueModal({
   const [year, setYear] = useState<number>(now.getFullYear());
   const [number, setNumber] = useState<number>(1);
   const [seq, setSeq] = useState<number>(1);
+  const [publishedDate, setPublishedDate] = useState<string>("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError("");
     try {
-      await adminApi.createIssue({ year, number, sequential_number: seq });
+      await adminApi.createIssue({
+        year,
+        number,
+        sequential_number: seq,
+        published_date: publishedDate || null,
+      });
+      toast.success("Номер создан");
       onCreated();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Ошибка создания номера");
+      toast.error(parseApiError(e), { description: "Не удалось создать номер" });
     } finally {
       setBusy(false);
     }
@@ -235,11 +236,6 @@ function CreateIssueModal({
             <X className="w-5 h-5" />
           </button>
         </div>
-        {error && (
-          <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-            {error}
-          </div>
-        )}
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
             <label className="field-label" htmlFor="new-year">Год</label>
@@ -276,6 +272,13 @@ function CreateIssueModal({
               required
             />
           </div>
+          <DateInput
+            id="new-published-date"
+            label="Дата выхода"
+            value={publishedDate}
+            onChange={setPublishedDate}
+            placeholderHint="Можно оставить пустым и заполнить позже"
+          />
           <div className="flex gap-3 justify-end pt-2">
             <button
               type="button"

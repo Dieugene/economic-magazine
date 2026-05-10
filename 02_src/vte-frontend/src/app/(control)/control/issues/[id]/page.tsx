@@ -4,10 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Upload, ChevronRight, Save, Trash2, Plus, FileText, ChevronUp, ChevronDown } from "lucide-react";
+import { Upload, ChevronRight, Save, Trash2, Plus, FileText } from "lucide-react";
+import { toast } from "sonner";
 import type { IssueFull, IssueStatus, Article, Section } from "@/lib/types";
-import { adminApi, api, ApiError } from "@/lib/api/client";
+import { adminApi, api } from "@/lib/api/client";
+import { parseApiError } from "@/lib/api/errors";
+import { comparePages } from "@/lib/utils/pages";
 import DocumentTitle from "@/components/public/DocumentTitle";
+import DateInput from "@/components/admin/DateInput";
 
 const statusLabels: Record<IssueStatus, string> = {
   Draft: "Черновик",
@@ -27,12 +31,12 @@ export default function IssueDetailPage({
   const [issue, setIssue] = useState<IssueFull | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loadError, setLoadError] = useState("");
-  const [saveError, setSaveError] = useState("");
   const [saveBusy, setSaveBusy] = useState(false);
 
   const [year, setYear] = useState<number>(0);
   const [number, setNumber] = useState<number>(0);
   const [seqNumber, setSeqNumber] = useState<number>(0);
+  const [publishedDate, setPublishedDate] = useState<string>("");
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -49,16 +53,17 @@ export default function IssueDetailPage({
       setYear(data.year);
       setNumber(data.number);
       setSeqNumber(data.sequential_number);
+      setPublishedDate(data.published_date ?? "");
       setSelectedSlugs(data.sections?.map((s) => s.slug) ?? []);
       try {
         const arts = await adminApi.listArticles(issueId);
-        setArticles(arts);
+        setArticles([...arts].sort((a, b) => comparePages(a.pages, b.pages)));
       } catch {
         setArticles([]);
       }
       setLoadError("");
     } catch (e) {
-      setLoadError(e instanceof ApiError ? e.message : "Ошибка загрузки номера");
+      setLoadError(parseApiError(e));
     }
   }
 
@@ -74,17 +79,18 @@ export default function IssueDetailPage({
   async function handleSave() {
     if (!issue) return;
     setSaveBusy(true);
-    setSaveError("");
     try {
       await adminApi.updateIssue(issueId, {
         year,
         number,
         sequential_number: seqNumber,
         sections_slugs: selectedSlugs,
+        published_date: publishedDate || null,
       });
       await loadAll();
+      toast.success("Выпуск сохранён");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка сохранения");
+      toast.error(parseApiError(e), { description: "Не удалось сохранить номер" });
     } finally {
       setSaveBusy(false);
     }
@@ -93,12 +99,12 @@ export default function IssueDetailPage({
   async function handleStatusChange(newStatus: IssueStatus) {
     if (!issue) return;
     setSaveBusy(true);
-    setSaveError("");
     try {
       await adminApi.updateIssueStatus(issueId, newStatus);
       await loadAll();
+      toast.success(`Статус изменён: ${statusLabels[newStatus]}`);
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка изменения статуса");
+      toast.error(parseApiError(e), { description: "Не удалось изменить статус" });
     } finally {
       setSaveBusy(false);
     }
@@ -109,21 +115,22 @@ export default function IssueDetailPage({
     setSaveBusy(true);
     try {
       await adminApi.deleteIssue(issueId);
+      toast.success("Номер удалён");
       router.push("/control/issues");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка удаления");
+      toast.error(parseApiError(e), { description: "Не удалось удалить номер" });
       setSaveBusy(false);
     }
   }
 
   async function handleCoverUpload(file: File) {
     setCoverBusy(true);
-    setSaveError("");
     try {
       await adminApi.uploadIssueCover(issueId, file);
       await loadAll();
+      toast.success("Обложка загружена");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка загрузки обложки");
+      toast.error(parseApiError(e), { description: "Не удалось загрузить обложку" });
     } finally {
       setCoverBusy(false);
     }
@@ -131,12 +138,12 @@ export default function IssueDetailPage({
 
   async function handlePdfUpload(file: File) {
     setPdfBusy(true);
-    setSaveError("");
     try {
       await adminApi.uploadIssuePdf(issueId, file);
       await loadAll();
+      toast.success("PDF загружен");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка загрузки PDF");
+      toast.error(parseApiError(e), { description: "Не удалось загрузить PDF" });
     } finally {
       setPdfBusy(false);
     }
@@ -147,30 +154,9 @@ export default function IssueDetailPage({
     try {
       await adminApi.deleteArticle(articleId);
       await loadAll();
+      toast.success("Статья удалена");
     } catch (e) {
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка удаления статьи");
-    }
-  }
-
-  const [reorderBusy, setReorderBusy] = useState(false);
-
-  async function handleReorder(index: number, direction: -1 | 1) {
-    const target = index + direction;
-    if (target < 0 || target >= articles.length) return;
-    const next = [...articles];
-    [next[index], next[target]] = [next[target], next[index]];
-    // Optimistic update
-    setArticles(next);
-    setReorderBusy(true);
-    setSaveError("");
-    try {
-      await adminApi.reorderArticles(issueId, next.map((a) => a.id));
-    } catch (e) {
-      // Rollback on error
-      setArticles(articles);
-      setSaveError(e instanceof ApiError ? e.message : "Ошибка изменения порядка");
-    } finally {
-      setReorderBusy(false);
+      toast.error(parseApiError(e), { description: "Не удалось удалить статью" });
     }
   }
 
@@ -216,12 +202,6 @@ export default function IssueDetailPage({
         </button>
       </div>
 
-      {saveError && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-          {saveError}
-        </div>
-      )}
-
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
           Данные номера
@@ -257,6 +237,12 @@ export default function IssueDetailPage({
               className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-600/20 focus:border-forest-600"
             />
           </div>
+          <DateInput
+            id="issue-published-date"
+            label="Дата выхода"
+            value={publishedDate}
+            onChange={setPublishedDate}
+          />
           <div>
             <label className="field-label">Текущий статус</label>
             <p className="px-3 py-2 text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded">
@@ -273,13 +259,16 @@ export default function IssueDetailPage({
             <Save className="w-4 h-4" />
             Сохранить данные
           </button>
-          {issue.published_date && (
-            <span className="text-xs text-gray-500">
-              Дата выхода: {issue.published_date}
-            </span>
-          )}
         </div>
       </div>
+
+      {issue.status === "Published" && (
+        <div className="rounded border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Номер опубликован, но остаётся полностью редактируемым. Меняйте
+          метаданные, рубрики, обложку, PDF, ссылку на XML, состав статей —
+          изменения попадут на публичную страницу сразу после сохранения.
+        </div>
+      )}
 
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
@@ -322,11 +311,7 @@ export default function IssueDetailPage({
         </h2>
         {allSections.length === 0 ? (
           <p className="text-sm text-gray-500">
-            Справочник рубрик пуст. Добавьте рубрики на странице{" "}
-            <Link href="/control/sections" className="text-forest-600 hover:underline">
-              Рубрикатор
-            </Link>
-            .
+            Справочник рубрик пуст.
           </p>
         ) : (
           <div className="space-y-2">
@@ -460,34 +445,14 @@ export default function IssueDetailPage({
           </p>
         ) : (
           <div className="divide-y divide-gray-100">
+            <p className="text-xs text-gray-400 mb-2">
+              Статьи отсортированы по диапазону страниц.
+            </p>
             {articles.map((article, index) => (
               <div
                 key={article.id}
                 className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
               >
-                <div className="flex-shrink-0 flex flex-col">
-                  <button
-                    type="button"
-                    onClick={() => handleReorder(index, -1)}
-                    disabled={index === 0 || reorderBusy}
-                    aria-label="Переместить выше"
-                    title="Переместить выше"
-                    className="text-gray-400 hover:text-forest-600 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronUp className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleReorder(index, 1)}
-                    disabled={index === articles.length - 1 || reorderBusy}
-                    aria-label="Переместить ниже"
-                    title="Переместить ниже"
-                    className="text-gray-400 hover:text-forest-600 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-                </div>
-
                 <span className="w-7 h-7 flex-shrink-0 bg-gray-100 rounded text-xs font-medium text-gray-500 flex items-center justify-center">
                   {index + 1}
                 </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
 
 type Lang = "ru" | "en";
 
@@ -38,11 +38,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   );
 
   // Avoid hydration mismatch: render with default 'ru' until mounted
-  const value: LanguageContextType = {
-    lang: mounted ? lang : "ru",
-    setLang,
-    t: mounted ? t : (ru: string) => ru,
-  };
+  const value = useMemo<LanguageContextType>(
+    () => ({
+      lang: mounted ? lang : "ru",
+      setLang,
+      t: mounted ? t : (ru: string) => ru,
+    }),
+    [mounted, lang, setLang, t]
+  );
 
   return (
     <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>

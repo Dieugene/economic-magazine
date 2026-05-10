@@ -274,6 +274,11 @@ export interface IssueCreatePayload {
   number: number;
   sequential_number: number;
   sections_slugs?: string[];
+  // ISO YYYY-MM-DD. На текущей версии бэка поле readOnly и игнорируется при
+  // POST/PATCH (см. PatchedIssueRequest в swagger). Отправляем превентивно —
+  // как только бэкенд откроет поле, ручной ввод даты заработает без
+  // дополнительной правки фронта.
+  published_date?: string | null;
 }
 
 export interface IssueUpdatePayload {
@@ -281,6 +286,7 @@ export interface IssueUpdatePayload {
   number?: number;
   sequential_number?: number;
   sections_slugs?: string[];
+  published_date?: string | null;
 }
 
 export interface ArticleCreatePayload {
@@ -296,7 +302,7 @@ export interface ArticleCreatePayload {
   keywords: { ru: string[]; en: string[] };
   udk: string;
   jel_codes?: string[];
-  references: { ru: string; en: string }[];
+  references: { ru: string; en: string }[] | null;
   received_date: string;
   accepted_date: string;
   funding: { ru: string; en?: string };
@@ -449,29 +455,6 @@ export const adminApi = {
     }
     return res.blob();
   },
-
-  // Sections
-  createSection: (name: { ru: string; en: string }) =>
-    fetchApi<Section>('/sections/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-      auth: true,
-    }),
-
-  updateSection: (slug: string, name: { ru: string; en: string }) =>
-    fetchApi<Section>(`/sections/${slug}/`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-      auth: true,
-    }),
-
-  deleteSection: (slug: string) =>
-    fetchApi<void>(`/sections/${slug}/`, {
-      method: 'DELETE',
-      auth: true,
-    }),
 
   // ── Users ──────────────────────────────────────────────────────
   changePassword: (oldPassword: string, newPassword: string) =>

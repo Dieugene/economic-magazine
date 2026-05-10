@@ -81,7 +81,7 @@ export default function Footer() {
             <ul className="space-y-1.5 text-sm">
               <li>
                 <Link
-                  href="/authors#submit"
+                  href="/authors/submit"
                   className="hover:text-white transition-colors"
                 >
                   {t("Подать статью", "Submit a Paper")}
@@ -89,18 +89,26 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/authors#guidelines"
+                  href="/authors/submission"
                   className="hover:text-white transition-colors"
                 >
-                  {t("Требования к оформлению", "Author Guidelines")}
+                  {t("Порядок подачи и оформления статей", "Procedure for Paper Submission")}
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/authors#agreement"
+                  href="/authors/copyright-agreement"
                   className="hover:text-white transition-colors"
                 >
-                  {t("Авторское соглашение", "Author Agreement")}
+                  {t("Авторское соглашение", "Copyright Agreement")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/authors/review"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("Порядок рецензирования", "Procedure for Paper Review")}
                 </Link>
               </li>
               <li>
@@ -108,7 +116,7 @@ export default function Footer() {
                   href="/ethics"
                   className="hover:text-white transition-colors"
                 >
-                  {t("Этика публикаций", "Publication Ethics")}
+                  {t("Этика научных публикаций", "Ethics of Scientific Publications")}
                 </Link>
               </li>
             </ul>
@@ -125,10 +133,10 @@ export default function Footer() {
               <p>{t("Нахимовский пр-т, 32", "Nakhimovsky prospect, 32")}</p>
               <p>
                 <a
-                  href="mailto:vte@inecon.ru"
+                  href="mailto:editorqet@inecon.ru"
                   className="text-copper-300 hover:text-copper-200 transition-colors"
                 >
-                  vte@inecon.ru
+                  editorqet@inecon.ru
                 </a>
               </p>
             </div>
@@ -145,8 +153,14 @@ export default function Footer() {
             )}
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="hover:text-white transition-colors">
-              {t("Политика персональных данных", "Privacy Policy")}
+            <Link
+              href="/privacy"
+              className="text-base sm:text-lg font-semibold text-white hover:text-copper-200 transition-colors underline underline-offset-2 decoration-copper-300"
+            >
+              {t(
+                "Политика обработки персональных данных",
+                "Personal Data Processing Policy"
+              )}
             </Link>
             <span className="hover:text-white transition-colors">
               ISSN 2587-7666
