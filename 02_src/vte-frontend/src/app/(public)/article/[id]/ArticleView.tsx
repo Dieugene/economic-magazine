@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import Breadcrumbs from "@/components/public/Breadcrumbs";
 import DocumentTitle from "@/components/public/DocumentTitle";
@@ -55,13 +56,24 @@ export default function ArticleView({ article }: { article: Article }) {
   const issueNumberLabel = `${lang === "en" ? "No." : "№"} ${article.issue_number} (${article.issue_sequential_number})`;
 
   const journalShort = lang === "en" ? "IET" : "ВТЭ";
-  const journalFull = lang === "en"
-    ? "Issues of Economic Theory"
-    : "Вопросы теоретической экономики";
-  const pagesPrefix = lang === "en" ? "Pp." : "С.";
-  // Авторы могут уже заканчиваться точкой («Дитковский Е.») — не дублируем её.
-  const authorsClean = authorsForLang.replace(/\.+\s*$/, "").trim();
-  const citationString = `${authorsClean}. ${titleForLang} // ${journalFull}. ${article.issue_year}. ${lang === "en" ? "No." : "№"} ${article.issue_number} (${article.issue_sequential_number}). ${pagesPrefix} ${article.pages}.${article.doi ? ` DOI: ${article.doi}.` : ""}`;
+  const citationString = useMemo(() => {
+    const journalFull = lang === "en"
+      ? "Issues of Economic Theory"
+      : "Вопросы теоретической экономики";
+    const pagesPrefix = lang === "en" ? "Pp." : "С.";
+    // Авторы могут уже заканчиваться точкой («Дитковский Е.») — не дублируем её.
+    const authorsClean = authorsForLang.replace(/\.+\s*$/, "").trim();
+    return `${authorsClean}. ${titleForLang} // ${journalFull}. ${article.issue_year}. ${lang === "en" ? "No." : "№"} ${article.issue_number} (${article.issue_sequential_number}). ${pagesPrefix} ${article.pages}.${article.doi ? ` DOI: ${article.doi}.` : ""}`;
+  }, [
+    lang,
+    authorsForLang,
+    titleForLang,
+    article.issue_year,
+    article.issue_number,
+    article.issue_sequential_number,
+    article.pages,
+    article.doi,
+  ]);
 
   return (
     <>
@@ -94,13 +106,13 @@ export default function ArticleView({ article }: { article: Article }) {
 
             <div className="w-[60px] h-[2px] bg-copper-400 mb-5" />
 
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-forest-600 leading-tight mb-3">
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-forest-600 leading-tight mb-3 break-words [overflow-wrap:anywhere]">
               {titleForLang}
             </h2>
 
             {/* Show the alternate-language title beneath, if available */}
             {lang === "ru" && article.title.en && (
-              <p className="font-serif text-xl text-gray-500 italic leading-snug mb-6">
+              <p className="font-serif text-xl text-gray-500 italic leading-snug mb-6 break-words [overflow-wrap:anywhere]">
                 {article.title.en}
               </p>
             )}
@@ -238,7 +250,7 @@ export default function ArticleView({ article }: { article: Article }) {
                   )}
                 </h3>
                 {abstract && (
-                  <p className="text-[15px] text-gray-700 leading-relaxed">{abstract.text}</p>
+                  <p className="text-[15px] text-gray-700 leading-relaxed break-words [overflow-wrap:anywhere] max-w-prose">{abstract.text}</p>
                 )}
                 {keywords && (
                   <div className="mt-5">
@@ -272,7 +284,7 @@ export default function ArticleView({ article }: { article: Article }) {
               <h4 className="text-xs font-medium text-copper-700 uppercase tracking-wider mb-1">
                 {t("Финансирование", "Funding")}
               </h4>
-              <p className="text-sm text-gray-700">{fundingForLang}</p>
+              <p className="text-sm text-gray-700 break-words [overflow-wrap:anywhere]">{fundingForLang}</p>
             </div>
           )}
 
@@ -281,11 +293,11 @@ export default function ArticleView({ article }: { article: Article }) {
             const refsArr = article.references ?? [];
             const primaryKey = lang === "en" ? "en" : "ru";
             const secondaryKey = lang === "en" ? "ru" : "en";
-            const primary = refsArr.map((r) => r[primaryKey]).filter(Boolean).join("\n");
-            const secondary = refsArr.map((r) => r[secondaryKey]).filter(Boolean).join("\n");
-            const text = primary || secondary;
-            const isFallback = !primary && !!secondary;
-            if (!text) return null;
+            const primaryItems = refsArr.map((r) => r[primaryKey]).filter((s): s is string => !!s && s.trim().length > 0);
+            const secondaryItems = refsArr.map((r) => r[secondaryKey]).filter((s): s is string => !!s && s.trim().length > 0);
+            const items = primaryItems.length > 0 ? primaryItems : secondaryItems;
+            const isFallback = primaryItems.length === 0 && secondaryItems.length > 0;
+            if (items.length === 0) return null;
             return (
               <div className="mb-8">
                 <h3 className="font-serif text-2xl font-semibold text-forest-600 mb-4">
@@ -296,7 +308,13 @@ export default function ArticleView({ article }: { article: Article }) {
                     </span>
                   )}
                 </h3>
-                <p className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed">{text}</p>
+                <ol className="list-decimal pl-6 space-y-2 text-sm text-gray-700 leading-relaxed">
+                  {items.map((ref, idx) => (
+                    <li key={idx} className="break-words [overflow-wrap:anywhere]">
+                      {ref}
+                    </li>
+                  ))}
+                </ol>
               </div>
             );
           })()}
@@ -324,7 +342,7 @@ export default function ArticleView({ article }: { article: Article }) {
             <h4 className="text-xs font-medium text-forest-600 uppercase tracking-wider mb-2">
               {t("Для цитирования", "How to cite")}
             </h4>
-            <p className="text-sm text-gray-700 leading-relaxed">{citationString}</p>
+            <p className="text-sm text-gray-700 leading-relaxed break-words [overflow-wrap:anywhere]">{citationString}</p>
           </div>
         </article>
 
