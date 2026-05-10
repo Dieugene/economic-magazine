@@ -70,7 +70,17 @@ interface IssueViewProps {
 export default function IssueView({ data }: IssueViewProps) {
   const { lang, t } = useLanguage();
 
-  const allArticles: Article[] = data.sections.flatMap((sg) => sg.articles);
+  // Защитная сетка: бэк может вернуть в IssueSection.articles статьи чужих
+  // выпусков (регрессия Bug-71). Фильтруем по issue_id и выкидываем пустые
+  // секции — на публике пустые рубрики не нужны.
+  const visibleSections = data.sections
+    .map((sg) => ({
+      ...sg,
+      articles: sg.articles.filter((a) => a.issue_id === data.id),
+    }))
+    .filter((sg) => sg.articles.length > 0);
+
+  const allArticles: Article[] = visibleSections.flatMap((sg) => sg.articles);
   const lastPage = getLastPage(allArticles);
   const publishedDate = data.published_date ?? "";
   const numberLabel = lang === "en" ? "No." : "№";
@@ -133,7 +143,7 @@ export default function IssueView({ data }: IssueViewProps) {
           </div>
 
           {/* Sections with articles */}
-          {data.sections.map((sectionGroup, sIdx) => {
+          {visibleSections.map((sectionGroup, sIdx) => {
             const sectionArticles = [...sectionGroup.articles].sort((a, b) =>
               comparePages(a.pages, b.pages)
             );
@@ -211,13 +221,13 @@ export default function IssueView({ data }: IssueViewProps) {
               </div>
             </div>
 
-            {data.sections.length > 0 && (
+            {visibleSections.length > 0 && (
               <div className="mt-6 bg-white border border-stone-400 rounded-sm p-5">
                 <h3 className="text-sm font-medium text-forest-600 mb-3 tracking-wide uppercase">
                   {t("Рубрики номера", "Issue Sections")}
                 </h3>
                 <nav className="space-y-1.5 text-sm">
-                  {data.sections.map((sg, i) => {
+                  {visibleSections.map((sg, i) => {
                     const shortName = lang === "en"
                       ? SHORT_NAMES_EN[sg.slug] ?? sg.name.en ?? sg.name.ru
                       : SHORT_NAMES_RU[sg.slug] ?? sg.name.ru;

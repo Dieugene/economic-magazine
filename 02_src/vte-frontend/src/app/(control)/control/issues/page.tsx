@@ -157,9 +157,7 @@ export default function IssuesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-500">
-                    {issue.sections
-                      ? issue.sections.reduce((sum, s) => sum + s.articles.length, 0)
-                      : issue.articles_count}
+                    {issue.articles_count ?? 0}
                   </td>
                   <td className="px-4 py-3 text-gray-500">{issue.sections?.length ?? 0}</td>
                   <td className="px-4 py-3">
