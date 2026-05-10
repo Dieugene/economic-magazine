@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import Breadcrumbs from "@/components/public/Breadcrumbs";
 import JournalCover from "@/components/public/JournalCover";
+import { formatDateRu } from "@/lib/utils/date";
 
 interface Section {
   num: number;
@@ -36,11 +37,11 @@ const sections: Section[] = [
 export default function HomeContent({ latestIssue }: HomeContentProps) {
   const { lang, t } = useLanguage();
 
+  // Без new Date() — иначе строка ISO трактуется как UTC и в часовых поясах
+  // с отрицательным offset выводится дата на день раньше. Формат DD.MM.YYYY
+  // используется и в RU, и в EN (заказчик специально просит российский стандарт).
   const publishedDate = latestIssue?.published_date
-    ? new Date(latestIssue.published_date).toLocaleDateString(
-        lang === "en" ? "en-US" : "ru-RU",
-        { day: "2-digit", month: "2-digit", year: "numeric" }
-      )
+    ? formatDateRu(latestIssue.published_date) || null
     : null;
 
   return (

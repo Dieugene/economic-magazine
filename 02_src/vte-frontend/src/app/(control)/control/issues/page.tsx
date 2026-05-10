@@ -8,6 +8,8 @@ import type { IssueSummary, IssueStatus } from "@/lib/types";
 import { adminApi } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
 import DocumentTitle from "@/components/public/DocumentTitle";
+import DateInput from "@/components/admin/DateInput";
+import { formatDateRu } from "@/lib/utils/date";
 
 const statusLabels: Record<IssueStatus, string> = {
   Draft: "Черновик",
@@ -146,7 +148,7 @@ export default function IssuesPage() {
                   <td className="px-4 py-3 text-gray-800">{issue.year}</td>
                   <td className="px-4 py-3 text-gray-800">№ {issue.number}</td>
                   <td className="px-4 py-3 text-gray-500">{issue.sequential_number}</td>
-                  <td className="px-4 py-3 text-gray-500">{issue.published_date || "—"}</td>
+                  <td className="px-4 py-3 text-gray-500">{formatDateRu(issue.published_date) || "—"}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-block px-2 py-0.5 text-xs font-medium rounded ${statusColors[issue.status]}`}
@@ -199,13 +201,19 @@ function CreateIssueModal({
   const [year, setYear] = useState<number>(now.getFullYear());
   const [number, setNumber] = useState<number>(1);
   const [seq, setSeq] = useState<number>(1);
+  const [publishedDate, setPublishedDate] = useState<string>("");
   const [busy, setBusy] = useState(false);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     try {
-      await adminApi.createIssue({ year, number, sequential_number: seq });
+      await adminApi.createIssue({
+        year,
+        number,
+        sequential_number: seq,
+        published_date: publishedDate || null,
+      });
       toast.success("Номер создан");
       onCreated();
     } catch (e) {
@@ -264,6 +272,13 @@ function CreateIssueModal({
               required
             />
           </div>
+          <DateInput
+            id="new-published-date"
+            label="Дата выхода"
+            value={publishedDate}
+            onChange={setPublishedDate}
+            placeholderHint="Можно оставить пустым и заполнить позже"
+          />
           <div className="flex gap-3 justify-end pt-2">
             <button
               type="button"
