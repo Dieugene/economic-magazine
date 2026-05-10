@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Upload, ChevronRight, Save, Trash2, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
-import type { IssueFull, IssueStatus, Article, Section } from "@/lib/types";
+import type { IssueFull, IssueStatus, IssueSummary, Article, Section } from "@/lib/types";
 import { adminApi, api } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
 import { comparePages } from "@/lib/utils/pages";
@@ -80,6 +80,22 @@ export default function IssueDetailPage({
     if (!issue) return;
     setSaveBusy(true);
     try {
+      let allIssues: IssueSummary[] = [];
+      try {
+        allIssues = await adminApi.listIssues();
+      } catch {
+        // если список не получен — пропускаем pre-check, бэк всё равно ответит
+      }
+      const duplicate = allIssues.find(
+        (i) => i.id !== issueId && i.year === year && i.number === number,
+      );
+      if (duplicate) {
+        toast.error(
+          `Выпуск ${year} № ${number} уже существует (id=${duplicate.id}). Измените номер.`,
+        );
+        setSaveBusy(false);
+        return;
+      }
       await adminApi.updateIssue(issueId, {
         year,
         number,
