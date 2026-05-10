@@ -40,5 +40,6 @@ YYYY-MM-DD-<тег>.md
 | [2026-05-10-localhost-staging.md](2026-05-10-localhost-staging.md) | Полная регрессия | local main `1839dcb` × staging | 9 дефектов, регрессия Bug-71 (public leak вернулся), частичная недоработка Block F (toast). Verdict: FAIL. Фиксы — последующие коммиты. |
 | [2026-05-10-bug-fixes-reverify.md](2026-05-10-bug-fixes-reverify.md) | Focused re-verify | local main `fad5898` × staging | 6 фронт-багов (Bug-3..Bug-8) подтверждены закрытыми. Verdict: PASS. |
 | [2026-05-10-91-bug9-smoke.md](2026-05-10-91-bug9-smoke.md) | Focused smoke | local main `f3bf533` × staging | `#91` PDF-индикаторы + disabled Publish и Bug-9 pre-check дубликатов. Verdict: PASS. |
+| [2026-05-10-staging-v0.1.11.md](2026-05-10-staging-v0.1.11.md) | Полная регрессия | staging `dieugene/vte-frontend:0.1.11` | E2E-прогон всего тест-плана прямо на боевом тестовом стенде заказчика. Критических/серьёзных дефектов нет, 3 наблюдения категории S4/N/A. Verdict: PASS-WITH-NOTES. |
 
 > Обновлять руками после каждой сессии — одна строка.
