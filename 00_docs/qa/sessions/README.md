@@ -39,5 +39,6 @@ YYYY-MM-DD-<тег>.md
 | [2026-05-05-full-staging.md](2026-05-05-full-staging.md) | Полная регрессия | v0.1.10 | 6 дефектов, в том числе один критический (утечка статей черновиков на публичные страницы) |
 | [2026-05-10-localhost-staging.md](2026-05-10-localhost-staging.md) | Полная регрессия | local main `1839dcb` × staging | 9 дефектов, регрессия Bug-71 (public leak вернулся), частичная недоработка Block F (toast). Verdict: FAIL. Фиксы — последующие коммиты. |
 | [2026-05-10-bug-fixes-reverify.md](2026-05-10-bug-fixes-reverify.md) | Focused re-verify | local main `fad5898` × staging | 6 фронт-багов (Bug-3..Bug-8) подтверждены закрытыми. Verdict: PASS. |
+| [2026-05-10-91-bug9-smoke.md](2026-05-10-91-bug9-smoke.md) | Focused smoke | local main `f3bf533` × staging | `#91` PDF-индикаторы + disabled Publish и Bug-9 pre-check дубликатов. Verdict: PASS. |
 
 > Обновлять руками после каждой сессии — одна строка.
