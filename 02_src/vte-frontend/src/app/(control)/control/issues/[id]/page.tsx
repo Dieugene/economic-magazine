@@ -15,8 +15,8 @@ import {
   FileX,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { IssueFull, IssueStatus, IssueSummary, Article, Section } from "@/lib/types";
-import { adminApi, api } from "@/lib/api/client";
+import type { IssueFull, IssueStatus, IssueSummary, Article } from "@/lib/types";
+import { adminApi } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
 import { comparePages } from "@/lib/utils/pages";
 import DocumentTitle from "@/components/public/DocumentTitle";
@@ -52,9 +52,6 @@ export default function IssueDetailPage({
   const [coverBusy, setCoverBusy] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
 
-  const [allSections, setAllSections] = useState<Section[]>([]);
-  const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
-
   async function loadAll() {
     try {
       const data = await adminApi.getIssue(issueId);
@@ -63,7 +60,6 @@ export default function IssueDetailPage({
       setNumber(data.number);
       setSeqNumber(data.sequential_number);
       setPublishedDate(data.published_date ?? "");
-      setSelectedSlugs(data.sections?.map((s) => s.slug) ?? []);
       try {
         const arts = await adminApi.listArticles(issueId);
         setArticles([...arts].sort((a, b) => comparePages(a.pages, b.pages)));
@@ -80,10 +76,6 @@ export default function IssueDetailPage({
     if (!isNaN(issueId)) loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [issueId]);
-
-  useEffect(() => {
-    api.getSections().then(setAllSections).catch(() => setAllSections([]));
-  }, []);
 
   async function handleSave() {
     if (!issue) return;
@@ -109,7 +101,6 @@ export default function IssueDetailPage({
         year,
         number,
         sequential_number: seqNumber,
-        sections_slugs: selectedSlugs,
         published_date: publishedDate || null,
       });
       await loadAll();
@@ -379,50 +370,6 @@ export default function IssueDetailPage({
             </div>
           )}
         </div>
-      </div>
-
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
-          Рубрики номера
-        </h2>
-        {allSections.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            Справочник рубрик пуст.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {allSections.map((s) => {
-              const checked = selectedSlugs.includes(s.slug);
-              return (
-                <label
-                  key={s.slug}
-                  className="flex items-start gap-3 text-sm cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    disabled={saveBusy}
-                    onChange={(e) => {
-                      setSelectedSlugs((prev) =>
-                        e.target.checked
-                          ? [...prev, s.slug]
-                          : prev.filter((x) => x !== s.slug)
-                      );
-                    }}
-                    className="mt-0.5"
-                  />
-                  <span>
-                    <span className="text-gray-800">{s.name.ru}</span>
-                    <span className="text-gray-400 ml-2 text-xs">{s.slug}</span>
-                  </span>
-                </label>
-              );
-            })}
-            <p className="text-xs text-gray-500 mt-3">
-              Сохраняется вместе с данными номера по кнопке «Сохранить данные» выше.
-            </p>
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
