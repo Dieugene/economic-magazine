@@ -266,35 +266,35 @@ export const articleFullData14: Article = {
 export const issueSummary1: IssueSummary = {
   id: 1, year: 2026, number: 1, sequential_number: 30,
   published_date: '2026-02-27',
-  cover_file: '/covers/vte_2026_1.jpg',
+  cover_file: null,
   pdf_file: 'https://journals.rcsi.science/vte/issue/download/2026_1/full.pdf',
   status: 'Published', articles_count: 12,
 };
 export const issueSummary2: IssueSummary = {
   id: 2, year: 2025, number: 4, sequential_number: 29,
   published_date: '2025-11-10',
-  cover_file: '/covers/vte_2025_4.jpg',
+  cover_file: null,
   pdf_file: 'https://questionset.ru/files/arch/2025/2025-N4/VTE_2025_4.pdf',
   status: 'Published', articles_count: 12,
 };
 export const issueSummary3: IssueSummary = {
   id: 3, year: 2025, number: 3, sequential_number: 28,
   published_date: '2025-08-20',
-  cover_file: '/covers/vte_2025_3.jpg',
+  cover_file: null,
   pdf_file: 'https://questionset.ru/files/arch/2025/2025-N3/VTE_2025_3.pdf',
   status: 'Published', articles_count: 12,
 };
 export const issueSummary4: IssueSummary = {
   id: 4, year: 2025, number: 2, sequential_number: 27,
   published_date: '2025-05-15',
-  cover_file: '/covers/vte_2025_2.jpg',
+  cover_file: null,
   pdf_file: 'https://questionset.ru/files/arch/2025/2025-N2/VTE_2025_2.pdf',
   status: 'Published', articles_count: 10,
 };
 export const issueSummary5: IssueSummary = {
   id: 5, year: 2025, number: 1, sequential_number: 26,
   published_date: '2025-02-20',
-  cover_file: '/covers/vte_2025_1.jpg',
+  cover_file: null,
   pdf_file: 'https://questionset.ru/files/arch/2025/2025-N1/VTE_2025_1.pdf',
   status: 'Published', articles_count: 12,
 };

@@ -48,6 +48,7 @@ export default function YearView({ year, issues }: YearViewProps) {
               <JournalCover
                 number={issue.number}
                 year={issue.year}
+                cover_url={issue.cover_file}
                 className="transition-transform duration-200 group-hover:scale-[1.02] group-hover:shadow-lg"
               />
               <p className="mt-3 text-sm text-forest-600 font-medium group-hover:text-copper-500 transition-colors">

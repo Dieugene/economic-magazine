@@ -199,7 +199,7 @@ export default function IssueView({ data }: IssueViewProps) {
                 </h3>
               </div>
               <div className="p-5">
-                <JournalCover number={data.number} year={data.year} className="mb-4" />
+                <JournalCover number={data.number} year={data.year} cover_url={data.cover_file} className="mb-4" />
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">{t("Статей:", "Articles:")}</span>

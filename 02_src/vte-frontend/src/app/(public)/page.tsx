@@ -18,6 +18,7 @@ export default async function HomePage() {
               number: latestIssue.number,
               sequential_number: latestIssue.sequential_number,
               published_date: latestIssue.published_date,
+              cover_file: latestIssue.cover_file,
             }
           : null
       }

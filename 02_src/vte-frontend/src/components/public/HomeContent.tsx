@@ -18,6 +18,7 @@ interface LatestIssue {
   number: number;
   sequential_number: number;
   published_date: string | null;
+  cover_file: string | null;
 }
 
 interface HomeContentProps {
@@ -256,6 +257,7 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                   number={latestIssue.number}
                   year={latestIssue.year}
                   sequential_number={latestIssue.sequential_number}
+                  cover_url={latestIssue.cover_file}
                   className="mb-4 group-hover:shadow-lg transition-shadow"
                 />
               </Link>
