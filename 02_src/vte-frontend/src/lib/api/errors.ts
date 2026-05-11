@@ -35,11 +35,7 @@ function parseDrfBody(body: unknown): string | null {
     if (!trimmed) return null;
     // Не показываем сырые HTML-страницы 404/500 от nginx как сообщение об ошибке.
     if (trimmed.startsWith("<")) return null;
-    // Бэк иногда отдаёт ошибки сериалайзера как Python repr-строку:
-    // `{'references': [ErrorDetail(string='msg', code='invalid')]}`. JSON.parse
-    // в client.ts падает на одинарных кавычках/нестандартных литералах — body
-    // приходит сырой строкой. Если внутри есть ErrorDetail(string=...) —
-    // извлекаем читаемые сообщения. Иначе показываем строку как есть.
+    // Python-repr с ErrorDetail(string='...') приходит сюда строкой (JSON.parse падает в client.ts).
     const fromRepr = extractErrorDetailMessages(trimmed);
     if (fromRepr) return fromRepr;
     return trimmed;
@@ -92,17 +88,13 @@ function humanizeField(name: string): string {
   return name.replace(/_/g, " ");
 }
 
-function extractErrorDetailMessages(s: string): string | null {
-  // Соответствует `ErrorDetail(string='msg')` и `ErrorDetail(string="msg")`.
-  // Сообщения могут содержать любые символы, кроме кавычки того же типа,
-  // которой обрамлены — для одиночных кейсов DRF этого достаточно. Если
-  // встретится экранирование (\'), оставим как есть — пользователю всё
-  // равно понятнее, чем сырая Python-строка.
+function extractErrorDetailMessages(text: string): string | null {
+  // На экранированной кавычке (\') match обрывается — допустимо, всё равно читабельнее сырого repr.
   const re = /ErrorDetail\(string=(['"])(.*?)\1/g;
   const found: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(s)) !== null) {
-    const msg = m[2].trim();
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text)) !== null) {
+    const msg = match[2].trim();
     if (msg) found.push(msg);
   }
   return found.length ? found.join("; ") : null;
