@@ -23,6 +23,9 @@ CLAUDE_HANDOFF.md
 # Git worktrees (project-specific work)
 .worktrees/
 
+# Agent pool inbox (coordination payloads — live in Tasks API + local FS, не в git)
+.inbox/
+
 # Project data and logs (generated during work)
 03_data/
 04_logs/
