@@ -365,6 +365,8 @@ export default function ArticleFormPage({
     }
   }
 
+  // Bug-B guard: save (PATCH полей) и upload PDF — раздельные handlers;
+  // не объединять без явной обработки 400 от upload. См. test_plan §7.8.
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
