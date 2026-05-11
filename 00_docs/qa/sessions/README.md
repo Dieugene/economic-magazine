@@ -41,5 +41,6 @@ YYYY-MM-DD-<тег>.md
 | [2026-05-10-bug-fixes-reverify.md](2026-05-10-bug-fixes-reverify.md) | Focused re-verify | local main `fad5898` × staging | 6 фронт-багов (Bug-3..Bug-8) подтверждены закрытыми. Verdict: PASS. |
 | [2026-05-10-91-bug9-smoke.md](2026-05-10-91-bug9-smoke.md) | Focused smoke | local main `f3bf533` × staging | `#91` PDF-индикаторы + disabled Publish и Bug-9 pre-check дубликатов. Verdict: PASS. |
 | [2026-05-10-staging-v0.1.11.md](2026-05-10-staging-v0.1.11.md) | Полная регрессия | staging `dieugene/vte-frontend:0.1.11` | E2E-прогон всего тест-плана прямо на боевом тестовом стенде заказчика. Критических/серьёзных дефектов нет, 3 наблюдения категории S4/N/A. Verdict: PASS-WITH-NOTES. |
+| [2026-05-11-staging-v0.1.11-strict.md](2026-05-11-staging-v0.1.11-strict.md) | Полная регрессия (strict §0bis) | staging `dieugene/vte-frontend:0.1.11` | E2E-прогон по жёстким правилам §0bis с графой «Доказательство» в каждой строке. 41 строка Coverage Log. Bug-A (обложка не рендерится) подтверждена в 3-й раз — S2, открыта. Bug-B 2026-05-10 архитектурно не воспроизводится (handler upload PDF разделён с save). 2 nit-уровня Obs (Python-репр в toast.error, маска даты при JS-bypass). Verdict: PASS-WITH-DEFECTS. |
 
 > Обновлять руками после каждой сессии — одна строка.
