@@ -50,9 +50,11 @@ function parseDrfBody(body: unknown): string | null {
 
   const obj = body as Record<string, unknown>;
 
-  // Бэк-обёртка проекта: {status_code, error_type, message}
+  // Бэк-обёртка проекта: {status_code, error_type, message}. В message бэк может
+  // упаковать Python-repr сериализатора — пропускаем через тот же экстрактор.
   if (typeof obj.message === "string" && obj.message.trim()) {
-    return obj.message.trim();
+    const trimmed = obj.message.trim();
+    return extractErrorDetailMessages(trimmed) ?? trimmed;
   }
 
   // DRF-стандарт: {detail: "..."}
