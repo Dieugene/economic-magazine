@@ -65,6 +65,13 @@ function SubmissionRu() {
             className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
           >
             авторского соглашения
+          </Link>
+          ,{" "}
+          <Link
+            href="/privacy"
+            className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
+          >
+            политикой обработки персональных данных
           </Link>{" "}
           и{" "}
           <Link
@@ -186,6 +193,13 @@ function SubmissionEn() {
             className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
           >
             copyright agreement
+          </Link>
+          , the{" "}
+          <Link
+            href="/privacy"
+            className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
+          >
+            personal data processing policy
           </Link>{" "}
           and the{" "}
           <Link

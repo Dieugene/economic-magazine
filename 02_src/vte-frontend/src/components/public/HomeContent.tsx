@@ -76,8 +76,16 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                   </p>
                   <p>
                     The journal has been published since 2017. Frequency — 4 times
-                    a year. Publisher: Institute of Economics, Russian Academy of
-                    Sciences, Moscow. ISSN: 2587-7666.
+                    a year. Publisher:{" "}
+                    <a
+                      href="https://en.inecon.org"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-teal-500 underline decoration-copper-200 underline-offset-2 hover:text-copper-400 transition-colors"
+                    >
+                      Institute of Economics, Russian Academy of Sciences
+                    </a>
+                    , Moscow. ISSN: 2587-7666.
                   </p>
                   <p>
                     Journal focuses on methodological and theoretical issues of
@@ -139,8 +147,16 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                   </p>
                   <p>
                     Журнал издаётся с 2017 г. С 2020 г. он стал ежеквартальным.
-                    Выходит только в электронном виде. Учредитель: Институт
-                    экономики РАН, г. Москва. ISSN: 2587-7666.
+                    Выходит только в электронном виде. Учредитель:{" "}
+                    <a
+                      href="https://inecon.org/institut/ob-institute.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-teal-500 underline decoration-copper-200 underline-offset-2 hover:text-copper-400 transition-colors"
+                    >
+                      Институт экономики РАН
+                    </a>
+                    , г. Москва. ISSN: 2587-7666.
                   </p>
                   <p>
                     Особенностью журнала является сосредоточенность на
@@ -253,7 +269,16 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                 <div className="space-y-3">
                   <IndexItem
                     label={t("Учредитель", "Publisher")}
-                    value={t("Институт экономики РАН", "Institute of Economics RAS")}
+                    value={
+                      <a
+                        href={lang === "en" ? "https://en.inecon.org" : "https://inecon.org/institut/ob-institute.html"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-teal-600 underline decoration-copper-200 underline-offset-2 hover:text-copper-400 transition-colors"
+                      >
+                        {t("Институт экономики РАН", "Institute of Economics RAS")}
+                      </a>
+                    }
                   />
                   <IndexItem
                     label={t("Периодичность", "Frequency")}
