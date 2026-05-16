@@ -108,6 +108,16 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                     </Link>{" "}
                     license.
                   </p>
+                  <p>
+                    <strong className="text-forest-700">Journal audience.</strong>{" "}
+                    Members of the academic society and university communities,
+                    historians of economics and economic thought, wide-range
+                    economists, sociologists, political scientists.
+                  </p>
+                  <p>
+                    <strong className="text-forest-700">Journal funding.</strong>{" "}
+                    The journal is published at the expense of the founder.
+                  </p>
                   <p className="italic text-gray-500">
                     With respect, Chief Editor of &ldquo;Issues of Economic
                     Theory&rdquo;{" "}
@@ -129,8 +139,8 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                   </p>
                   <p>
                     Журнал издаётся с 2017 г. С 2020 г. он стал ежеквартальным.
-                    Выходит только в электронном виде. Издатель: Институт экономики
-                    РАН, г. Москва. ISSN: 2587-7666.
+                    Выходит только в электронном виде. Учредитель: Институт
+                    экономики РАН, г. Москва. ISSN: 2587-7666.
                   </p>
                   <p>
                     Особенностью журнала является сосредоточенность на
@@ -164,6 +174,18 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                     </Link>
                     .
                   </p>
+                  <p>
+                    <strong className="text-forest-700">Аудитория журнала.</strong>{" "}
+                    Представители академического и университетского сообществ:
+                    экономисты, социологи, политологи, историки экономики и
+                    экономической мысли.
+                  </p>
+                  <p>
+                    <strong className="text-forest-700">
+                      Финансирование журнала.
+                    </strong>{" "}
+                    Издание журнала осуществляется за счёт средств учредителя.
+                  </p>
                   <p className="italic text-gray-500">
                     С уважением, главный редактор {"\u00AB"}Вопросов теоретической
                     экономики{"\u00BB"}{" "}
@@ -185,13 +207,47 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <IndexItem
-                    label={t("Перечень ВАК", "HAC List")}
-                    value={t("Специальности: 5.2.1, 5.4.2, 5.5.3", "Specialties: 5.2.1, 5.4.2, 5.5.3")}
+                    label={t(
+                      "Перечень ВАК (Категория журнала в перечне ВАК 1)",
+                      "HAC List (Q1)"
+                    )}
+                    value={
+                      <>
+                        <div>{t("Специальности:", "Specialties:")}</div>
+                        <ul className="list-disc pl-5 mt-1 space-y-0.5">
+                          <li>
+                            {t(
+                              "5.2.1 — Экономическая теория",
+                              "5.2.1 — Economic theory"
+                            )}
+                          </li>
+                          <li>
+                            {t(
+                              "5.4.2 — Экономическая социология",
+                              "5.4.2 — Economic sociology"
+                            )}
+                          </li>
+                          <li>
+                            {t(
+                              "5.5.3 — Государственное управление и отраслевые политики",
+                              "5.5.3 — Public administration and sectoral policies"
+                            )}
+                          </li>
+                        </ul>
+                      </>
+                    }
                   />
                   <IndexItem label="ISSN" value="2587-7666 (Online)" />
                   <IndexItem
                     label={t("Регистрация", "Registration")}
                     value={t("Эл № ФС77-78796 от 30.07.2020", "El No. FS77-78796 dated 30.07.2020")}
+                  />
+                  <IndexItem
+                    label={t("Ядро РИНЦ", "RSCI")}
+                    value={t(
+                      "Входит в Ядро РИНЦ, список RSCI",
+                      "Part of the Russian Science Citation Index Core, RSCI list"
+                    )}
                   />
                 </div>
                 <div className="space-y-3">
@@ -206,6 +262,13 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                   <IndexItem
                     label={t("Лицензия", "License")}
                     value="Creative Commons 4.0"
+                  />
+                  <IndexItem
+                    label={t("Перечень ЕГПНИ", "EGPNI List")}
+                    value={t(
+                      "Категория К2",
+                      "Category K2 (Unified State Register of Scientific Research)"
+                    )}
                   />
                 </div>
               </div>
@@ -362,13 +425,13 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
   );
 }
 
-function IndexItem({ label, value }: { label: string; value: string }) {
+function IndexItem({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3">
       <div className="w-1.5 h-1.5 rounded-full bg-copper-400 mt-2 flex-shrink-0" />
       <div>
         <span className="text-sm font-medium text-forest-700">{label}</span>
-        <p className="text-sm text-gray-500 mt-0.5">{value}</p>
+        <div className="text-sm text-gray-500 mt-0.5">{value}</div>
       </div>
     </div>
   );
