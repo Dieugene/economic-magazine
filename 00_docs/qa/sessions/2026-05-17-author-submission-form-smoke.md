@@ -115,3 +115,52 @@ curl -X POST http://185.180.230.243/api/articles/upload_new_pdf_file/ \
 Фронт работоспособен и готов к деплою: рендер, валидация, honeypot, error-handling, template-download UI — всё работает. Полный positive path (загрузка статьи) не подтверждён только потому, что **бэк отвечает 400 на корректный по свагеру payload** (B1). После фикса бэка — повторный прогон шага 5 без правок фронта.
 
 Деплой можно делать сразу после явного «ок» от заказчика — фронт-часть не блокируется бэк-блокерами (форма продолжит работать корректно после фикса B1).
+
+---
+
+## Re-test — 2026-05-17, второй прогон (после бэкенд-фиксов)
+
+Бэкендер выкатил два фикса и **переименовал эндпоинт**:
+- `POST /api/articles/upload_new_pdf_file/` → `POST /api/articles/upload_new_article/` (тот же `ArticleUploadRequest`, security `jwtAuth OR {}` — anonymous OK).
+- `GET /api/articles/download_template/` — теперь 200 OK, отдаёт `шаблон оформления статьи ВТЭ.docx` (36 KB) без авторизации. B3 закрыт.
+
+**Фронт-правки (commit `775d510`):**
+- Обновлён путь в `adminApi.submitManuscript` → `/articles/upload_new_article/`.
+- Добавлена защитная проверка тела ответа: если бэк возвращает HTTP 200 с `error_type` в JSON, фронт re-raise'ит `ApiError(500)` чтобы форма показала ошибку, а не ложный success.
+
+### Coverage второго прогона
+
+| # | Сценарий | Поведение | Результат |
+|---|---|---|---|
+| 1 | Прямой `curl POST` с минимальным required-set, без zip | `HTTP 500 {"message":"Внутренняя ошибка сервера: 'zip_with_additional_files'"}` | ⚠ **B5** — бэк падает KeyError, если опциональное `zip_with_additional_files` не передано |
+| 2 | Прямой `curl POST` с required + zip | `HTTP 200 {"status_code":null,"error_type":"server_error","message":"Внутренняя ошибка сервера: Error 111 connecting to 127.0.0.1:6379. Connection refused."}` | ⚠ **B6** — Celery/Redis недоступны, но HTTP-код 200; основная транзакция, видимо, прошла, упало уведомление |
+| 3 | UI submit с zip (до фронт-фикса B6) | success-экран отображён несмотря на ошибку | ❌ маскировка ошибки — баг UX |
+| 4 | UI submit без zip (после фронт-фикса) | красный баннер «Внутренняя ошибка сервера: 'zip_with_additional_files'» | ✅ корректное error-состояние |
+| 5 | UI submit с zip (после фронт-фикса) | red баннер «Внутренняя ошибка сервера: Error 111 connecting to 127.0.0.1:6379. Connection refused.» | ✅ корректное error-состояние; больше не маскирует |
+| 6 | GET `/api/articles/download_template/` | 200 OK + 36 KB docx | ✅ B3 закрыт |
+| 7 | Template-download через UI | браузерное скачивание `vte-article-template.docx` | ✅ |
+
+### Новые баги (бэк)
+
+**B5 — KeyError на отсутствие опционального `zip_with_additional_files`.** Field в swagger без `required`, но обработчик ожидает его всегда. Проверить view'у `upload_new_article` — поправить на `request.FILES.get('zip_with_additional_files')` или `.get('zip_with_additional_files', None)`.
+
+**B6 — Celery/Redis недоступны (127.0.0.1:6379, connection refused) → HTTP 200 + error body.** Две проблемы: (а) Redis на бэке не поднят, (б) wrapper не должен возвращать 200 при свалившейся транзакции — нужен 5xx. Фронт защищён через `error_type`-guard, но это лечит симптом.
+
+### Что подтверждено
+
+- ✅ Path: `/articles/upload_new_article/` доходит до бэка, фронт правильно адресует.
+- ✅ Template-download: 200, файл скачивается.
+- ✅ Защита от 200+error_type работает (фронт показывает ошибку, не success).
+- ✅ Защита от 4xx/5xx работает (фронт через `parseApiError` показывает message бэка).
+- ❌ Полный позитивный путь не подтверждён — блокируется бэк-багами B5+B6. Когда бэкендер поднимет Redis и поправит KeyError на zip, фронт должен пройти positive-path без правок.
+
+### Деплой?
+
+Фронт готов к деплою (commit `775d510`). После деплоя страница `/authors/submit` в проде будет:
+- корректно валидировать ввод,
+- защищать от ботов через honeypot,
+- скачивать шаблон,
+- показывать осмысленные ошибки на любые ответы бэка (4xx / 5xx / 200+error_type),
+- не маскировать ошибки как успех.
+
+Положительный путь (success-экран «Статья получена») заработает автоматически после фикса B5+B6 на бэке без правок фронта.
