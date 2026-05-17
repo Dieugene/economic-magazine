@@ -1,3 +1,4 @@
+import { Toaster } from "sonner";
 import Header from "@/components/public/Header";
 import Navigation from "@/components/public/Navigation";
 import Footer from "@/components/public/Footer";
@@ -17,6 +18,7 @@ export default function PublicLayout({
       </main>
       <Footer />
       <CookieBanner />
+      <Toaster position="top-right" richColors closeButton />
     </>
   );
 }

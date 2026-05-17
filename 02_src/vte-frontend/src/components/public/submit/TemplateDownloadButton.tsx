@@ -21,7 +21,7 @@ export default function TemplateDownloadButton() {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 404) {
+      if (err instanceof ApiError && (err.status === 404 || err.status === 401 || err.status === 403)) {
         toast.error("Шаблон временно недоступен. Обратитесь в редакцию: editorqet@inecon.ru");
       } else {
         toast.error("Не удалось скачать шаблон. Попробуйте позже.");
