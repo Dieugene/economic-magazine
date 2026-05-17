@@ -10,7 +10,7 @@ interface NavItem {
   labelRu: string;
   labelEn: string;
   href: string;
-  dropdown?: { labelRu: string; labelEn: string; href: string }[];
+  dropdown?: { labelRu: string; labelEn: string; href: string; ruOnly?: boolean }[];
 }
 
 const rubricatorItems = [
@@ -32,7 +32,7 @@ const archiveItems = [
 ];
 
 const authorsItems = [
-  { labelRu: "Подать статью", labelEn: "Submit a Paper", href: "/authors/submit" },
+  { labelRu: "Подать статью", labelEn: "Submit a Paper", href: "/authors/submit", ruOnly: true },
   { labelRu: "Порядок подачи и оформления статей", labelEn: "Procedure for Paper Submission", href: "/authors/submission" },
   { labelRu: "Авторское соглашение", labelEn: "Copyright Agreement", href: "/authors/copyright-agreement" },
   { labelRu: "Порядок рецензирования статей", labelEn: "Procedure for Paper Review", href: "/authors/review" },
@@ -55,7 +55,7 @@ interface NavigationProps {
 export default function Navigation({ activeItem }: NavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   return (
     <nav className="border-t border-stone-300 bg-stone-50">
@@ -87,15 +87,17 @@ export default function Navigation({ activeItem }: NavigationProps) {
                   </Link>
                   {openDropdown === item.key && (
                     <div className="absolute top-full left-0 bg-white shadow-lg border border-stone-300 rounded-sm py-1 min-w-[280px] z-50">
-                      {item.dropdown.map((sub) => (
-                        <Link
-                          key={sub.href}
-                          href={sub.href}
-                          className="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600"
-                        >
-                          {t(sub.labelRu, sub.labelEn)}
-                        </Link>
-                      ))}
+                      {item.dropdown
+                        .filter((sub) => !(sub.ruOnly && lang === "en"))
+                        .map((sub) => (
+                          <Link
+                            key={sub.href}
+                            href={sub.href}
+                            className="block px-4 py-2 text-sm text-gray-600 hover:bg-stone-100 hover:text-forest-600"
+                          >
+                            {t(sub.labelRu, sub.labelEn)}
+                          </Link>
+                        ))}
                     </div>
                   )}
                 </div>
