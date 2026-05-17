@@ -19,8 +19,8 @@ const subPages: SubPage[] = [
     href: "/authors/submit",
     ru: "Подать статью",
     en: "Submit a Paper",
-    descRu: "Сервис подачи статей и контакты редакции для отправки рукописи.",
-    descEn: "Manuscript submission service and editorial contacts.",
+    descRu: "Форма подачи рукописи через сайт журнала.",
+    descEn: "Manuscript submission form (Russian only).",
   },
   {
     href: "/authors/submission",
@@ -46,7 +46,7 @@ const subPages: SubPage[] = [
 ];
 
 export default function AuthorsPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   return (
     <>
@@ -75,7 +75,9 @@ export default function AuthorsPage() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {subPages.map((p) => (
+          {subPages
+            .filter((p) => !(lang === "en" && p.href === "/authors/submit"))
+            .map((p) => (
             <Link
               key={p.href}
               href={p.href}
