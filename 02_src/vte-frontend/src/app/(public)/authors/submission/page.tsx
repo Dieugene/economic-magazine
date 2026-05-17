@@ -5,6 +5,7 @@ import Breadcrumbs from "@/components/public/Breadcrumbs";
 import PageHeading from "@/components/public/PageHeading";
 import DocumentTitle from "@/components/public/DocumentTitle";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import TemplateDownloadButton from "@/components/public/submit/TemplateDownloadButton";
 
 export default function AuthorsSubmissionPage() {
   const { lang } = useLanguage();
@@ -38,6 +39,12 @@ export default function AuthorsSubmissionPage() {
 function SubmissionRu() {
   return (
     <div className="prose max-w-none text-gray-700 leading-relaxed space-y-6 text-[15px]">
+      <div className="bg-stone-50 border border-stone-300 rounded-sm p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 not-prose mb-6">
+        <p className="text-sm text-gray-700 m-0">
+          Скачайте шаблон оформления статьи и подготовьте рукопись по нему.
+        </p>
+        <TemplateDownloadButton />
+      </div>
       <div className="bg-white border border-stone-400 rounded-sm p-6">
         <p className="text-sm text-gray-700 leading-relaxed">
           Подача статей в журнал «Вопросы теоретической экономики» осуществляется через специальный{" "}
