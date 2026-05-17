@@ -439,9 +439,18 @@ export const adminApi = {
       if (v === undefined || v === null) continue;
       fd.append(k, v as string | Blob);
     }
-    return fetchApi<{ message: string }>('/articles/upload_new_pdf_file/', {
-      method: 'POST',
-      body: fd,
+    // Бэк иногда отвечает HTTP 200 с error-телом (например, при сбое Celery/Redis
+    // отправка уведомления падает уже после сохранения, но wrapper возвращает 200
+    // с {status_code:null, error_type:"server_error", message:"..."}). Считаем
+    // submission неуспешной, если в успешном теле виден маркер ошибки.
+    return fetchApi<{ message: string; error_type?: string; status_code?: number | null }>(
+      '/articles/upload_new_article/',
+      { method: 'POST', body: fd }
+    ).then((res) => {
+      if (res.error_type) {
+        throw new ApiError(500, `API error: ${res.message ?? res.error_type}`, res);
+      }
+      return res;
     });
   },
 
