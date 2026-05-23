@@ -62,14 +62,12 @@ function ReviewRu() {
               editorqet@inecon.ru
             </a>
             , либо через{" "}
-            <a
-              href="https://ms.questionset.ru/"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/authors/submit"
               className="text-teal-600 hover:text-copper-400 underline underline-offset-2"
             >
               сервис подачи статей
-            </a>
+            </Link>
             .
           </li>
           <li>

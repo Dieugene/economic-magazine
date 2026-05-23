@@ -39,7 +39,7 @@ export default function AuthorDataBlock({ state, errors, onChange, onBlur }: Pro
 
         <div>
           <label htmlFor="sub-workplace" className={labelClass}>
-            Место работы (название и адрес){requiredMark}
+            Место работы (название и адрес, соавторов через запятую){requiredMark}
           </label>
           <textarea
             id="sub-workplace"
@@ -56,7 +56,7 @@ export default function AuthorDataBlock({ state, errors, onChange, onBlur }: Pro
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="sub-position" className={labelClass}>
-              Должность{requiredMark}
+              Должность (соавторов через запятую){requiredMark}
             </label>
             <input
               id="sub-position"
@@ -72,7 +72,7 @@ export default function AuthorDataBlock({ state, errors, onChange, onBlur }: Pro
 
           <div>
             <label htmlFor="sub-city" className={labelClass}>
-              Город{requiredMark}
+              Город (соавторов через запятую){requiredMark}
             </label>
             <input
               id="sub-city"

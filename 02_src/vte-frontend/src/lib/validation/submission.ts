@@ -54,7 +54,7 @@ export function validateField(
       return undefined;
     case "phoneNumber":
       if (!state.phoneNumber.trim()) return REQUIRED;
-      if (countDigits(state.phoneNumber) < 7) return "Введите номер полностью";
+      if (countDigits(state.phoneNumber) < 11) return "Введите номер полностью";
       return undefined;
     case "orcidId":
       if (!state.orcidId.trim()) return undefined; // optional

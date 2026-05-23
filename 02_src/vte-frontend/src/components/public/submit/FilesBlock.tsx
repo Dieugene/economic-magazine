@@ -63,8 +63,6 @@ function DropArea({ id, accept, hint, file, error, onPick, onBlur }: DropAreaPro
         className={`border-2 border-dashed rounded-sm px-4 py-6 text-center cursor-pointer transition-colors ${
           dragOver
             ? "border-forest-600 bg-forest-50"
-            : error
-            ? "border-red-400 bg-red-50/30"
             : "border-stone-400 bg-stone-50 hover:border-copper-300"
         }`}
       >

@@ -41,21 +41,19 @@ function SubmissionRu() {
     <div className="prose max-w-none text-gray-700 leading-relaxed space-y-6 text-[15px]">
       <div className="bg-stone-50 border border-stone-300 rounded-sm p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 not-prose mb-6">
         <p className="text-sm text-gray-700 m-0">
-          Скачайте шаблон оформления статьи и подготовьте рукопись по нему.
+          Скачайте шаблон оформления статей.
         </p>
         <TemplateDownloadButton />
       </div>
       <div className="bg-white border border-stone-400 rounded-sm p-6">
         <p className="text-sm text-gray-700 leading-relaxed">
           Подача статей в журнал «Вопросы теоретической экономики» осуществляется через специальный{" "}
-          <a
-            href="https://ms.questionset.ru/"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/authors/submit"
             className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"
           >
             сервис подачи статей
-          </a>
+          </Link>
           . Если у Вас возникли сложности с использованием сервиса, пожалуйста, направьте статью на электронный адрес редакции журнала «Вопросы теоретической экономики»:{" "}
           <a
             href="mailto:editorqet@inecon.ru"
@@ -111,7 +109,7 @@ function SubmissionRu() {
           <p><strong>а)</strong> шрифт Times New Roman с одинарным межстрочным интервалом; фамилия автора – 12-м кеглем светлым, прямым, прописными буквами; название статьи – 12-м кеглем полужирным, прямым, прописными буквами; ключевые слова, аннотация, сноски – 10-м кеглем светлым, прямым; текст статьи – 12-м кеглем. Поля страницы: верхнее – 1 см, левое – 2,0, нижнее – 1,5, правое – 1,5 см.</p>
           <p><strong>б)</strong> таблицы должны быть пронумерованы и иметь названия, а текст должен содержать ссылку на таблицу по соответствующему номеру (например, Табл. 1). Если в таблицах содержатся сноски, они размещаются под таблицей. Для знаков сносок в таблицах используются «звездочки» (*) или буквы. Ссылки на источники размещаются под таблицей после сносок и предваряются словом «Источник:» («Источники:») или «Рассчитано по:».</p>
           <p><strong>в)</strong> формулы оформляются средствами программы Word, а сложные формулы набираются во встроенном редакторе формул. Если в тексте содержатся ссылки на формулы, то формулы должны быть пронумерованы.</p>
-          <p><strong>г)</strong> рисунки (диаграммы, схемы, графики) желательно готовить в программах векторной графики. Фотографии должны быть в форматах TIFF или JPG с разрешением не менее 300 dpi. Все рисунки должны быть пронумерованы и иметь подрисуночные подписи, а текст должен содержать ссылки на рисунки по соответствующему номеру, например: Рис. 12. Сноски, примечания, содержащиеся в рисунках, размещаются непосредственно под рисунками. Для знаков сносок используются «звездочки» (*), буквы или другие знаки, но отличные от знаков сносок таблиц и номеров постраничных сносок в основном тексте. Ссылки на источники размещаются под рисунками после сносок и предваряются словом «Источник:» («Источники:»). Иллюстрации (диаграммы, схемы, графики), которые готовились в программе Excel, помимо размещения в самой статье, передаются отдельным файлом .xlsx. На графиках и диаграммах единицы измерения указываются один раз по осям координат. Шрифт – Times. Иллюстрации, которые готовились в векторных графических программах (Adobe Illustrator, CorelDraw), необходимо предоставить в векторном формате *.eps. Шрифт – Times. Растровые иллюстрации (фотографии, сканированные изображения) предоставляются размером 170 мм по ширине в разрешении 300 dpi и цветовой модели RGB. Для формул, которые могут быть записаны средствами Word, не использовать встроенный редактор формул. При использовании <a href="https://ms.questionset.ru" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-copper-400 underline underline-offset-2">онлайн-сервиса подачи статей</a> файлы загружаются в разделе «Дополнительные материалы одним файлом в .zip архиве».</p>
+          <p><strong>г)</strong> рисунки (диаграммы, схемы, графики) желательно готовить в программах векторной графики. Фотографии должны быть в форматах TIFF или JPG с разрешением не менее 300 dpi. Все рисунки должны быть пронумерованы и иметь подрисуночные подписи, а текст должен содержать ссылки на рисунки по соответствующему номеру, например: Рис. 12. Сноски, примечания, содержащиеся в рисунках, размещаются непосредственно под рисунками. Для знаков сносок используются «звездочки» (*), буквы или другие знаки, но отличные от знаков сносок таблиц и номеров постраничных сносок в основном тексте. Ссылки на источники размещаются под рисунками после сносок и предваряются словом «Источник:» («Источники:»). Иллюстрации (диаграммы, схемы, графики), которые готовились в программе Excel, помимо размещения в самой статье, передаются отдельным файлом .xlsx. На графиках и диаграммах единицы измерения указываются один раз по осям координат. Шрифт – Times. Иллюстрации, которые готовились в векторных графических программах (Adobe Illustrator, CorelDraw), необходимо предоставить в векторном формате *.eps. Шрифт – Times. Растровые иллюстрации (фотографии, сканированные изображения) предоставляются размером 170 мм по ширине в разрешении 300 dpi и цветовой модели RGB. Для формул, которые могут быть записаны средствами Word, не использовать встроенный редактор формул. При использовании <Link href="/authors/submit" className="text-teal-600 hover:text-copper-400 underline underline-offset-2">онлайн-сервиса подачи статей</Link> файлы загружаются в разделе «Дополнительные материалы одним файлом в .zip архиве».</p>
         </div>
 
         <h3 className="font-serif text-lg font-semibold text-forest-700 mt-5 mb-2">3. Пристатейный библиографический список</h3>
@@ -132,11 +130,11 @@ function SubmissionRu() {
           <p>Монография: <em>Evans J. S. B. T.</em> (2010). <em>Thinking Twice: Two Minds in One Brain.</em> — Oxford and New York: Oxford University Press.</p>
 
           <p className="font-medium text-forest-700 pt-2">Версии оформления русскоязычных публикаций для списка REFERENCES:</p>
-          <p><em>Andreeva E.L., Polkova T.V.</em> (2014). Assessment of the Quality of Working Life of the Population of Russian Regions // <em>Regional Economy.</em> No. 3(35). Pp. 91–101. DOI: 10.17059/2013-3-7.</p>
-          <p><em>Kolosova R.P., Baimurzina G.R.</em> (2021). <em>Decent Work in the New Conditions: Updating the Indicators of the Quality of Employment / Transformation of the Labor Market and Employment Policy:</em> Coll. of the IV Int. scient.-pract. conf. «Kostinsky Readings», Moscow, 11.02.2021. — M.: Academy of Labor and Social Relations. Pp. 15–20.</p>
-          <p><em>Lapin N.I.</em> (2021). <em>The Complexity of the Formation of a New Russia. An Anthroposociocultural Approach.</em> — M.: Ves` Mir.</p>
-          <p><em>MOT</em> (2008). <em>Measuring Decent Work Based on the Recommendations of the Tripartite Meeting of Experts on Measuring Decent Work</em> (September 2008). URL: https://www.ilo.org/wcmsp5/groups/public/---dgreports/---integration/documents/meetingdocument/wcms_192844.pdf (access date: 12.07.2025).</p>
-          <p><em>Precarious employment in the Russian Federation: theory and methodology of identification, assessment and vector of reduction</em> (2018). / Ed. V.N. Bobkov. — M.: KNORUS.</p>
+          <p><em>Andreeva E.L., Polkova T.V.</em> (2014). Assessment of the Quality of Working Life of the Population of Russian Regions // <em>Regional Economy.</em> No. 3(35). Pp. 91–101. DOI: 10.17059/2013-3-7. (In Russ.).</p>
+          <p><em>Kolosova R.P., Baimurzina G.R.</em> (2021). Decent Work in the New Conditions: Updating the Indicators of the Quality of Employment / <em>Transformation of the Labor Market and Employment Policy: Coll. of the IV Int. scient.-pract. conf. «Kostinsky Readings»</em>, Moscow, 11.02.2021. — M.: Academy of Labor and Social Relations. Pp. 15–20. (In Russ.).</p>
+          <p><em>Lapin N.I.</em> (2021). <em>The Complexity of the Formation of a New Russia. An Anthroposociocultural Approach.</em> — M.: Ves` Mir. (In Russ.).</p>
+          <p><em>MOT</em> (2008). <em>Measuring Decent Work Based on the Recommendations of the Tripartite Meeting of Experts on Measuring Decent Work</em> (September 2008). URL: https://www.ilo.org/wcmsp5/groups/public/---dgreports/---integration/documents/meetingdocument/wcms_192844.pdf (access date: 12.07.2025). (In Russ.).</p>
+          <p><em>Precarious employment in the Russian Federation: theory and methodology of identification, assessment and vector of reduction</em> (2018). / Ed. V.N. Bobkov. — M.: KNORUS. (In Russ.).</p>
 
           <p><strong>(c)</strong> В случае указания интернет-источников необходимо уточнять дату обращения. Формат: число, месяц, год. Например: дата обращения: 05.04.2020.</p>
           <p className="font-medium text-forest-700 pt-2"><em>Примеры оформления ссылки на интернет-ресурсы:</em></p>

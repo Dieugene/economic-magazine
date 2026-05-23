@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { adminApi } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
 import type { SubmissionFormState, SubmissionErrors } from "@/lib/types/submission";
@@ -23,6 +23,20 @@ export default function SubmissionForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [serverError, setServerError] = useState<string | null>(null);
   const [submittedEmail, setSubmittedEmail] = useState<string>("");
+
+  // Если пользователь промахивается мимо drop-zone, браузер по умолчанию
+  // открывает файл в текущей вкладке и теряет состояние формы. Глобальный
+  // preventDefault на dragover/drop ловит только промахи — наш handler
+  // в DropArea отрабатывает раньше через bubbling.
+  useEffect(() => {
+    const prevent = (e: DragEvent) => e.preventDefault();
+    window.addEventListener("dragover", prevent);
+    window.addEventListener("drop", prevent);
+    return () => {
+      window.removeEventListener("dragover", prevent);
+      window.removeEventListener("drop", prevent);
+    };
+  }, []);
 
   function handleChange<K extends keyof SubmissionFormState>(key: K, value: SubmissionFormState[K]) {
     setState((prev) => ({ ...prev, [key]: value }));

@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+import Link from "next/link";
 import type { SubmissionFormState, SubmissionErrors } from "@/lib/types/submission";
 import FormSection from "./FormSection";
 
@@ -10,12 +12,30 @@ interface Props {
   onBlur: (key: keyof SubmissionFormState) => void;
 }
 
-const ITEMS: { key: keyof SubmissionFormState; label: string }[] = [
+const linkClass =
+  "text-teal-600 hover:text-copper-400 underline underline-offset-2 transition-colors";
+
+const ITEMS: { key: keyof SubmissionFormState; label: ReactNode }[] = [
   { key: "declProfile",      label: "Статья соответствует содержательно-тематическому профилю журнала" },
   { key: "declOriginal",     label: "Этот материал ранее не был опубликован — ни полностью, ни частично, — а также не был представлен для рассмотрения и публикации в другом журнале" },
   { key: "declComplete",     label: "Статья полностью укомплектована аппаратом (аннотации, ключевые слова, информация об авторах, списки литературы на двух языках)" },
   { key: "declNoPlagiarism", label: "Статья не содержит неоформленных заимствований — плагиата и самоплагиата" },
-  { key: "declAgreement",    label: "Автор (соавторы) принимает условия договора" },
+  {
+    key: "declAgreement",
+    label: (
+      <>
+        Автор (соавторы) принимает условия{" "}
+        <Link
+          href="/authors/copyright-agreement"
+          target="_blank"
+          className={linkClass}
+          onClick={(e) => e.stopPropagation()}
+        >
+          авторского соглашения
+        </Link>
+      </>
+    ),
+  },
 ];
 
 export default function DeclarationsBlock({ state, errors, onChange, onBlur }: Props) {
