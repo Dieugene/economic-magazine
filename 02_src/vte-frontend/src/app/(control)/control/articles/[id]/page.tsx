@@ -442,6 +442,22 @@ export default function ArticleFormPage({
     );
   }
 
+  // Статья без выпуска бэком не создаётся. Прямой переход на /control/articles/new
+  // без issue_id query — обычно нажатие на старую закладку или ошибка навигации;
+  // отправляем пользователя в список номеров.
+  if (isNew && !issueId) {
+    return (
+      <div className="bg-amber-50 border border-amber-200 rounded p-4 text-sm text-amber-800">
+        Статью можно создать только в контексте выпуска. Откройте нужный номер
+        в{" "}
+        <Link href="/control/issues" className="underline hover:text-forest-700">
+          списке номеров
+        </Link>{" "}
+        и нажмите «Добавить статью».
+      </div>
+    );
+  }
+
   return (
     <>
       <DocumentTitle
@@ -523,21 +539,7 @@ export default function ArticleFormPage({
           <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 pt-5 pb-0">
             Основная информация
           </legend>
-          <div className="p-5 pt-3 grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div>
-              <label htmlFor="issue-id" className={labelClass}>ID номера</label>
-              <input
-                id="issue-id"
-                type="number"
-                className={inputClass}
-                value={issueId || ""}
-                onChange={(e) => setIssueId(Number(e.target.value))}
-                disabled={!isNew}
-              />
-              <p className={hintClass}>
-                Можно оставить пустым и позже привязать через карточку номера
-              </p>
-            </div>
+          <div className="p-5 pt-3 grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label htmlFor="section-slug" className={labelClass}>Рубрика *</label>
               <select

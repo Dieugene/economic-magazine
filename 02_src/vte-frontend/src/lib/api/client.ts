@@ -93,7 +93,12 @@ async function rawFetch(path: string, init?: RequestInit): Promise<Response> {
   return fetch(`${API_BASE}${path}`, init);
 }
 
-async function tryRefreshTokens(): Promise<boolean> {
+// Бэк ротирует refresh-токен при каждом /auth/refresh/, поэтому параллельные
+// 401-обновления гарантированно сломают друг друга. Держим один inflight
+// promise — все одновременные запросы ждут общий результат.
+let refreshInflight: Promise<boolean> | null = null;
+
+async function doRefreshTokens(): Promise<boolean> {
   const refresh = tokenStore.getRefresh();
   if (!refresh) return false;
   try {
@@ -108,6 +113,26 @@ async function tryRefreshTokens(): Promise<boolean> {
     return true;
   } catch {
     return false;
+  }
+}
+
+function tryRefreshTokens(): Promise<boolean> {
+  if (!refreshInflight) {
+    refreshInflight = doRefreshTokens().finally(() => {
+      refreshInflight = null;
+    });
+  }
+  return refreshInflight;
+}
+
+// При окончательной потере авторизации (refresh истёк или его нет) выкидываем
+// пользователя в /control/login. Только из-под /control — публичные страницы
+// 401 не получают, а если получили — это не повод их редиректить.
+function redirectToLoginIfAdmin() {
+  if (typeof window === 'undefined') return;
+  const path = window.location.pathname;
+  if (path.startsWith('/control') && !path.startsWith('/control/login')) {
+    window.location.href = '/control/login';
   }
 }
 
@@ -126,15 +151,28 @@ async function fetchApi<T>(path: string, options: FetchOptions = {}): Promise<T>
 
   let res = await fetch(`${API_BASE}${path}`, { ...init, headers });
 
-  // Auto-refresh on 401 if we have a refresh token
-  if (res.status === 401 && needAuth && tokenStore.getRefresh()) {
-    const refreshed = await tryRefreshTokens();
-    if (refreshed) {
-      const newToken = tokenStore.getAccess();
-      if (newToken) headers.set('Authorization', `Bearer ${newToken}`);
-      res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  // Auto-refresh поток для защищённых эндпоинтов:
+  //   401 + есть refresh → пробуем обновить → retry оригинальный запрос.
+  //   Если retry снова 401 ИЛИ refresh не удался ИЛИ refresh-токена не было —
+  //   деавторизация и редирект в /control/login.
+  if (res.status === 401 && needAuth) {
+    if (tokenStore.getRefresh()) {
+      const refreshed = await tryRefreshTokens();
+      if (refreshed) {
+        const newToken = tokenStore.getAccess();
+        if (newToken) headers.set('Authorization', `Bearer ${newToken}`);
+        res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+        if (res.status === 401) {
+          tokenStore.clear();
+          redirectToLoginIfAdmin();
+        }
+      } else {
+        tokenStore.clear();
+        redirectToLoginIfAdmin();
+      }
     } else {
       tokenStore.clear();
+      redirectToLoginIfAdmin();
     }
   }
 
