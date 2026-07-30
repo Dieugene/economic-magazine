@@ -83,7 +83,7 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                       rel="noopener noreferrer"
                       className="text-teal-500 underline decoration-copper-200 underline-offset-2 hover:text-copper-400 transition-colors"
                     >
-                      Institute of Economics, Russian Academy of Sciences
+                      Institute of Economics of the Russian Academy of Sciences
                     </a>
                     , Moscow. ISSN: 2587-7666.
                   </p>
@@ -154,7 +154,7 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                       rel="noopener noreferrer"
                       className="text-teal-500 underline decoration-copper-200 underline-offset-2 hover:text-copper-400 transition-colors"
                     >
-                      Институт экономики РАН
+                      Институт экономики Российской академии наук
                     </a>
                     , г. Москва. ISSN: 2587-7666.
                   </p>
@@ -276,7 +276,10 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
                         rel="noopener noreferrer"
                         className="text-teal-600 underline decoration-copper-200 underline-offset-2 hover:text-copper-400 transition-colors"
                       >
-                        {t("Институт экономики РАН", "Institute of Economics RAS")}
+                        {t(
+                          "Институт экономики Российской академии наук",
+                          "Institute of Economics of the Russian Academy of Sciences"
+                        )}
                       </a>
                     }
                   />
@@ -428,7 +431,12 @@ export default function HomeContent({ latestIssue }: HomeContentProps) {
               {t("Контакты", "Contacts")}
             </h3>
             <div className="text-sm text-gray-600 space-y-2">
-              <p>{t("Институт экономики РАН", "Institute of Economics RAS")}</p>
+              <p>
+                {t(
+                  "Институт экономики Российской академии наук",
+                  "Institute of Economics of the Russian Academy of Sciences"
+                )}
+              </p>
               <p>
                 {t("Нахимовский проспект, 32", "Nakhimovsky prospect, 32")}
                 <br />

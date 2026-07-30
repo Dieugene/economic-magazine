@@ -4,6 +4,7 @@ import type {
   Article,
   Author,
   Section,
+  SectionFull,
   EditorialBoardMember,
   PaginatedArticleList,
   TokenPair,
@@ -231,9 +232,9 @@ export const api = {
   getArticle: (id: number) => fetchApi<Article>(`/articles/${id}/`),
 
   getSections: () => fetchApi<Section[]>('/sections/'),
-  getSection: (slug: string) => fetchApi<Section>(`/sections/${slug}/`),
-  getSectionArticles: (slug: string) =>
-    fetchApi<Section>(`/sections/${slug}/articles/`),
+  // Detail-эндпоинт уже отдаёт статьи рубрики (SectionFull.articles).
+  // Отдельного /sections/{slug}/articles/ на бэке нет — он отвечает 404.
+  getSection: (slug: string) => fetchApi<SectionFull>(`/sections/${slug}/`),
 
   getEditorialBoard: () =>
     fetchApi<EditorialBoardMember[]>('/editorial_board/'),

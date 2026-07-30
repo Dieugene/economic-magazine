@@ -45,6 +45,13 @@ export interface Section {
   name: LocalizedString;
 }
 
+// GET /api/sections/{slug}/ отдаёт рубрику вместе с полными объектами статей
+// (в списке GET /api/sections/ поля articles нет).
+
+export interface SectionFull extends Section {
+  articles: Article[];
+}
+
 // ── Issue ───────────────────────────────────────────────────────
 
 export interface IssueSummary {

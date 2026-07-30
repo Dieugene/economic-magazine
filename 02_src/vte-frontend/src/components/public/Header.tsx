@@ -44,7 +44,10 @@ export default function Header() {
                 {t("Вопросы теоретической экономики", "Theoretical Economics")}
               </h1>
               <p className="text-sm text-gray-500 mt-0.5 tracking-wide">
-                {t("Институт экономики РАН", "Institute of Economics RAS")}
+                {t(
+                  "Институт экономики Российской академии наук",
+                  "Institute of Economics of the Russian Academy of Sciences"
+                )}
               </p>
             </div>
           </div>

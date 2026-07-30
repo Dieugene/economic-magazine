@@ -436,22 +436,15 @@ export function getMockData(path: string, _init?: RequestInit): unknown {
   // Sections list
   if (path === '/sections/') return sections;
 
-  // Section articles
-  const sectionArticlesMatch = path.match(/^\/sections\/([^/]+)\/articles\//);
-  if (sectionArticlesMatch) {
-    const slug = sectionArticlesMatch[1];
-    const section = sectionBySlug(slug);
-    if (!section) return null;
-    const articleIds = allArticleSummaries
-      .filter((a) => a.section_name.ru === section.name.ru)
-      .map((a) => a.id);
-    return { ...section, articles: articleIds };
-  }
-
-  // Single section
+  // Single section — как на бэке, detail отдаёт рубрику вместе со статьями
   const sectionMatch = path.match(/^\/sections\/([^/]+)\/$/);
   if (sectionMatch) {
-    return sectionBySlug(sectionMatch[1]) ?? null;
+    const section = sectionBySlug(sectionMatch[1]);
+    if (!section) return null;
+    const articles = allArticleSummaries.filter(
+      (a) => a.section_name.ru === section.name.ru
+    );
+    return { ...section, articles };
   }
 
   // Editorial board

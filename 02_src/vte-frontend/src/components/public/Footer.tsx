@@ -30,7 +30,7 @@ export default function Footer() {
             <p className="text-xs leading-relaxed">
               {t(
                 "Научный журнал Института экономики Российской академии наук. Издается с 2017 года.",
-                "Academic journal of the Institute of Economics, Russian Academy of Sciences. Published since 2017."
+                "Academic journal of the Institute of Economics of the Russian Academy of Sciences. Published since 2017."
               )}
             </p>
           </div>
@@ -128,7 +128,12 @@ export default function Footer() {
               {t("Контакты", "Contacts")}
             </p>
             <div className="text-sm space-y-1.5">
-              <p>{t("Институт экономики РАН", "Institute of Economics RAS")}</p>
+              <p>
+                {t(
+                  "Институт экономики Российской академии наук",
+                  "Institute of Economics of the Russian Academy of Sciences"
+                )}
+              </p>
               <p>{t("Москва, 117218", "Moscow, 117218")}</p>
               <p>{t("Нахимовский пр-т, 32", "Nakhimovsky prospect, 32")}</p>
               <p>
@@ -148,8 +153,8 @@ export default function Footer() {
           <p>
             &copy; 2017&ndash;{new Date().getFullYear()}{" "}
             {t(
-              "Вопросы теоретической экономики. Учредитель: ИЭ РАН",
-              "Theoretical Economics. Publisher: IE RAS"
+              "Вопросы теоретической экономики. Учредитель: Институт экономики Российской академии наук",
+              "Theoretical Economics. Publisher: Institute of Economics of the Russian Academy of Sciences"
             )}
           </p>
           <div className="flex items-center gap-4">

@@ -328,7 +328,7 @@ export default function ArticleView({ article }: { article: Article }) {
               .join(", ");
             const journalCopy = lang === "en"
               ? "Institute of Economics of the Russian Academy of Sciences «Issues of Economic Theory»"
-              : "ФГБУН Институт экономики РАН «Вопросы теоретической экономики»";
+              : "ФГБУН Институт экономики Российской академии наук «Вопросы теоретической экономики»";
             return (
               <div className="mb-6 text-xs text-gray-500 leading-relaxed">
                 {authorsCopy && <p>© {authorsCopy}, {article.issue_year}</p>}

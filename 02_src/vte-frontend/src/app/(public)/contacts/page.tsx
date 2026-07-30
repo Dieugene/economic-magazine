@@ -41,7 +41,12 @@ export default function ContactsPage() {
                   )}
                 </strong>
               </p>
-              <p>{t("Издатель: Институт экономики РАН", "Publisher: Institute of Economics RAS")}</p>
+              <p>
+                {t(
+                  "Издатель: Институт экономики Российской академии наук",
+                  "Publisher: Institute of Economics of the Russian Academy of Sciences"
+                )}
+              </p>
               <p>ISSN: 2587-7666</p>
               <p>{t("Периодичность: 4 раза в год", "Frequency: 4 times a year")}</p>
               <p>{t("Издаётся с декабря 2017 г.", "Published since December 2017")}</p>
@@ -89,7 +94,10 @@ export default function ContactsPage() {
                 </a>
               </p>
               <p>
-                {t("Институт экономики РАН:", "Institute of Economics RAS:")}{" "}
+                {t(
+                  "Институт экономики Российской академии наук:",
+                  "Institute of Economics of the Russian Academy of Sciences:"
+                )}{" "}
                 <a
                   href="mailto:ieras@inecon.ru"
                   className="text-teal-600 hover:text-copper-400 transition-colors underline underline-offset-2"

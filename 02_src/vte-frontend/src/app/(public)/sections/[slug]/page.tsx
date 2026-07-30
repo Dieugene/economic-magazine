@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api/client";
 import SectionView from "./SectionView";
-import type { Article } from "@/lib/types";
 
 export default async function SectionPage({
   params,
@@ -10,6 +9,8 @@ export default async function SectionPage({
 }) {
   const { slug } = await params;
 
+  // GET /sections/{slug}/ отдаёт рубрику вместе с её статьями — отдельного
+  // запроса за списком статей не нужно (эндпоинт .../articles/ на бэке 404).
   let section;
   try {
     section = await api.getSection(slug);
@@ -18,22 +19,5 @@ export default async function SectionPage({
   }
   if (!section) notFound();
 
-  let articleIds: number[] = [];
-  try {
-    const sectionWithIds = await api.getSectionArticles(slug);
-    articleIds = (sectionWithIds as unknown as { articles?: number[] }).articles ?? [];
-  } catch {
-    articleIds = [];
-  }
-
-  let articles: Article[] = [];
-  try {
-    const allArticles = await api.listArticles();
-    const idSet = new Set(articleIds);
-    articles = allArticles.filter((a) => idSet.has(a.id));
-  } catch {
-    articles = [];
-  }
-
-  return <SectionView section={section} articles={articles} />;
+  return <SectionView section={section} articles={section.articles ?? []} />;
 }
