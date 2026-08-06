@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { api, ApiError } from "@/lib/api/client";
+import { sortIssues } from "@/lib/utils/issues";
 import IssueView from "./IssueView";
 
 export default async function IssuePage({
@@ -19,7 +20,10 @@ export default async function IssuePage({
     if (e instanceof ApiError && e.status === 404) notFound();
     throw e;
   }
-  const issueSummary = allIssues.find((i) => i.number === numberNum);
+  // Уникальность пары (year, number) бэк не гарантирует. Сортируем перед
+  // поиском, чтобы при дубликате URL всегда открывал один и тот же выпуск,
+  // а не тот, что бэк случайно поставил первым.
+  const issueSummary = sortIssues(allIssues).find((i) => i.number === numberNum);
   if (!issueSummary) notFound();
 
   let data;

@@ -10,6 +10,7 @@ import { parseApiError } from "@/lib/api/errors";
 import DocumentTitle from "@/components/public/DocumentTitle";
 import DateInput from "@/components/admin/DateInput";
 import { formatDateRu } from "@/lib/utils/date";
+import { sortIssues } from "@/lib/utils/issues";
 
 const statusLabels: Record<IssueStatus, string> = {
   Draft: "Черновик",
@@ -50,7 +51,9 @@ export default function IssuesPage() {
 
   const filtered = useMemo(() => {
     if (!issues) return [];
-    return issues.filter((issue) => {
+    // Тот же порядок, что на публичной части: бэк отдаёт список неупорядоченным,
+    // и без сортировки таблица перетасовывается после каждого сохранения.
+    return sortIssues(issues).filter((issue) => {
       if (yearFilter !== "all" && issue.year !== yearFilter) return false;
       if (statusFilter !== "all" && issue.status !== statusFilter) return false;
       return true;
