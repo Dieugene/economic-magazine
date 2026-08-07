@@ -12,6 +12,7 @@ import type {
   StaticPage,
   IssueStatus,
 } from '@/lib/types';
+import { filenameFromDisposition } from './files';
 
 // Server vs client base URL.
 //
@@ -97,27 +98,37 @@ async function rawFetch(path: string, init?: RequestInit): Promise<Response> {
 // Бэк ротирует refresh-токен при каждом /auth/refresh/, поэтому параллельные
 // 401-обновления гарантированно сломают друг друга. Держим один inflight
 // promise — все одновременные запросы ждут общий результат.
-let refreshInflight: Promise<boolean> | null = null;
+let refreshInflight: Promise<RefreshOutcome> | null = null;
 
-async function doRefreshTokens(): Promise<boolean> {
+// Исход обновления. Разделять 'rejected' и 'unreachable' обязательно: на первом
+// мы стираем токены, и если сюда попадёт обычный сетевой сбой, то один
+// неудавшийся запрос выбросит редактора из админки, уничтожив живой refresh
+// (он действует неделю). Отказ засчитываем только когда его вынес сам бэк.
+type RefreshOutcome = 'ok' | 'rejected' | 'unreachable';
+
+async function doRefreshTokens(): Promise<RefreshOutcome> {
   const refresh = tokenStore.getRefresh();
-  if (!refresh) return false;
+  if (!refresh) return 'rejected';
   try {
     const res = await rawFetch('/auth/refresh/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh }),
     });
-    if (!res.ok) return false;
-    const data = (await res.json()) as TokenPair;
-    tokenStore.set(data);
-    return true;
+    if (res.ok) {
+      const data = (await res.json()) as TokenPair;
+      tokenStore.set(data);
+      return 'ok';
+    }
+    // 5xx и 502/504 от прокси — про состояние бэка, а не про токен
+    return res.status >= 500 ? 'unreachable' : 'rejected';
   } catch {
-    return false;
+    // fetch бросает только на транспорте: сеть, DNS, обрыв
+    return 'unreachable';
   }
 }
 
-function tryRefreshTokens(): Promise<boolean> {
+function tryRefreshTokens(): Promise<RefreshOutcome> {
   if (!refreshInflight) {
     refreshInflight = doRefreshTokens().finally(() => {
       refreshInflight = null;
@@ -137,6 +148,39 @@ function redirectToLoginIfAdmin() {
   }
 }
 
+// Auto-refresh поток для защищённых эндпоинтов:
+//   401 + есть refresh → пробуем обновить → retry оригинальный запрос.
+//   Если retry снова 401 ИЛИ refresh не удался ИЛИ refresh-токена не было —
+//   деавторизация и редирект в /control/login.
+//
+// Вынесено из fetchApi, потому что тем же потоком ходят бинарные загрузки
+// (PDF выпуска и статьи), которым JSON-разбор не нужен, но авто-refresh нужен
+// ровно так же: access живёт 15 часов, а рабочая вкладка — дольше, и без
+// обновления скачивание молча провалилось бы посреди работы.
+async function fetchWithAuthRetry(
+  path: string,
+  init: RequestInit,
+  headers: Headers
+): Promise<Response> {
+  let res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  if (res.status !== 401) return res;
+
+  const outcome = await tryRefreshTokens();
+  if (outcome === 'ok') {
+    const newToken = tokenStore.getAccess();
+    if (newToken) headers.set('Authorization', `Bearer ${newToken}`);
+    res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+    if (res.status !== 401) return res;
+  } else if (outcome === 'unreachable') {
+    // Бэк не ответил — судить о токенах не по чему, оставляем их жить
+    return res;
+  }
+
+  tokenStore.clear();
+  redirectToLoginIfAdmin();
+  return res;
+}
+
 async function fetchApi<T>(path: string, options: FetchOptions = {}): Promise<T> {
   if (USE_MOCKS) {
     const { getMockData } = await import('./mock/data');
@@ -150,32 +194,9 @@ async function fetchApi<T>(path: string, options: FetchOptions = {}): Promise<T>
     if (token) headers.set('Authorization', `Bearer ${token}`);
   }
 
-  let res = await fetch(`${API_BASE}${path}`, { ...init, headers });
-
-  // Auto-refresh поток для защищённых эндпоинтов:
-  //   401 + есть refresh → пробуем обновить → retry оригинальный запрос.
-  //   Если retry снова 401 ИЛИ refresh не удался ИЛИ refresh-токена не было —
-  //   деавторизация и редирект в /control/login.
-  if (res.status === 401 && needAuth) {
-    if (tokenStore.getRefresh()) {
-      const refreshed = await tryRefreshTokens();
-      if (refreshed) {
-        const newToken = tokenStore.getAccess();
-        if (newToken) headers.set('Authorization', `Bearer ${newToken}`);
-        res = await fetch(`${API_BASE}${path}`, { ...init, headers });
-        if (res.status === 401) {
-          tokenStore.clear();
-          redirectToLoginIfAdmin();
-        }
-      } else {
-        tokenStore.clear();
-        redirectToLoginIfAdmin();
-      }
-    } else {
-      tokenStore.clear();
-      redirectToLoginIfAdmin();
-    }
-  }
+  const res = needAuth
+    ? await fetchWithAuthRetry(path, init, headers)
+    : await fetch(`${API_BASE}${path}`, { ...init, headers });
 
   if (!res.ok) {
     const text = await res.text();
@@ -493,15 +514,40 @@ export const adminApi = {
     });
   },
 
-  downloadTemplate: async (): Promise<Blob> => {
-    const token = tokenStore.getAccess();
-    const headers = new Headers();
-    if (token) headers.set('Authorization', `Bearer ${token}`);
-    const res = await fetch(`${API_BASE}/articles/download_template/`, { headers });
+  // Шаблон оформления статьи — публичный файл, кнопка на него стоит только на
+  // публичной странице подачи. Заголовок Authorization сюда не ставим намеренно:
+  // бэк отклоняет любой запрос с недействительным Bearer на стадии
+  // аутентификации, ещё до проверки прав, и открытый эндпоинт отвечает 401.
+  // Токен же в localStorage переживает вкладку и рабочий день, так что редактор,
+  // заходивший в админку накануне, ломал себе публичную кнопку.
+  downloadTemplate: async (): Promise<{ blob: Blob; filename: string | null }> => {
+    const res = await fetch(`${API_BASE}/articles/download_template/`);
     if (!res.ok) {
       throw new ApiError(res.status, `API error: ${res.status} ${res.statusText}`);
     }
-    return res.blob();
+    return {
+      blob: await res.blob(),
+      filename: filenameFromDisposition(res.headers.get('Content-Disposition')),
+    };
+  },
+
+  // Скачивание файла из-под авторизации. Нужно там, где материал ещё не
+  // опубликован: бэк отдаёт такие файлы только по токену, а обычная навигация
+  // по <a href> заголовок Authorization не несёт — токен лежит в localStorage.
+  downloadProtectedFile: async (
+    path: string
+  ): Promise<{ blob: Blob; filename: string | null }> => {
+    const headers = new Headers();
+    const token = tokenStore.getAccess();
+    if (token) headers.set('Authorization', `Bearer ${token}`);
+    const res = await fetchWithAuthRetry(path, {}, headers);
+    if (!res.ok) {
+      throw new ApiError(res.status, `API error: ${res.status} ${res.statusText}`);
+    }
+    return {
+      blob: await res.blob(),
+      filename: filenameFromDisposition(res.headers.get('Content-Disposition')),
+    };
   },
 
   // ── Users ──────────────────────────────────────────────────────

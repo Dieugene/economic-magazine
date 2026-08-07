@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import PdfDownloadLink from '@/components/PdfDownloadLink';
+import type { PdfLink } from '@/lib/api/files';
 
 interface ArticleCardProps {
   authors: string;
@@ -10,7 +12,7 @@ interface ArticleCardProps {
   href: string;
   pages: string;
   pdfSizeKb?: number | null;
-  pdfUrl?: string | null;
+  pdfLink?: PdfLink | null;
   abstract?: string | null;
 }
 
@@ -20,7 +22,7 @@ export default function ArticleCard({
   href,
   pages,
   pdfSizeKb,
-  pdfUrl,
+  pdfLink,
   abstract,
 }: ArticleCardProps) {
   const [open, setOpen] = useState(false);
@@ -41,19 +43,17 @@ export default function ArticleCard({
             {pdfSizeKb ? ` · ${pdfSizeKb} ${t('КБ', 'KB')}` : ''}
           </p>
         </div>
-        {pdfUrl && (
+        {pdfLink && (
           <div className="flex items-center gap-2 shrink-0">
-            <a
-              href={pdfUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <PdfDownloadLink
+              link={pdfLink}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-forest-600 bg-forest-50 px-3 py-1.5 rounded-sm hover:bg-forest-100 transition-colors"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M6 20h12a2 2 0 002-2V8l-6-6H6a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
               PDF
-            </a>
+            </PdfDownloadLink>
           </div>
         )}
       </div>

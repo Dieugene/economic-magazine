@@ -18,9 +18,11 @@ import {
 import { toast } from "sonner";
 import { adminApi, api, type ArticleCreatePayload } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
+import { articlePdfLink, fileNameFromUrl } from "@/lib/api/files";
 import { findOverlaps } from "@/lib/utils/pages";
 import type { Article, ArticleType, Author, Affiliation, Section } from "@/lib/types";
 import DocumentTitle from "@/components/public/DocumentTitle";
+import PdfDownloadLink from "@/components/PdfDownloadLink";
 
 const inputClass =
   "w-full px-3 py-2 border border-stone-400 rounded-sm text-sm text-gray-700 bg-white focus:outline-none focus:border-forest-500 focus:ring-2 focus:ring-forest-500/10";
@@ -1175,14 +1177,13 @@ export default function ArticleFormPage({
                 {article?.pdf_file && (
                   <p className={`${hintClass} mt-2`}>
                     Текущий файл:{" "}
-                    <a
-                      href={article.pdf_file}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <PdfDownloadLink
+                      link={articlePdfLink(article)}
+                      requiresAuth
                       className="text-forest-600 underline"
                     >
-                      {decodeURIComponent(article.pdf_file.split("/").pop() ?? "")}
-                    </a>
+                      {fileNameFromUrl(article.pdf_file)}
+                    </PdfDownloadLink>
                     {article.pdf_size_kb && ` (${article.pdf_size_kb} КБ)`}
                   </p>
                 )}

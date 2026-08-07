@@ -11,18 +11,26 @@ export default function TemplateDownloadButton() {
     if (loading) return;
     setLoading(true);
     try {
-      const blob = await adminApi.downloadTemplate();
+      const { blob, filename } = await adminApi.downloadTemplate();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "vte-article-template.docx";
+      a.download = filename ?? "vte-article-template.docx";
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(url);
+      // Отзыв в том же кадре, что и клик, отменяет сохранение в Firefox и Safari
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (err) {
-      if (err instanceof ApiError && (err.status === 404 || err.status === 401 || err.status === 403)) {
+      // 404 — файла на бэке нет, тут редакция действительно нужна. Отказ по
+      // правам разводим отдельно: он означает поломку доступа, а не отсутствие
+      // шаблона, и «обратитесь в редакцию» увело бы диагностику не туда —
+      // именно на этом баг с чужим токеном в запросе прожил незамеченным.
+      const status = err instanceof ApiError ? err.status : null;
+      if (status === 404) {
         toast.error("Шаблон временно недоступен. Обратитесь в редакцию: editorqet@inecon.ru");
+      } else if (status === 401 || status === 403) {
+        toast.error("Сервер отклонил запрос шаблона. Обновите страницу и попробуйте снова.");
       } else {
         toast.error("Не удалось скачать шаблон. Попробуйте позже.");
       }

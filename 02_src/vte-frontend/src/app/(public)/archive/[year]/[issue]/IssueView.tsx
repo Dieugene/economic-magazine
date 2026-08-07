@@ -4,6 +4,8 @@ import Breadcrumbs from "@/components/public/Breadcrumbs";
 import JournalCover from "@/components/public/JournalCover";
 import ArticleCard from "@/components/public/ArticleCard";
 import DocumentTitle from "@/components/public/DocumentTitle";
+import PdfDownloadLink from "@/components/PdfDownloadLink";
+import { articlePdfLink, issuePdfLink } from "@/lib/api/files";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { comparePages } from "@/lib/utils/pages";
 import type { Article, IssueFull } from "@/lib/types";
@@ -84,6 +86,7 @@ export default function IssueView({ data }: IssueViewProps) {
   const lastPage = getLastPage(allArticles);
   const publishedDate = data.published_date ?? "";
   const numberLabel = lang === "en" ? "No." : "№";
+  const issuePdf = issuePdfLink(data);
 
   return (
     <>
@@ -125,19 +128,17 @@ export default function IssueView({ data }: IssueViewProps) {
                 </>
               )}
             </div>
-            {data.pdf_file && (
+            {issuePdf && (
               <div className="mt-5">
-                <a
-                  href={data.pdf_file}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <PdfDownloadLink
+                  link={issuePdf}
                   className="inline-flex items-center gap-2 bg-forest-600 text-white text-sm font-medium px-5 py-2.5 rounded-sm hover:bg-forest-700 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   {t("Весь выпуск (PDF)", "Full issue (PDF)")}
-                </a>
+                </PdfDownloadLink>
               </div>
             )}
           </div>
@@ -178,7 +179,7 @@ export default function IssueView({ data }: IssueViewProps) {
                         href={`/article/${article.id}`}
                         pages={article.pages}
                         pdfSizeKb={article.pdf_size_kb}
-                        pdfUrl={article.pdf_file}
+                        pdfLink={articlePdfLink(article)}
                         abstract={abstractForLang}
                       />
                     </div>

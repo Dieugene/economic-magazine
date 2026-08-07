@@ -73,7 +73,9 @@ export default function ArticlePreviewPage({
         </div>
       )}
 
-      {article && <ArticleView article={article} />}
+      {/* requiresAuth: в превью статья может быть черновиком — её PDF бэк
+          отдаёт только по токену, обычная ссылка получит отказ */}
+      {article && <ArticleView article={article} requiresAuth />}
     </div>
   );
 }

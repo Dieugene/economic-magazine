@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface JournalCoverProps {
@@ -18,13 +19,33 @@ export default function JournalCover({
 }: JournalCoverProps) {
   const { lang } = useLanguage();
 
-  if (cover_url) {
+  // Обложка может не загрузиться — файла нет на бэке или он временно недоступен.
+  // Вместо иконки битой картинки показываем фирменную CSS-обложку ниже.
+  const [imgBroken, setImgBroken] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Разметка приезжает с сервера, и загрузка картинки может провалиться ещё до
+  // гидратации — тогда onError уже не сработает. Проверяем состояние после
+  // монтирования: у неудавшейся картинки complete === true при naturalWidth 0.
+  //
+  // Сброс в начале обязателен: после защёлкивания флага <img> не рендерится
+  // вовсе, ref обнуляется, и без сброса один сетевой сбой оставлял бы заглушку
+  // навсегда — даже когда компоненту дали другой адрес.
+  useEffect(() => {
+    setImgBroken(false);
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth === 0) setImgBroken(true);
+  }, [cover_url]);
+
+  if (cover_url && !imgBroken) {
     return (
       <div className={`aspect-[271/384] rounded-sm overflow-hidden ${className}`}>
         <img
+          ref={imgRef}
           src={cover_url}
           alt={lang === "en" ? `IET ${year}, No. ${number}` : `ВТЭ ${year}, № ${number}`}
           className="w-full h-full object-cover"
+          onError={() => setImgBroken(true)}
         />
       </div>
     );

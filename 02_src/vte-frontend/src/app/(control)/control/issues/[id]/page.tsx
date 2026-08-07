@@ -18,8 +18,10 @@ import { toast } from "sonner";
 import type { IssueFull, IssueStatus, IssueSummary, Article } from "@/lib/types";
 import { adminApi } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
+import { articlePdfLink, fileNameFromUrl, issuePdfLink } from "@/lib/api/files";
 import { comparePages } from "@/lib/utils/pages";
 import DocumentTitle from "@/components/public/DocumentTitle";
+import PdfDownloadLink from "@/components/PdfDownloadLink";
 import DateInput from "@/components/admin/DateInput";
 
 const statusLabels: Record<IssueStatus, string> = {
@@ -194,6 +196,8 @@ export default function IssueDetailPage({
   if (!issue) {
     return <div className="text-gray-400">Загрузка...</div>;
   }
+
+  const issuePdf = issuePdfLink(issue);
 
   // Превентивная защита публикации: бэк отвергает 400 если у выпуска или
   // любой статьи нет PDF. Считаем причины блокировки заранее, чтобы
@@ -396,16 +400,10 @@ export default function IssueDetailPage({
             <p className="text-xs text-gray-400 mt-1">JPG, PNG</p>
           </button>
           {issue.cover_file && (
+            // Ссылкой имя файла не делаем: бэк закрыл прямую раздачу, а
+            // эндпоинта скачивания обложки пока нет — открывать нечего.
             <p className="text-xs text-gray-500 mt-3 truncate">
-              Текущий файл:{" "}
-              <a
-                href={issue.cover_file}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-forest-600 underline"
-              >
-                {decodeURIComponent(issue.cover_file.split("/").pop() ?? "")}
-              </a>
+              Текущий файл: {fileNameFromUrl(issue.cover_file)}
             </p>
           )}
         </div>
@@ -432,17 +430,12 @@ export default function IssueDetailPage({
             </p>
             <p className="text-xs text-gray-400 mt-1">PDF</p>
           </button>
-          {issue.pdf_file && (
+          {issue.pdf_file && issuePdf && (
             <p className="text-xs text-gray-500 mt-3 truncate">
               Текущий файл:{" "}
-              <a
-                href={issue.pdf_file}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-forest-600 underline"
-              >
-                {decodeURIComponent(issue.pdf_file.split("/").pop() ?? "")}
-              </a>
+              <PdfDownloadLink link={issuePdf} requiresAuth className="text-forest-600 underline">
+                {fileNameFromUrl(issue.pdf_file)}
+              </PdfDownloadLink>
             </p>
           )}
         </div>
@@ -511,17 +504,14 @@ export default function IssueDetailPage({
                   </span>
                 )}
 
-                {article.pdf_file && (
-                  <a
-                    href={article.pdf_file}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-shrink-0 text-gray-400 hover:text-forest-600 transition-colors"
-                    title="Открыть PDF"
-                  >
-                    <FileText className="w-4 h-4" />
-                  </a>
-                )}
+                <PdfDownloadLink
+                  link={articlePdfLink(article)}
+                  requiresAuth
+                  className="flex-shrink-0 text-gray-400 hover:text-forest-600 transition-colors"
+                  title="Скачать PDF"
+                >
+                  <FileText className="w-4 h-4" />
+                </PdfDownloadLink>
 
                 <Link
                   href={`/control/articles/${article.id}`}

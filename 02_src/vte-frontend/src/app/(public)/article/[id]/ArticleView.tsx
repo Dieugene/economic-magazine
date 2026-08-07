@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import Link from "next/link";
 import Breadcrumbs from "@/components/public/Breadcrumbs";
 import DocumentTitle from "@/components/public/DocumentTitle";
+import PdfDownloadLink from "@/components/PdfDownloadLink";
+import { articlePdfLink } from "@/lib/api/files";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { Article, ArticleType, LocalizedString } from "@/lib/types";
 
@@ -40,8 +42,18 @@ function formatDate(dateStr: string, lang: "ru" | "en"): string {
   });
 }
 
-export default function ArticleView({ article }: { article: Article }) {
+// `requiresAuth` включает админское превью: тот же компонент показывают на
+// `/control/articles/[id]/preview`, где статья может быть черновиком, а такой
+// PDF бэк отдаёт только по токену. На публичной странице флага нет.
+export default function ArticleView({
+  article,
+  requiresAuth = false,
+}: {
+  article: Article;
+  requiresAuth?: boolean;
+}) {
   const { lang, t } = useLanguage();
+  const articlePdf = articlePdfLink(article);
 
   const titleForLang = lang === "en" && article.title.en ? article.title.en : article.title.ru;
   const authorsForLang = (article.authors ?? [])
@@ -355,11 +367,10 @@ export default function ArticleView({ article }: { article: Article }) {
                 {t("Скачать", "Download")}
               </h3>
               <div className="space-y-2">
-                {article.pdf_file && (
-                  <a
-                    href={article.pdf_file}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                {articlePdf && (
+                  <PdfDownloadLink
+                    link={articlePdf}
+                    requiresAuth={requiresAuth}
                     className="flex items-center gap-3 p-3 bg-forest-600 text-white rounded-sm hover:bg-forest-700 transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -373,7 +384,7 @@ export default function ArticleView({ article }: { article: Article }) {
                         </span>
                       )}
                     </div>
-                  </a>
+                  </PdfDownloadLink>
                 )}
                 {article.xml_url && (
                   <a
