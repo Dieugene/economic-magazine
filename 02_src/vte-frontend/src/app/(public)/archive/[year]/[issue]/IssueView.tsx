@@ -191,62 +191,69 @@ export default function IssueView({ data }: IssueViewProps) {
         </div>
 
         {/* Sidebar */}
+        {/*
+          Липкий только список рубрик, а не весь сайдбар. Прежде обе карточки лежали в общей
+          обёртке с `lg:sticky`, и она получалась выше экрана (обложка + счётчики + список ≈ 900px):
+          прилипший блок показывал только верхнюю часть, а хвост списка рубрик становился виден,
+          лишь когда страница долистана до конца. Список сам по себе укладывается в ~250px и влезает
+          в любой экран. Обе карточки должны быть ПРЯМЫМИ детьми <aside>: он растянут гридом на
+          высоту строки, и только от него липкий блок получает ход. Верни обёртку — ход схлопнется
+          в ноль (её высота равна содержимому), и sticky перестанет работать вовсе.
+        */}
         <aside className="lg:col-span-1">
-          <div className="lg:sticky lg:top-6">
-            <div className="bg-white border border-stone-400 rounded-sm overflow-hidden">
-              <div className="bg-forest-600 px-5 py-3">
-                <h3 className="text-sm font-medium text-white tracking-wide uppercase">
-                  {t("Этот номер", "This issue")}
-                </h3>
-              </div>
-              <div className="p-5">
-                <JournalCover number={data.number} year={data.year} cover_url={data.cover_file} className="mb-4" />
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">{t("Статей:", "Articles:")}</span>
-                    <span className="text-forest-600 font-medium">{allArticles.length}</span>
-                  </div>
-                  {lastPage > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">{t("Страниц:", "Pages:")}</span>
-                      <span className="text-forest-600 font-medium">{lastPage}</span>
-                    </div>
-                  )}
-                  {publishedDate && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">{t("Дата:", "Date:")}</span>
-                      <span className="text-forest-600 font-medium">{formatDateRu(publishedDate)}</span>
-                    </div>
-                  )}
+          <div className="bg-white border border-stone-400 rounded-sm overflow-hidden">
+            <div className="bg-forest-600 px-5 py-3">
+              <h3 className="text-sm font-medium text-white tracking-wide uppercase">
+                {t("Этот номер", "This issue")}
+              </h3>
+            </div>
+            <div className="p-5">
+              <JournalCover number={data.number} year={data.year} cover_url={data.cover_file} className="mb-4" />
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">{t("Статей:", "Articles:")}</span>
+                  <span className="text-forest-600 font-medium">{allArticles.length}</span>
                 </div>
+                {lastPage > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">{t("Страниц:", "Pages:")}</span>
+                    <span className="text-forest-600 font-medium">{lastPage}</span>
+                  </div>
+                )}
+                {publishedDate && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">{t("Дата:", "Date:")}</span>
+                    <span className="text-forest-600 font-medium">{formatDateRu(publishedDate)}</span>
+                  </div>
+                )}
               </div>
             </div>
-
-            {visibleSections.length > 0 && (
-              <div className="mt-6 bg-white border border-stone-400 rounded-sm p-5">
-                <h3 className="text-sm font-medium text-forest-600 mb-3 tracking-wide uppercase">
-                  {t("Рубрики номера", "Issue Sections")}
-                </h3>
-                <nav className="space-y-1.5 text-sm">
-                  {visibleSections.map((sg, i) => {
-                    const shortName = lang === "en"
-                      ? SHORT_NAMES_EN[sg.slug] ?? sg.name.en ?? sg.name.ru
-                      : SHORT_NAMES_RU[sg.slug] ?? sg.name.ru;
-                    return (
-                      <a
-                        key={sg.slug}
-                        href={`#section-${sg.slug}`}
-                        className="block text-gray-600 hover:text-copper-500 transition-colors"
-                      >
-                        {ROMAN[i]}. {shortName}{" "}
-                        <span className="text-gray-500">({sg.articles.length})</span>
-                      </a>
-                    );
-                  })}
-                </nav>
-              </div>
-            )}
           </div>
+
+          {visibleSections.length > 0 && (
+            <div className="mt-6 lg:sticky lg:top-6 bg-white border border-stone-400 rounded-sm p-5">
+              <h3 className="text-sm font-medium text-forest-600 mb-3 tracking-wide uppercase">
+                {t("Рубрики номера", "Issue Sections")}
+              </h3>
+              <nav className="space-y-1.5 text-sm">
+                {visibleSections.map((sg, i) => {
+                  const shortName = lang === "en"
+                    ? SHORT_NAMES_EN[sg.slug] ?? sg.name.en ?? sg.name.ru
+                    : SHORT_NAMES_RU[sg.slug] ?? sg.name.ru;
+                  return (
+                    <a
+                      key={sg.slug}
+                      href={`#section-${sg.slug}`}
+                      className="block text-gray-600 hover:text-copper-500 transition-colors"
+                    >
+                      {ROMAN[i]}. {shortName}{" "}
+                      <span className="text-gray-500">({sg.articles.length})</span>
+                    </a>
+                  );
+                })}
+              </nav>
+            </div>
+          )}
         </aside>
       </div>
     </>

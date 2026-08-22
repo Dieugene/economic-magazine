@@ -40,3 +40,7 @@ Thumbs.db
 
 # Git
 *.orig
+
+# agent long-term memory: local only, never leaves this machine
+# (each role keeps its own git repo inside .memory\<role>\)
+.memory/

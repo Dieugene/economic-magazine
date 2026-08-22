@@ -359,8 +359,16 @@ export default function ArticleView({
         </article>
 
         {/* Right sidebar (1/3) */}
+        {/*
+          Сайдбар статьи НЕ липкий. Три карточки дают ~760px, и на ноутбучном экране (реальная
+          видимая высота ~760-790px при 1440x900, ещё меньше при 1366x768) прилипший блок не
+          помещался: нижняя карточка «В этом номере» со ссылкой на содержание уходила за край и
+          доставалась только тем, кто долистал страницу до конца. Внутристраничной навигации здесь
+          нет, липнуть нечему — блок едет вместе со страницей и читается целиком.
+          Ту же болезнь на странице выпуска лечили иначе — см. комментарий в IssueView.tsx.
+        */}
         <aside className="lg:col-span-1">
-          <div className="lg:sticky lg:top-6 space-y-6">
+          <div className="space-y-6">
             {/* Download section */}
             <div className="bg-white border border-stone-400 rounded-sm p-5">
               <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">

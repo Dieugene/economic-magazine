@@ -63,7 +63,7 @@ function PrivacyRu() {
         (далее — Сайт).
       </p>
 
-      <h2 className={sectionHeadingClass}>Оператор персональных данных</h2>
+      <h2 className={sectionHeadingClass}>1. Оператор персональных данных</h2>
       <p>
         Оператором персональных данных является: Федеральное государственное бюджетное учреждение науки Институт экономики Российской академии наук (ИЭ РАН).
       </p>
@@ -99,8 +99,8 @@ function PrivacyRu() {
         является официальной информационной площадкой научного журнала «Вопросы теоретической экономики» и действует в рамках единой политики обработки персональных данных ИЭ РАН.
       </p>
 
-      <h2 className={sectionHeadingClass}>1. Состав обрабатываемых персональных данных</h2>
-      <p className={subHeadingClass}>1.1. Данные авторов статей, рецензентов, членов редакционной коллегии:</p>
+      <h2 className={sectionHeadingClass}>2. Состав обрабатываемых персональных данных</h2>
+      <p className={subHeadingClass}>2.1. Данные авторов статей, рецензентов, членов редакционной коллегии:</p>
       <ul className={listClass}>
         <li>ФИО;</li>
         <li>учёная степень, учёное звание;</li>
@@ -112,7 +112,7 @@ function PrivacyRu() {
         <li>личная подпись (в том числе электронная);</li>
         <li>метаданные загружаемых файлов (включая скрытые поля .docx, .pdf и др.).</li>
       </ul>
-      <p className={subHeadingClass}>1.2. Данные посетителей Сайта (автоматически собираемые):</p>
+      <p className={subHeadingClass}>2.2. Данные посетителей Сайта (автоматически собираемые):</p>
       <ul className={listClass}>
         <li>IP-адрес;</li>
         <li>файлы cookie;</li>
@@ -122,13 +122,13 @@ function PrivacyRu() {
         <li>источник перехода;</li>
         <li>технические логи веб-сервера.</li>
       </ul>
-      <p>Указанные в п. 1.2 данные обрабатываются в обезличенном виде и не используются для идентификации конкретного пользователя.</p>
+      <p>Указанные в п. 2.2 данные обрабатываются в обезличенном виде и не используются для идентификации конкретного пользователя.</p>
       <p>
         Специальные категории персональных данных (касающиеся расовой, национальной принадлежности, политических взглядов, религиозных или философских убеждений, состояния здоровья, интимной жизни) и биометрические персональные данные Оператором не обрабатываются.
       </p>
 
-      <h2 className={sectionHeadingClass}>2. Цели обработки персональных данных</h2>
-      <p className={subHeadingClass}>2.1. В отношении авторов, рецензентов, членов редакционной коллегии и редакционного совета:</p>
+      <h2 className={sectionHeadingClass}>3. Цели обработки персональных данных</h2>
+      <p className={subHeadingClass}>3.1. В отношении авторов, рецензентов, членов редакционной коллегии и редакционного совета:</p>
       <ul className={listClass}>
         <li>заключение и исполнение лицензионных договоров;</li>
         <li>проведение процедуры рецензирования;</li>
@@ -137,7 +137,7 @@ function PrivacyRu() {
         <li>публикация статей и сведений об авторах и редакторах в открытом доступе;</li>
         <li>размещение и индексирование статей в российских и международных наукометрических базах.</li>
       </ul>
-      <p className={subHeadingClass}>2.2. В отношении пользователей Сайта:</p>
+      <p className={subHeadingClass}>3.2. В отношении пользователей Сайта:</p>
       <ul className={listClass}>
         <li>обеспечение корректной технической работы Сайта;</li>
         <li>анализ посещаемости и улучшение функциональности;</li>
@@ -148,15 +148,16 @@ function PrivacyRu() {
         Обработка персональных данных осуществляется исключительно в указанных целях. Использование данных в иных целях возможно только при получении отдельного согласия субъекта.
       </p>
 
-      <h2 className={sectionHeadingClass}>3. Правовые основания обработки персональных данных</h2>
+      <h2 className={sectionHeadingClass}>4. Правовые основания обработки персональных данных</h2>
       <p>Обработка осуществляется на следующих основаниях (ст. 6 Федерального закона № 152-ФЗ):</p>
       <ul className={listClass}>
         <li>согласие субъекта персональных данных;</li>
         <li>заключение и исполнение договора, стороной которого является субъект (ч. 1 п. 5);</li>
         <li>осуществление уставной деятельности научной организации (ч. 1 п. 2);</li>
-        <li>законные интересы Оператора (обеспечение безопасности Сайта, аналитика), при условии, что такие интересы не нарушают права субъекта (ч. 1 п. 7);</li>
-        <li>публикация сведений об авторах в открытом доступе.</li>
+        <li>законные интересы Оператора (обеспечение безопасности Сайта, аналитика), при условии, что такие интересы не нарушают права субъекта (ч. 1 п. 7).</li>
       </ul>
+
+      <h2 className={sectionHeadingClass}>5. Публикация сведений об авторах в открытом доступе</h2>
       <p>
         Передавая статью для публикации, автор даёт явное согласие на отнесение следующих данных к категории персональных данных, разрешённых субъектом для распространения (ст. 10.1 152-ФЗ):
       </p>
@@ -171,21 +172,21 @@ function PrivacyRu() {
         Указанные данные публикуются вместе со статьёй в открытом доступе, включаются в метаданные, DOI и библиографические описания под лицензией Creative Commons Attribution 4.0 International (CC BY 4.0). Такое распространение не является нарушением конфиденциальности.
       </p>
 
-      <h2 className={sectionHeadingClass}>4. Передача персональных данных третьим лицам</h2>
+      <h2 className={sectionHeadingClass}>6. Передача персональных данных третьим лицам</h2>
       <p>Персональные данные могут передаваться:</p>
       <ul className={listClass}>
         <li>
-          <strong>4.1.</strong> Рецензентам — в объёме, необходимом для проведения экспертизы (ФИО автора скрывается при двойном слепом рецензировании).
+          <strong>6.1.</strong> Рецензентам — в объёме, необходимом для проведения экспертизы (ФИО автора скрывается при двойном слепом рецензировании).
         </li>
         <li>
-          <strong>4.2.</strong> Наукометрическим и индексационным базам (РИНЦ (ООО НЭБ), КиберЛенинка (ООО «Итеос»), сервисах ФГБУ РЦНИ (Национальная платформа журналов, ИС Метафора), РНЖ (ФГБУ РИЭПП), РГБ (ФГБУ «РГБ»)).
+          <strong>6.2.</strong> Наукометрическим и индексационным базам (РИНЦ (ООО НЭБ), КиберЛенинка (ООО «Итеос»), сервисах ФГБУ РЦНИ (Национальная платформа журналов, ИС Метафора), РНЖ (ФГБУ РИЭПП), РГБ (ФГБУ «РГБ»)).
         </li>
         <li>
-          <strong>4.3.</strong> Техническим подрядчикам (хостинг-провайдерам, администраторам Сайта, сервисам аналитики) — только на основании договора поручения обработки персональных данных с обязательством обеспечения конфиденциальности и безопасности (ст. 6 ч. 3 Федерального закона 152-ФЗ).
+          <strong>6.3.</strong> Техническим подрядчикам (хостинг-провайдерам, администраторам Сайта, сервисам аналитики) — только на основании договора поручения обработки персональных данных с обязательством обеспечения конфиденциальности и безопасности (ст. 6 ч. 3 Федерального закона 152-ФЗ).
         </li>
       </ul>
 
-      <h2 className={sectionHeadingClass}>5. Трансграничная передача персональных данных</h2>
+      <h2 className={sectionHeadingClass}>7. Трансграничная передача персональных данных</h2>
       <p>Трансграничная передача осуществляется исключительно:</p>
       <ul className={listClass}>
         <li>в обезличенном виде (для индексации в международных базах) либо</li>
@@ -195,7 +196,7 @@ function PrivacyRu() {
         Первичная обработка и хранение персональных данных граждан РФ осуществляется на серверах, расположенных на территории Российской Федерации. Передача в страны, не обеспечивающие адекватный уровень защиты прав субъектов персональных данных (перечень определяется Роскомнадзором), допускается только в объёме, необходимом для индексации публикаций в международных базах, и с предварительным уведомлением Роскомнадзора в установленных случаях.
       </p>
 
-      <h2 className={sectionHeadingClass}>6. Сроки хранения персональных данных</h2>
+      <h2 className={sectionHeadingClass}>8. Сроки хранения персональных данных</h2>
       <ul className={listClass}>
         <li>Данные авторов, рецензентов, членов редакционных органов — в течение 75 лет с момента публикации статьи или подписания согласия (в соответствии с Перечнем типовых управленческих архивных документов, утв. Приказом Росархива от 20.12.2019 № 236, и требованиями архивного хранения научных публикаций).</li>
         <li>Паспортные данные, использованные для заключения договора, — 5 лет после окончания действия договора.</li>
@@ -205,7 +206,7 @@ function PrivacyRu() {
         По достижении целей или при отзыве согласия данные уничтожаются или обезличиваются в течение 30 дней с составлением соответствующего акта.
       </p>
 
-      <h2 className={sectionHeadingClass}>7. Права субъекта персональных данных</h2>
+      <h2 className={sectionHeadingClass}>9. Права субъекта персональных данных</h2>
       <p>Субъект имеет право:</p>
       <ul className={listClass}>
         <li>получать информацию об обработке своих данных;</li>
@@ -224,7 +225,7 @@ function PrivacyRu() {
         или по почтовому адресу Оператора. Срок ответа — не более 10 рабочих дней, на сложные запросы — до 30 дней.
       </p>
 
-      <h2 className={sectionHeadingClass}>8. Меры по обеспечению безопасности персональных данных</h2>
+      <h2 className={sectionHeadingClass}>10. Меры по обеспечению безопасности персональных данных</h2>
       <p>
         Оператор применяет комплекс правовых, организационных и технических мер, соответствующих 1-му уровню защищённости персональных данных (УЗ-1) в соответствии с Постановлением Правительства РФ от 01.11.2012 № 1119, включая:
       </p>
@@ -237,12 +238,12 @@ function PrivacyRu() {
         <li>регулярные проверки и аудиты системы защиты.</li>
       </ul>
 
-      <h2 className={sectionHeadingClass}>9. Использование cookie и аналитических сервисов</h2>
+      <h2 className={sectionHeadingClass}>11. Использование cookie и аналитических сервисов</h2>
       <p>
         Сайт использует cookie-файлы для обеспечения работоспособности, сохранения настроек и анализа посещаемости (Яндекс.Метрика в анонимизированном режиме). При первом посещении Сайта отображается баннер с запросом согласия на использование cookie. Пользователь может отказаться — при этом часть функций Сайта может быть недоступна.
       </p>
 
-      <h2 className={sectionHeadingClass}>10. Порядок направления запросов и обращений</h2>
+      <h2 className={sectionHeadingClass}>12. Порядок направления запросов и обращений</h2>
       <p>Все запросы, отзывы согласия и жалобы направляются:</p>
       <ul className={listClass}>
         <li>
@@ -257,7 +258,7 @@ function PrivacyRu() {
         <li>Почтовый адрес: 117218, Москва, Нахимовский пр-т, д. 32, Канцелярия ИЭ РАН.</li>
       </ul>
 
-      <h2 className={sectionHeadingClass}>11. Внесение изменений в Политику</h2>
+      <h2 className={sectionHeadingClass}>13. Внесение изменений в Политику</h2>
       <p>
         Оператор вправе вносить изменения в настоящую Политику. Новая редакция публикуется на Сайте и вступает в силу с момента размещения. При существенных изменениях Оператор уведомляет пользователей по электронной почте (если она известна) не менее чем за 10 дней.
       </p>
@@ -285,7 +286,7 @@ function PrivacyEn() {
         (hereinafter referred to as the &ldquo;Site&rdquo;).
       </p>
 
-      <h2 className={sectionHeadingClass}>Personal Data Operator</h2>
+      <h2 className={sectionHeadingClass}>1. Personal Data Operator</h2>
       <p>
         The Personal Data Operator is: Federal State Budgetary Institution of Science, Institute of Economics of the Russian Academy of Sciences (IE RAS).
       </p>
@@ -321,8 +322,8 @@ function PrivacyEn() {
         is the official information platform of the scientific journal &ldquo;Issues of Theoretical Economics&rdquo; and operates within the framework of the unified personal data processing policy of IE RAS.
       </p>
 
-      <h2 className={sectionHeadingClass}>1. Composition of Processed Personal Data</h2>
-      <p className={subHeadingClass}>1.1. Data of Article Authors, Reviewers, and Editorial Board Members:</p>
+      <h2 className={sectionHeadingClass}>2. Composition of Processed Personal Data</h2>
+      <p className={subHeadingClass}>2.1. Data of Article Authors, Reviewers, and Editorial Board Members:</p>
       <ul className={listClass}>
         <li>full name;</li>
         <li>academic degree, academic title;</li>
@@ -334,7 +335,7 @@ function PrivacyEn() {
         <li>personal signature (including electronic);</li>
         <li>metadata of uploaded files (including hidden fields of .docx, .pdf, etc.).</li>
       </ul>
-      <p className={subHeadingClass}>1.2. Data of Site Visitors (automatically collected):</p>
+      <p className={subHeadingClass}>2.2. Data of Site Visitors (automatically collected):</p>
       <ul className={listClass}>
         <li>IP address;</li>
         <li>cookies;</li>
@@ -344,13 +345,13 @@ function PrivacyEn() {
         <li>referral source;</li>
         <li>web server technical logs.</li>
       </ul>
-      <p>The data specified in clause 1.2 is processed in anonymized form and is not used to identify specific users.</p>
+      <p>The data specified in clause 2.2 is processed in anonymized form and is not used to identify specific users.</p>
       <p>
         Special categories of personal data (concerning racial or ethnic origin, political views, religious or philosophical beliefs, health, intimate life) and biometric personal data are not processed by the Operator.
       </p>
 
-      <h2 className={sectionHeadingClass}>2. Purposes of Personal Data Processing</h2>
-      <p className={subHeadingClass}>2.1. With respect to authors, reviewers, editorial board and editorial council members:</p>
+      <h2 className={sectionHeadingClass}>3. Purposes of Personal Data Processing</h2>
+      <p className={subHeadingClass}>3.1. With respect to authors, reviewers, editorial board and editorial council members:</p>
       <ul className={listClass}>
         <li>conclusion and execution of license agreements;</li>
         <li>conducting the peer-review process;</li>
@@ -359,7 +360,7 @@ function PrivacyEn() {
         <li>publication of articles and information about authors and editors in open access;</li>
         <li>indexing and inclusion of articles in Russian and international scientometric databases.</li>
       </ul>
-      <p className={subHeadingClass}>2.2. With respect to Site users:</p>
+      <p className={subHeadingClass}>3.2. With respect to Site users:</p>
       <ul className={listClass}>
         <li>ensuring proper technical functioning of the Site;</li>
         <li>traffic analysis and functionality improvement;</li>
@@ -370,15 +371,16 @@ function PrivacyEn() {
         Personal data is processed exclusively for the above purposes. Use of data for other purposes is possible only with the separate consent of the data subject.
       </p>
 
-      <h2 className={sectionHeadingClass}>3. Legal Grounds for Processing Personal Data</h2>
+      <h2 className={sectionHeadingClass}>4. Legal Grounds for Processing Personal Data</h2>
       <p>Processing is carried out on the following grounds (Article 6 of Federal Law No. 152-FZ):</p>
       <ul className={listClass}>
         <li>consent of the personal data subject;</li>
         <li>conclusion and execution of a contract to which the data subject is a party (Clause 5, Part 1);</li>
         <li>exercise of the statutory functions of a scientific organization (Clause 2, Part 1);</li>
-        <li>legitimate interests of the Operator (ensuring Site security, analytics), provided such interests do not violate the rights of the data subject (Clause 7, Part 1);</li>
-        <li>publication of information about authors in open access.</li>
+        <li>legitimate interests of the Operator (ensuring Site security, analytics), provided such interests do not violate the rights of the data subject (Clause 7, Part 1).</li>
       </ul>
+
+      <h2 className={sectionHeadingClass}>5. Publication of Information About Authors in Open Access</h2>
       <p>
         By submitting an article for publication, the author gives explicit consent to classify the following data as personal data permitted for dissemination by the data subject (Article 10.1 of Law No. 152-FZ):
       </p>
@@ -393,21 +395,21 @@ function PrivacyEn() {
         Such data is published together with the article in open access, included in metadata, DOI and bibliographic descriptions under the Creative Commons Attribution 4.0 International License (CC BY 4.0). Such dissemination does not constitute a breach of confidentiality.
       </p>
 
-      <h2 className={sectionHeadingClass}>4. Transfer of Personal Data to Third Parties</h2>
+      <h2 className={sectionHeadingClass}>6. Transfer of Personal Data to Third Parties</h2>
       <p>Personal data may be transferred:</p>
       <ul className={listClass}>
         <li>
-          <strong>4.1.</strong> To reviewers — to the extent necessary for the peer-review process (the author&rsquo;s name is hidden during double-blind peer review).
+          <strong>6.1.</strong> To reviewers — to the extent necessary for the peer-review process (the author&rsquo;s name is hidden during double-blind peer review).
         </li>
         <li>
-          <strong>4.2.</strong> To scientometric and indexing databases (RSCI (NEICON LLC), CyberLeninka (Iteos LLC), services of the Russian Center for Scientific Information (National Journal Platform, Metaphora Information System), Russian Journal Network (RIEPP FSBU), Russian State Library (RSL FSBU)).
+          <strong>6.2.</strong> To scientometric and indexing databases (RSCI (NEICON LLC), CyberLeninka (Iteos LLC), services of the Russian Center for Scientific Information (National Journal Platform, Metaphora Information System), Russian Journal Network (RIEPP FSBU), Russian State Library (RSL FSBU)).
         </li>
         <li>
-          <strong>4.3.</strong> To technical contractors (hosting providers, Site administrators, analytics services) — only on the basis of a data processing agreement that imposes confidentiality and security obligations (Article 6, Part 3 of Federal Law No. 152-FZ).
+          <strong>6.3.</strong> To technical contractors (hosting providers, Site administrators, analytics services) — only on the basis of a data processing agreement that imposes confidentiality and security obligations (Article 6, Part 3 of Federal Law No. 152-FZ).
         </li>
       </ul>
 
-      <h2 className={sectionHeadingClass}>5. Cross-Border Transfer of Personal Data</h2>
+      <h2 className={sectionHeadingClass}>7. Cross-Border Transfer of Personal Data</h2>
       <p>Cross-border transfer is carried out exclusively:</p>
       <ul className={listClass}>
         <li>in anonymized form (for indexing in international databases) or</li>
@@ -417,7 +419,7 @@ function PrivacyEn() {
         Primary processing and storage of personal data of Russian citizens is carried out on servers located on the territory of the Russian Federation. Transfer to countries that do not provide adequate protection for the rights of personal data subjects (list determined by Roskomnadzor) is permitted only to the extent necessary for indexing publications in international databases and with prior notification to Roskomnadzor where required.
       </p>
 
-      <h2 className={sectionHeadingClass}>6. Retention Periods for Personal Data</h2>
+      <h2 className={sectionHeadingClass}>8. Retention Periods for Personal Data</h2>
       <ul className={listClass}>
         <li>Data of authors, reviewers, editorial board members — for 75 years from the date of publication of the article or signing of consent (in accordance with the List of Standard Managerial Archival Documents approved by Order No. 236 of the Federal Archive Agency of December 20, 2019, and the requirements for archival storage of scientific publications).</li>
         <li>Passport data used for concluding a contract — 5 years after the contract expires.</li>
@@ -427,7 +429,7 @@ function PrivacyEn() {
         Upon achievement of purposes or withdrawal of consent, data is destroyed or anonymized within 30 days, with a corresponding report drawn up.
       </p>
 
-      <h2 className={sectionHeadingClass}>7. Rights of the Personal Data Subject</h2>
+      <h2 className={sectionHeadingClass}>9. Rights of the Personal Data Subject</h2>
       <p>The data subject has the right to:</p>
       <ul className={listClass}>
         <li>obtain information about the processing of their data;</li>
@@ -446,7 +448,7 @@ function PrivacyEn() {
         or to the Operator&rsquo;s postal address. Response time — no more than 10 business days; for complex requests — up to 30 days.
       </p>
 
-      <h2 className={sectionHeadingClass}>8. Security Measures for Personal Data Protection</h2>
+      <h2 className={sectionHeadingClass}>10. Security Measures for Personal Data Protection</h2>
       <p>
         The Operator applies a comprehensive set of legal, organizational and technical measures corresponding to Level 1 protection of personal data (PL-1) in accordance with Resolution No. 1119 of the Government of the Russian Federation of November 1, 2012, including:
       </p>
@@ -459,12 +461,12 @@ function PrivacyEn() {
         <li>regular security checks and audits.</li>
       </ul>
 
-      <h2 className={sectionHeadingClass}>9. Use of Cookies and Analytics Services</h2>
+      <h2 className={sectionHeadingClass}>11. Use of Cookies and Analytics Services</h2>
       <p>
         The Site uses cookies to ensure functionality, save preferences and analyze traffic (Yandex.Metrica in anonymized mode). Upon first visit to the Site, a banner requesting consent to use cookies is displayed. The user may decline — in which case some functions of the Site may be unavailable.
       </p>
 
-      <h2 className={sectionHeadingClass}>10. Procedure for Submitting Requests and Inquiries</h2>
+      <h2 className={sectionHeadingClass}>12. Procedure for Submitting Requests and Inquiries</h2>
       <p>All requests, consent withdrawals and complaints should be sent to:</p>
       <ul className={listClass}>
         <li>
@@ -479,7 +481,7 @@ function PrivacyEn() {
         <li>Postal address: 32 Nakhimovsky Prospekt, Moscow, 117218, Russian Federation, IE RAS Chancellery.</li>
       </ul>
 
-      <h2 className={sectionHeadingClass}>11. Changes to the Policy</h2>
+      <h2 className={sectionHeadingClass}>13. Changes to the Policy</h2>
       <p>
         The Operator has the right to amend this Policy. The new version is published on the Site and becomes effective upon posting. In the event of material changes, the Operator shall notify users by email (if known) at least 10 days in advance.
       </p>

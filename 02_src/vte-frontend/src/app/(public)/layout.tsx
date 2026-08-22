@@ -1,8 +1,5 @@
 import { Toaster } from "sonner";
-import Header from "@/components/public/Header";
-import Navigation from "@/components/public/Navigation";
-import Footer from "@/components/public/Footer";
-import CookieBanner from "@/components/public/CookieBanner";
+import PublicShell from "@/components/public/PublicShell";
 
 export default function PublicLayout({
   children,
@@ -11,13 +8,8 @@ export default function PublicLayout({
 }) {
   return (
     <>
-      <Header />
-      <Navigation />
-      <main className="max-w-7xl px-4 sm:px-8 lg:px-12 pb-16 flex-1">
-        {children}
-      </main>
-      <Footer />
-      <CookieBanner />
+      <PublicShell>{children}</PublicShell>
+      {/* Toaster остаётся здесь, а не в оболочке: на странице 404 тостов никто не показывает. */}
       <Toaster position="top-right" richColors closeButton />
     </>
   );
