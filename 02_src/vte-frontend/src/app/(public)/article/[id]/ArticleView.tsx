@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
+import Link from "@/components/public/HoverPrefetchLink";
 import Breadcrumbs from "@/components/public/Breadcrumbs";
 import DocumentTitle from "@/components/public/DocumentTitle";
 import PdfDownloadLink from "@/components/PdfDownloadLink";

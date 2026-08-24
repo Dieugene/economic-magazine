@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/public/HoverPrefetchLink";
 import { Archive, Search, Home } from "lucide-react";
 import DocumentTitle from "@/components/public/DocumentTitle";
 import PageHeading from "@/components/public/PageHeading";

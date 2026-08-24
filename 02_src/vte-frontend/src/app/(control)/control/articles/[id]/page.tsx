@@ -10,6 +10,7 @@ import {
   Trash2,
   Plus,
   Upload,
+  FileCode,
   ChevronRight,
   BookOpen,
   ArrowUp,
@@ -18,8 +19,9 @@ import {
 import { toast } from "sonner";
 import { adminApi, api, type ArticleCreatePayload } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
-import { articlePdfLink, fileNameFromUrl } from "@/lib/api/files";
+import { articleJatsXml, articlePdfLink, fileNameFromUrl } from "@/lib/api/files";
 import { findOverlaps } from "@/lib/utils/pages";
+import { looksLikeXml, saveBlobAsFile } from "@/lib/utils/download";
 import type { Article, ArticleType, Author, Affiliation, Section } from "@/lib/types";
 import DocumentTitle from "@/components/public/DocumentTitle";
 import PdfDownloadLink from "@/components/PdfDownloadLink";
@@ -105,6 +107,8 @@ export default function ArticleFormPage({
   // PDF upload
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+  // Отдельно от общего `busy`: выгрузка XML не должна запирать «Сохранить».
+  const [xmlBusy, setXmlBusy] = useState(false);
 
   // Статус выпуска нужен только для информационного баннера на форме статьи
   // в Published-номере: «всё редактируется». Сама форма не блокируется.
@@ -433,6 +437,37 @@ export default function ArticleFormPage({
       toast.error(parseApiError(e), { description: "Не удалось загрузить PDF" });
     } finally {
       setPdfBusy(false);
+    }
+  }
+
+  // Выгрузка JATS-XML. Документ бэк собирает из СОХРАНЁННЫХ данных статьи, а не
+  // из того, что сейчас в форме, — поэтому рядом с кнопкой стоит об этом
+  // подпись, а сама кнопка не пытается ничего сохранить за редактора.
+  async function handleXmlDownload() {
+    if (!article) return;
+    const target = articleJatsXml(article);
+    if (!target) {
+      toast.error("В демо-режиме XML не формируется");
+      return;
+    }
+    setXmlBusy(true);
+    try {
+      const { blob } = await adminApi.downloadProtectedFile(target.apiPath);
+      // Отказ может приехать и с кодом 200 — такой прецедент у бэка есть.
+      // Файл уходит руками в чужую систему, поэтому дешевле проверить здесь,
+      // чем разбираться, почему там не принялось.
+      const head = await blob.slice(0, 200).text();
+      if (!looksLikeXml(head)) {
+        toast.error("Бэкенд вернул не XML", {
+          description: "Файл не сохранён. Проверьте статью и повторите.",
+        });
+        return;
+      }
+      saveBlobAsFile(blob, target.filename);
+    } catch (e) {
+      toast.error(parseApiError(e), { description: "Не удалось сформировать XML" });
+    } finally {
+      setXmlBusy(false);
     }
   }
 
@@ -1189,9 +1224,42 @@ export default function ArticleFormPage({
                 )}
               </div>
             )}
+            {!isNew && (
+              <div>
+                <label className={labelClass}>Документ JATS XML</label>
+                {issueStatus !== null && issueStatus !== "Published" ? (
+                  // Не гасим кнопку, а убираем её и объясняем словами: у
+                  // выключенной кнопки подсказка не доходит до тех, кто читает
+                  // страницу с экранного диктора, и она выпадает из таб-порядка.
+                  // Тот же приём, что у PDF в новой статье, — строкой ниже.
+                  <p className="text-xs text-gray-500">
+                    XML можно будет скачать после публикации номера.
+                  </p>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleXmlDownload}
+                      disabled={xmlBusy}
+                      aria-busy={xmlBusy || undefined}
+                      className="inline-flex items-center gap-2 text-sm border border-stone-400 rounded px-4 py-2 hover:bg-stone-50 disabled:opacity-50"
+                    >
+                      <FileCode className="w-4 h-4" />
+                      {xmlBusy ? "Формируется..." : "Скачать XML (JATS)"}
+                    </button>
+                    <p className={`${hintClass} mt-2`}>
+                      Формируется на сервере по <strong>сохранённым</strong> данным
+                      статьи — правки в форме попадут в файл только после
+                      сохранения. Выложив документ на РЦНИ, вставьте адрес в поле
+                      «URL XML (JATS)» выше.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
             {isNew && (
               <p className="text-xs text-gray-500">
-                PDF можно будет загрузить после первого сохранения статьи.
+                PDF и XML станут доступны после первого сохранения статьи.
               </p>
             )}
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
+import Link from "@/components/public/HoverPrefetchLink";
 import type { SubmissionFormState, SubmissionErrors } from "@/lib/types/submission";
 import FormSection from "./FormSection";
 

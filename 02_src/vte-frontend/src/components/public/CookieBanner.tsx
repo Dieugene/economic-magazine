@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/public/HoverPrefetchLink";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 

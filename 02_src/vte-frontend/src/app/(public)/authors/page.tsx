@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/public/HoverPrefetchLink";
 import Breadcrumbs from "@/components/public/Breadcrumbs";
 import PageHeading from "@/components/public/PageHeading";
 import DocumentTitle from "@/components/public/DocumentTitle";

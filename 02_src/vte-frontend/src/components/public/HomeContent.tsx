@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/public/HoverPrefetchLink";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import Breadcrumbs from "@/components/public/Breadcrumbs";
 import JournalCover from "@/components/public/JournalCover";

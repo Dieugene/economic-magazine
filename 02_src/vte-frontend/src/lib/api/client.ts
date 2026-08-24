@@ -218,6 +218,16 @@ async function fetchApi<T>(path: string, options: FetchOptions = {}): Promise<T>
 
 // ── Public API ──────────────────────────────────────────────────
 
+// Самый свежий выпуск: год по убыванию, внутри года — больший номер.
+// Отдельно от sortIssues (lib/utils/issues.ts): там порядок показа в архиве,
+// здесь — выбор одного выпуска, и правила у них разные.
+function latestOf(issues: IssueSummary[]): IssueSummary {
+  return [...issues].sort((a, b) => {
+    if (b.year !== a.year) return b.year - a.year;
+    return b.number - a.number;
+  })[0];
+}
+
 export const api = {
   // Issues — единый эндпоинт; для публичной части фильтруем по статусу Published на клиенте
   getIssues: async (year?: number): Promise<IssueSummary[]> => {
@@ -230,12 +240,24 @@ export const api = {
     fetchApi<IssueSummary[]>(year ? `/issues/?year=${year}` : '/issues/'),
 
   getLatestIssue: async (): Promise<IssueSummary | null> => {
-    const issues = await api.getIssues();
-    if (issues.length === 0) return null;
-    return [...issues].sort((a, b) => {
-      if (b.year !== a.year) return b.year - a.year;
-      return b.number - a.number;
-    })[0];
+    // ⚠️ /issues/ без фильтра отдаёт 6,74 МБ — весь архив со всеми статьями и
+    // аннотациями, — хотя главной нужен ровно один выпуск. Выбора полей и
+    // пагинации бэк не поддерживает (?fields, ?omit, ?page_size, ?limit,
+    // ?ordering он игнорирует, ответ байт в байт тот же); единственный
+    // работающий фильтр — year, и он же режет ответ до ~0,5 МБ.
+    //
+    // Пустой год стоит 2 байта и 0,03 с, поэтому идём по годам подряд.
+    // Начинаем со следующего: выпуск могут опубликовать с датой вперёд, и
+    // спрашивать только текущий год значило бы такой выпуск не увидеть.
+    const currentYear = new Date().getFullYear();
+    for (const year of [currentYear + 1, currentYear, currentYear - 1]) {
+      const issues = await api.getIssues(year);
+      if (issues.length > 0) return latestOf(issues);
+    }
+    // Три года подряд пусто — журнал давно не выходил либо год на сервере
+    // отличается от нашего. Тогда уже честно смотрим весь список.
+    const all = await api.getIssues();
+    return all.length > 0 ? latestOf(all) : null;
   },
 
   getYears: async (): Promise<number[]> => {
@@ -542,7 +564,17 @@ export const adminApi = {
     if (token) headers.set('Authorization', `Bearer ${token}`);
     const res = await fetchWithAuthRetry(path, {}, headers);
     if (!res.ok) {
-      throw new ApiError(res.status, `API error: ${res.status} ${res.statusText}`);
+      // Тело читаем так же, как в fetchApi: у файловых эндпоинтов отказ приходит
+      // осмысленным текстом («номер не опубликован»), и без него на экране
+      // осталась бы только цифра статуса.
+      const text = await res.text();
+      let body: unknown = text;
+      try {
+        body = JSON.parse(text);
+      } catch {
+        // тело — не JSON, оставляем строку
+      }
+      throw new ApiError(res.status, `API error: ${res.status} ${res.statusText}`, body);
     }
     return {
       blob: await res.blob(),

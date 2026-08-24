@@ -2,7 +2,7 @@ import { api } from '@/lib/api/client';
 import Breadcrumbs from '@/components/public/Breadcrumbs';
 import PageHeading from '@/components/public/PageHeading';
 import DocumentTitle from '@/components/public/DocumentTitle';
-import Link from 'next/link';
+import Link from "@/components/public/HoverPrefetchLink";
 
 // Серверный fetch к API — рендерим на каждый запрос, не на этапе билда,
 // чтобы билд не зависел от доступности бэкенда.

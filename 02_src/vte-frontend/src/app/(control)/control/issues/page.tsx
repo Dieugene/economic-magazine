@@ -162,7 +162,11 @@ export default function IssuesPage() {
                   <td className="px-4 py-3 text-gray-500">
                     {issue.articles_count ?? 0}
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{issue.sections?.length ?? 0}</td>
+                  <td className="px-4 py-3 text-gray-500">
+                    {/* sections_count — когда бэк перестанет вкладывать рубрики
+                        в списочный ответ; sections.length — пока вкладывает. */}
+                    {issue.sections_count ?? issue.sections?.length ?? 0}
+                  </td>
                   <td className="px-4 py-3">
                     <Link
                       href={`/control/issues/${issue.id}`}

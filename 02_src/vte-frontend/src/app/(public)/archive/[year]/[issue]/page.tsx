@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { api, ApiError } from "@/lib/api/client";
+import type { IssueFull } from "@/lib/types";
 import { sortIssues } from "@/lib/utils/issues";
 import IssueView from "./IssueView";
 
@@ -26,12 +27,22 @@ export default async function IssuePage({
   const issueSummary = sortIssues(allIssues).find((i) => i.number === numberNum);
   if (!issueSummary) notFound();
 
-  let data;
-  try {
-    data = await api.getIssue(issueSummary.id);
-  } catch (e) {
-    if (e instanceof ApiError && e.status === 404) notFound();
-    throw e;
+  // Списочный ответ вкладывает в выпуск те же рубрики со статьями, что отдаёт
+  // detail: объекты сверены побайтно (issues/13/ против того же выпуска в
+  // ?year=2021). Значит второй запрос за уже скачанным не нужен — это минус
+  // 159 КБ и один поход на бэк с каждого показа номера. Если бэк когда-нибудь
+  // перестанет вкладывать рубрики в список, ветка ниже возьмёт detail, как
+  // раньше, и страница не сломается.
+  let data: IssueFull | null = issueSummary.sections
+    ? (issueSummary as IssueFull)
+    : null;
+  if (!data) {
+    try {
+      data = await api.getIssue(issueSummary.id);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) notFound();
+      throw e;
+    }
   }
   if (!data) notFound();
 

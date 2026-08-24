@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import Link from "@/components/public/HoverPrefetchLink";
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import PdfDownloadLink from '@/components/PdfDownloadLink';
 import type { PdfLink } from '@/lib/api/files';

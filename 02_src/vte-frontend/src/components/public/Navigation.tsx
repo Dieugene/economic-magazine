@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/public/HoverPrefetchLink";
 import { ChevronDown, Menu } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 

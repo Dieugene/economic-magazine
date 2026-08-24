@@ -73,3 +73,51 @@ export function fileNameFromUrl(url: string): string {
     return raw;
   }
 }
+
+// ── JATS XML статьи ─────────────────────────────────────────────
+//
+// Бэк генерирует документ на лету: `GET /articles/{id}/create_jats_xml/`.
+// Эндпоинт только читает — проба на боевом показала, что запись статьи после
+// вызова не меняется, несмотря на «create_» в имени. Токен нужен всегда (аноним
+// получает 401), поэтому ссылкой это не сделать — только запрос из-под сессии.
+//
+// Имя бэк присылает — `Content-Disposition: attachment; filename="article_318.xml"`, — но мы
+// сознательно ставим своё. Файл кладут руками в чужую систему пачкой по номеру, и среди десятка
+// одинаковых `article_NNN.xml` не разобраться, где что; `vte-2023-2-7-21.xml` называет год, номер и
+// страницы. Захочет бэк отдавать осмысленное имя — здесь достаточно будет вернуть `filename` из
+// ответа (`filenameFromDisposition` выше уже умеет его читать, включая кириллицу).
+
+interface JatsXmlOwner {
+  id: number;
+  issue_year: number | null;
+  issue_number: number | null;
+  pages: string;
+}
+
+export interface JatsXmlTarget {
+  apiPath: string;
+  filename: string;
+}
+
+// null — значит скачивать неоткуда (mock-режим): в моках эндпоинта нет, а запрос
+// ушёл бы в прокси и упал там. Тот же приём, что у ссылок на PDF выше.
+export function articleJatsXml(article: JatsXmlOwner): JatsXmlTarget | null {
+  if (USE_MOCKS) return null;
+  return {
+    apiPath: `/articles/${article.id}/create_jats_xml/`,
+    filename: jatsXmlFileName(article),
+  };
+}
+
+export function jatsXmlFileName(article: JatsXmlOwner): string {
+  const { issue_year: year, issue_number: number, pages } = article;
+  if (!year || !number) return `article-${article.id}.xml`;
+  // Страницы приходят как «7-21», «7–21» (длинное тире) или «7, 21» — приводим
+  // к одному виду, чтобы имя файла не зависело от того, как их набрал редактор.
+  const range = (pages ?? '')
+    .replace(/[^\d]+/g, '-')
+    .replace(/^-|-$/g, '');
+  return range
+    ? `vte-${year}-${number}-${range}.xml`
+    : `vte-${year}-${number}-article-${article.id}.xml`;
+}
