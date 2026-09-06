@@ -407,6 +407,16 @@ export function getMockData(path: string, _init?: RequestInit): unknown {
     return issueFullMap[id] ?? null;
   }
 
+  // Годы архива — отдельной веткой ВЫШЕ общей '/issues/': иначе её перехватит
+  // startsWith и архив получит массив выпусков вместо { years }. Годы выводим
+  // из тех же выпусков, чтобы плитка года не вела в notFound().
+  if (path.startsWith('/issues/years/')) {
+    const years = Array.from(
+      new Set(allIssues.filter((i) => i.status === 'Published').map((i) => i.year))
+    );
+    return { years: years.sort((a, b) => b - a) };
+  }
+
   // Issues list (with optional ?year=)
   if (path.startsWith('/issues/')) {
     const yearMatch = path.match(/[?&]year=(\d+)/);

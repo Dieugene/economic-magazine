@@ -19,7 +19,13 @@ import {
 import { toast } from "sonner";
 import { adminApi, api, type ArticleCreatePayload } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
-import { articleJatsXml, articlePdfLink, fileNameFromUrl } from "@/lib/api/files";
+import {
+  articleJatsXml,
+  articlePdfLink,
+  articleXmlLinks,
+  fileNameFromUrl,
+  isRcsiXmlUrl,
+} from "@/lib/api/files";
 import { findOverlaps } from "@/lib/utils/pages";
 import { looksLikeXml, saveBlobAsFile } from "@/lib/utils/download";
 import type { Article, ArticleType, Author, Affiliation, Section } from "@/lib/types";
@@ -51,6 +57,18 @@ const ARTICLE_TYPES: { value: ArticleType; label: string }[] = [
   { value: "Book_review", label: "Рецензия" },
   { value: "Editorial", label: "От редактора" },
 ];
+
+// Ответ на генерацию XML, когда это не сам документ. Успехом считаем только
+// тело без маркера ошибки: отказ у бэка умеет приезжать с кодом 200 — тот же
+// случай, что при подаче рукописи (см. submitManuscript в lib/api/client.ts).
+function isSuccessPayload(text: string): boolean {
+  try {
+    const payload = JSON.parse(text) as Record<string, unknown> | null;
+    return !!payload && typeof payload === "object" && !("error_type" in payload);
+  } catch {
+    return false;
+  }
+}
 
 function LangBadge({ lang }: { lang: "RU" | "EN" }) {
   return (
@@ -113,6 +131,10 @@ export default function ArticleFormPage({
   // Статус выпуска нужен только для информационного баннера на форме статьи
   // в Published-номере: «всё редактируется». Сама форма не блокируется.
   const [issueStatus, setIssueStatus] = useState<string | null>(null);
+
+  // Куда ведёт ссылка «скачать XML»: считаем от СОХРАНЁННОЙ статьи, а не от
+  // поля формы, — качается то, что лежит на сервере.
+  const xmlTarget = article ? articleXmlLinks(article) : null;
 
   async function loadSections() {
     try {
@@ -440,34 +462,81 @@ export default function ArticleFormPage({
     }
   }
 
-  // Выгрузка JATS-XML. Документ бэк собирает из СОХРАНЁННЫХ данных статьи, а не
-  // из того, что сейчас в форме, — поэтому рядом с кнопкой стоит об этом
+  // Формирование JATS-XML. Документ бэк собирает из СОХРАНЁННЫХ данных статьи, а
+  // не из того, что сейчас в форме, — поэтому рядом с кнопкой стоит об этом
   // подпись, а сама кнопка не пытается ничего сохранить за редактора.
-  async function handleXmlDownload() {
+  //
+  // ⚠️ Смысл вызова разный на двух бэках: боевой просто отдаёт файл, а
+  // обновлённый сохраняет его у себя и записывает ссылку в поле `xml_url` —
+  // поверх адреса РЦНИ, если он там стоял. Отсюда подтверждение до вызова и
+  // показ прежнего адреса после: вернуть его можно только руками.
+  async function handleXmlGenerate() {
     if (!article) return;
     const target = articleJatsXml(article);
     if (!target) {
       toast.error("В демо-режиме XML не формируется");
       return;
     }
+    const previousRcsi = isRcsiXmlUrl(xmlUrl) ? xmlUrl : null;
+    if (
+      previousRcsi &&
+      !confirm(
+        "В поле «URL XML (JATS)» стоит ссылка на РЦНИ.\n\n" +
+          "Обновлённый бэкенд заменит её ссылкой на файл, собранный на нашем " +
+          "сервере. Прежний адрес придётся вписать обратно вручную.\n\n" +
+          "Сформировать XML?"
+      )
+    ) {
+      return;
+    }
     setXmlBusy(true);
     try {
       const { blob } = await adminApi.downloadProtectedFile(target.apiPath);
-      // Отказ может приехать и с кодом 200 — такой прецедент у бэка есть.
-      // Файл уходит руками в чужую систему, поэтому дешевле проверить здесь,
-      // чем разбираться, почему там не принялось.
       const head = await blob.slice(0, 200).text();
-      if (!looksLikeXml(head)) {
+      if (looksLikeXml(head)) {
+        // Отказ может приехать и с кодом 200 — такой прецедент у бэка есть.
+        // Файл уходит руками в чужую систему, поэтому дешевле проверить здесь,
+        // чем разбираться, почему там не принялось.
+        saveBlobAsFile(blob, target.filename);
+      } else if (!isSuccessPayload(await blob.text())) {
         toast.error("Бэкенд вернул не XML", {
           description: "Файл не сохранён. Проверьте статью и повторите.",
         });
         return;
+      } else {
+        // Обновлённый бэк файл оставляет у себя и отвечает сообщением, а не
+        // документом. Скачать его можно ссылкой рядом — она смотрит на поле.
+        toast.success("XML сформирован на сервере");
       }
-      saveBlobAsFile(blob, target.filename);
+      await refreshXmlUrl(previousRcsi);
     } catch (e) {
       toast.error(parseApiError(e), { description: "Не удалось сформировать XML" });
     } finally {
       setXmlBusy(false);
+    }
+  }
+
+  // Перечитываем ТОЛЬКО ссылку на XML, а не всю статью: loadArticle() перезальёт
+  // два десятка полей формы и сотрёт несохранённые правки редактора. Обновить
+  // поле при этом обязательно — иначе следующее «Сохранить изменения» отправит
+  // прежнее значение и затрёт свежую ссылку.
+  async function refreshXmlUrl(previousRcsi: string | null) {
+    if (!articleId) return;
+    try {
+      const fresh = await adminApi.getArticle(articleId);
+      setArticle(fresh);
+      const next = fresh.xml_url ?? "";
+      if (next === xmlUrl) return;
+      setXmlUrl(next);
+      if (previousRcsi) {
+        toast.warning("Ссылка на РЦНИ заменена", {
+          description: `Прежний адрес: ${previousRcsi}`,
+          duration: 30_000,
+        });
+      }
+    } catch {
+      // Не перечитали — поле осталось прежним. Молчим: генерация уже прошла,
+      // а ошибку чтения редактор увидит при следующем открытии статьи.
     }
   }
 
@@ -1237,21 +1306,47 @@ export default function ArticleFormPage({
                   </p>
                 ) : (
                   <>
-                    <button
-                      type="button"
-                      onClick={handleXmlDownload}
-                      disabled={xmlBusy}
-                      aria-busy={xmlBusy || undefined}
-                      className="inline-flex items-center gap-2 text-sm border border-stone-400 rounded px-4 py-2 hover:bg-stone-50 disabled:opacity-50"
-                    >
-                      <FileCode className="w-4 h-4" />
-                      {xmlBusy ? "Формируется..." : "Скачать XML (JATS)"}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <button
+                        type="button"
+                        onClick={handleXmlGenerate}
+                        disabled={xmlBusy}
+                        aria-busy={xmlBusy || undefined}
+                        className="inline-flex items-center gap-2 text-sm border border-stone-400 rounded px-4 py-2 hover:bg-stone-50 disabled:opacity-50"
+                      >
+                        <FileCode className="w-4 h-4" />
+                        {xmlBusy ? "Формируется..." : "Сформировать XML (JATS)"}
+                      </button>
+                      {xmlTarget?.rcsi && (
+                        <a
+                          href={xmlTarget.rcsi}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-forest-600 underline"
+                        >
+                          Открыть XML на РЦНИ
+                        </a>
+                      )}
+                      {xmlTarget?.download && (
+                        <PdfDownloadLink
+                          link={{
+                            href: xmlTarget.download.href,
+                            apiPath: xmlTarget.download.apiPath,
+                          }}
+                          requiresAuth
+                          fallbackFilename={xmlTarget.download.fallbackFilename}
+                          className="text-sm text-forest-600 underline"
+                        >
+                          Скачать XML
+                        </PdfDownloadLink>
+                      )}
+                    </div>
                     <p className={`${hintClass} mt-2`}>
-                      Формируется на сервере по <strong>сохранённым</strong> данным
-                      статьи — правки в форме попадут в файл только после
-                      сохранения. Выложив документ на РЦНИ, вставьте адрес в поле
-                      «URL XML (JATS)» выше.
+                      Файл собирается на сервере по <strong>сохранённым</strong> данным
+                      статьи — правки в форме попадут в него только после сохранения.
+                      Обновлённый бэкенд кладёт ссылку на собранный файл в поле
+                      «URL XML (JATS)» выше, заменяя то, что там стояло; адрес
+                      публикации на РЦНИ вписывают в это же поле вручную.
                     </p>
                   </>
                 )}

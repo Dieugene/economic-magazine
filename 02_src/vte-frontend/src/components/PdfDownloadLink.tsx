@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { adminApi, ApiError } from "@/lib/api/client";
+import { api, adminApi, ApiError } from "@/lib/api/client";
 import type { PdfLink } from "@/lib/api/files";
 
 interface PdfDownloadLinkProps {
@@ -12,6 +12,16 @@ interface PdfDownloadLinkProps {
   // true только там, где материал может быть неопубликованным, — то есть на
   // страницах админки. См. комментарий ниже, почему это решает вызывающий код
   requiresAuth?: boolean;
+  // Качать блобом даже анонимно. Нужно там, где эндпоинт умеет ответить отказом
+  // на живой с виду ссылке: обычная навигация по `<a download>` показывает такой
+  // отказ только строкой «Failed» в полке загрузок браузера, на самой странице
+  // не появляется ничего. Блоб-ветка ловит код ответа и говорит словами.
+  viaFetch?: boolean;
+  // Имя файла на случай, если бэк не прислал своего в Content-Disposition.
+  // ⚠️ Именно запасное: имя из заголовка приоритетнее — его формат согласован с
+  // заказчиком (у XML оно повторяет имя PDF статьи), и подменять его своим
+  // значит спорить с этим решением.
+  fallbackFilename?: string;
   className?: string;
   title?: string;
   "aria-label"?: string;
@@ -36,6 +46,8 @@ interface PdfDownloadLinkProps {
 export default function PdfDownloadLink({
   link,
   requiresAuth = false,
+  viaFetch = false,
+  fallbackFilename,
   className,
   title,
   "aria-label": ariaLabel,
@@ -44,7 +56,7 @@ export default function PdfDownloadLink({
   const [busy, setBusy] = useState(false);
 
   async function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
-    if (!requiresAuth || !link?.apiPath) return; // обычная навигация
+    if ((!requiresAuth && !viaFetch) || !link?.apiPath) return; // обычная навигация
     // Модификаторы («открыть в новой вкладке», «сохранить как») не перехватываем.
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
 
@@ -52,11 +64,16 @@ export default function PdfDownloadLink({
     if (busy) return;
     setBusy(true);
     try {
-      const { blob, filename } = await adminApi.downloadProtectedFile(link.apiPath);
+      // Анонимную ветку ведём отдельным запросом без Authorization: у
+      // редактора, открывшего публичную страницу, токен в localStorage лежит, и
+      // протухший уронил бы ему админскую сессию (см. предупреждение выше).
+      const { blob, filename: headerName } = requiresAuth
+        ? await adminApi.downloadProtectedFile(link.apiPath)
+        : await api.downloadPublicFile(link.apiPath);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = filename ?? "document.pdf";
+      a.download = headerName ?? fallbackFilename ?? "document.pdf";
       document.body.appendChild(a);
       a.click();
       a.remove();

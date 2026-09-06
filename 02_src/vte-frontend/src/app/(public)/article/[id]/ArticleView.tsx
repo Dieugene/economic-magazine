@@ -5,7 +5,7 @@ import Link from "@/components/public/HoverPrefetchLink";
 import Breadcrumbs from "@/components/public/Breadcrumbs";
 import DocumentTitle from "@/components/public/DocumentTitle";
 import PdfDownloadLink from "@/components/PdfDownloadLink";
-import { articlePdfLink } from "@/lib/api/files";
+import { articlePdfLink, articleXmlLinks } from "@/lib/api/files";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { Article, ArticleType, LocalizedString } from "@/lib/types";
 
@@ -33,6 +33,20 @@ function pickWithFallback(
   return null;
 }
 
+// Оформление у обеих кнопок XML одно; различаются подписи — «открыть на РЦНИ»
+// и «скачать». Одинаковая плашка тут намеренно: обе дают один и тот же документ,
+// разными путями.
+const XML_LINK_CLASS =
+  "flex items-center gap-3 p-3 bg-stone-200 text-forest-600 rounded-sm hover:bg-stone-300 transition-colors";
+
+function XmlIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+    </svg>
+  );
+}
+
 function formatDate(dateStr: string, lang: "ru" | "en"): string {
   const d = new Date(dateStr);
   return d.toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", {
@@ -54,6 +68,7 @@ export default function ArticleView({
 }) {
   const { lang, t } = useLanguage();
   const articlePdf = articlePdfLink(article);
+  const xml = articleXmlLinks(article);
 
   const titleForLang = lang === "en" && article.title.en ? article.title.en : article.title.ru;
   const authorsForLang = (article.authors ?? [])
@@ -394,21 +409,53 @@ export default function ArticleView({
                     </div>
                   </PdfDownloadLink>
                 )}
-                {article.xml_url && (
+                {/* Кнопок XML может быть две — так просил заказчик. Прежняя
+                    ссылка на РЦНИ идёт первой: она работает при любом бэке, и
+                    если скачивание откажет, читателю остаётся рабочий путь.
+                    Подписи различаются действием, а не источником: две строки
+                    «XML (JATS)» подряд экранный диктор прочёл бы почти
+                    одинаково, а «РЦНИ» произнёс бы по буквам. */}
+                {xml?.rcsi && (
                   <a
-                    href={article.xml_url}
+                    href={xml.rcsi}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 bg-stone-200 text-forest-600 rounded-sm hover:bg-stone-300 transition-colors"
+                    className={XML_LINK_CLASS}
+                    // Подпись начинается ДОСЛОВНО с видимого текста: иначе
+                    // голосовое управление по произнесённой фразе на ссылку не
+                    // наведётся (правило «доступное имя содержит видимое»).
+                    aria-label={t(
+                      "Открыть XML на РЦНИ — откроется в новой вкладке",
+                      "Open XML at RCSI — opens in a new tab"
+                    )}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
+                    <XmlIcon />
                     <div>
-                      <span className="text-sm font-medium">XML (JATS)</span>
-                      <span className="text-xs text-gray-600 ml-1">{t("РЦНИ", "RCSI")}</span>
+                      <span className="text-sm font-medium">
+                        {t("Открыть XML на РЦНИ", "Open XML at RCSI")}
+                      </span>
                     </div>
                   </a>
+                )}
+                {xml?.download && (
+                  // Файл отдаёт наш бэк — и он же даёт имя (то же, что у PDF
+                  // статьи). Качаем через fetch, а не обычной ссылкой: пока
+                  // на боевом старый бэк, этот эндпоинт отвечает 404, и по
+                  // обычной ссылке читатель не увидел бы вообще ничего.
+                  <PdfDownloadLink
+                    link={{ href: xml.download.href, apiPath: xml.download.apiPath }}
+                    requiresAuth={requiresAuth}
+                    viaFetch
+                    fallbackFilename={xml.download.fallbackFilename}
+                    className={XML_LINK_CLASS}
+                  >
+                    <XmlIcon />
+                    <div>
+                      <span className="text-sm font-medium">
+                        {t("Скачать XML (JATS)", "Download XML (JATS)")}
+                      </span>
+                    </div>
+                  </PdfDownloadLink>
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-4 leading-relaxed">

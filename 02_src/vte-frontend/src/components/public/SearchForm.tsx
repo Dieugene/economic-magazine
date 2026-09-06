@@ -19,7 +19,11 @@ export default function SearchForm() {
 
     setLoading(true);
     try {
-      const data = await api.search({ q: trimmed });
+      // page_size задаём явно и не полагаемся на умолчание бэка: на боевом оно
+      // равно 10, а на обновлённом — 1, и поиск показал бы одну статью из трёхсот.
+      // ⚠️ Постраничного вывода у формы нет: это первые 10 совпадений из data.count,
+      // и пользователю об этом ничего не сказано.
+      const data = await api.search({ q: trimmed, page_size: 10 });
       setResults(data.results);
     } catch {
       setResults([]);
