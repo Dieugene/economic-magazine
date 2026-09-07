@@ -3,12 +3,24 @@ import Breadcrumbs from '@/components/public/Breadcrumbs';
 import PageHeading from '@/components/public/PageHeading';
 import DocumentTitle from '@/components/public/DocumentTitle';
 import Link from "@/components/public/HoverPrefetchLink";
+import { connection } from 'next/server';
 
-// Серверный fetch к API — рендерим на каждый запрос, не на этапе билда,
-// чтобы билд не зависел от доступности бэкенда.
-export const dynamic = 'force-dynamic';
+// Страница остаётся динамической, но данные для неё кэшируются.
+//
+// `connection()` вместо прежнего `dynamic = 'force-dynamic'`: тот запрещал
+// кэшировать вообще что-либо (документация Next 16: он равносилен
+// `cache: 'no-store'` на каждом запросе), а нужен он был только ради одного —
+// чтобы страница не пререндерилась на сборке, где бэкенд недоступен.
+// `connection()` даёт ровно это и ничего больше.
+//
+// 🛑 `fetchCache` здесь обязателен. По умолчанию ('auto') Next НЕ кэширует
+// запросы, обнаруженные ПОСЛЕ Request-time API, а `connection()` — как раз
+// такой API. Без этой строки кэш молча не включился бы: страница работает,
+// ошибок нет, а бэкенд получает те же запросы на каждый показ.
+export const fetchCache = 'default-cache';
 
 export default async function ArchiveIndexPage() {
+  await connection();
   const years = await api.getYears();
 
   return (
