@@ -121,6 +121,31 @@ export function isRcsiXmlUrl(url: string): boolean {
   return /^https?:\/\/([a-z0-9-]+\.)*rcsi\.science\//i.test(url);
 }
 
+// Годится ли значение поля «URL XML (JATS)» для ОТПРАВКИ на бэк.
+//
+// ⚠️ Бэк держит это поле как `URLField` (проба OPTIONS на стенде 11.09.2026:
+// `"xml_url":{"type":"url", … "max_length":200}`) и на путь от корня отвечает
+// 400 «Введите правильный URL» — при том, что генерация XML сама записывает
+// туда именно путь (`/files/arch/2026/2026-N3/article_354_….xml`), в обход
+// сериализатора. Поэтому проверка повторяет бэковскую, а не смягчает её:
+// значение, которое здесь не прошло, там получит 400.
+//
+// Регистр схемы не проверяем: `HTTPS://…` — такой же валидный адрес.
+export function isSendableXmlUrl(value: string): boolean {
+  return /^https?:\/\/[^\s/?#]+/i.test(value) && value.length <= XML_URL_MAX_LENGTH;
+}
+
+// Длина поля у бэка (`max_length` из OPTIONS). Держим тут же, чтобы форма
+// отказывала до запроса, а не после 400.
+export const XML_URL_MAX_LENGTH = 200;
+
+// Показывать ли рядом с полем ссылку «открыть файл». Только для пути от корня,
+// записанного сервером: одиночный `/` в начале означает наш же сайт, а `//host`
+// увёл бы на чужой — его сюда не пускаем.
+export function isServerXmlPath(value: string): boolean {
+  return value.startsWith('/') && !value.startsWith('//');
+}
+
 export interface ArticleXmlLinks {
   // Прежняя ссылка на РЦНИ — как её вписали руками. Ведёт на чужой сервер.
   rcsi: string | null;

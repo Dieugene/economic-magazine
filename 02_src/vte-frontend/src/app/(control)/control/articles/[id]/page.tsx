@@ -25,6 +25,9 @@ import {
   articleXmlLinks,
   fileNameFromUrl,
   isRcsiXmlUrl,
+  isSendableXmlUrl,
+  isServerXmlPath,
+  XML_URL_MAX_LENGTH,
 } from "@/lib/api/files";
 import { findOverlaps } from "@/lib/utils/pages";
 import { looksLikeXml, saveBlobAsFile } from "@/lib/utils/download";
@@ -124,6 +127,9 @@ export default function ArticleFormPage({
 
   // PDF upload
   const pdfInputRef = useRef<HTMLInputElement>(null);
+  // Нужен, чтобы на отказ проверки перевести фокус на само поле: тост показывает
+  // причину, но не место, а поле стоит далеко внизу длинной формы.
+  const xmlUrlRef = useRef<HTMLInputElement>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
   // Отдельно от общего `busy`: выгрузка XML не должна запирать «Сохранить».
   const [xmlBusy, setXmlBusy] = useState(false);
@@ -135,6 +141,13 @@ export default function ArticleFormPage({
   // Куда ведёт ссылка «скачать XML»: считаем от СОХРАНЁННОЙ статьи, а не от
   // поля формы, — качается то, что лежит на сервере.
   const xmlTarget = article ? articleXmlLinks(article) : null;
+
+  // Менял ли редактор поле «URL XML (JATS)» руками. Сравниваем с тем, что лежит
+  // в сохранённой статье: после «Сформировать XML» там путь от корня, который
+  // бэк сам записал и обратно на запись не принимает (400). Неизменённое поле
+  // не отправляем вовсе — см. `buildPayload`.
+  const xmlUrlTrimmed = xmlUrl.trim();
+  const xmlUrlChanged = xmlUrlTrimmed !== (article?.xml_url ?? "").trim();
 
   async function loadSections() {
     try {
@@ -292,6 +305,24 @@ export default function ArticleFormPage({
       toast.error("Выберите рубрику");
       return null;
     }
+    // Проверка стоит ЗДЕСЬ, а не в handleSave: там она пришлась бы после
+    // `setBusy(true)`, и выход по `return` оставил бы кнопку «Сохраняем...»
+    // навсегда запертой. Рядом уже так сделано для рубрики.
+    if (xmlUrlChanged && xmlUrlTrimmed && !isSendableXmlUrl(xmlUrlTrimmed)) {
+      toast.error(
+        xmlUrlTrimmed.length > XML_URL_MAX_LENGTH
+          ? `Адрес XML длиннее ${XML_URL_MAX_LENGTH} символов — бэкенд такой не примет`
+          : "Адрес XML должен начинаться с http:// или https://",
+        {
+          description:
+            "Путь, который подставила кнопка «Сформировать XML», исправлять не нужно: " +
+            "он уже сохранён на сервере и при сохранении статьи не потеряется.",
+        }
+      );
+      xmlUrlRef.current?.focus();
+      xmlUrlRef.current?.scrollIntoView({ block: "center" });
+      return null;
+    }
     // Degree — опциональное. Бэк не принимает `null`; если оба языка пустые,
     // опускаем ключ `degree` целиком.
     const cleanedAuthors: Author[] = authors.map((a) => {
@@ -344,7 +375,12 @@ export default function ArticleFormPage({
       received_date: receivedDate,
       accepted_date: acceptedDate,
       funding: { ru: fundingRu, en: fundingEn },
-      xml_url: xmlUrl || null,
+      // Ключ появляется, ТОЛЬКО если редактор правил поле сам. Иначе статью с
+      // путём от бэка нельзя было бы сохранить вообще: он приходит в GET, но на
+      // PATCH возвращается 400 «Введите правильный URL» (проба на стенде).
+      // Побочно это закрывает и тихую потерю: когда `refreshXmlUrl` не сумел
+      // перечитать свежую ссылку, прежнее значение из формы её больше не затрёт.
+      ...(xmlUrlChanged ? { xml_url: xmlUrlTrimmed || null } : {}),
     };
   }
 
@@ -1252,12 +1288,38 @@ export default function ArticleFormPage({
               <label htmlFor="xml-url" className={labelClass}>URL XML (JATS)</label>
               <input
                 id="xml-url"
-                type="url"
+                // ⚠️ НЕ `type="url"`. Кнопка «Сформировать XML» подставляет сюда
+                // путь от корня (`/files/arch/...`), который пишет сам бэк, —
+                // браузер такой адрес считает невалидным и молча запирает
+                // сохранение ВСЕЙ формы, хотя редактор этого значения не вводил.
+                // Ровно на это наткнулась редакция 11.09.2026. Проверка теперь
+                // своя и только для значений, введённых руками (`buildPayload`).
+                type="text"
+                inputMode="url"
+                ref={xmlUrlRef}
+                maxLength={XML_URL_MAX_LENGTH}
                 className={inputClass}
                 value={xmlUrl}
                 onChange={(e) => setXmlUrl(e.target.value)}
                 placeholder="https://journals.rcsi.science/..."
               />
+              {article?.xml_url && isServerXmlPath(article.xml_url) && (
+                // Путь от корня редактору нечем проверить: ссылки «Открыть XML
+                // на РЦНИ» у него нет, а «Скачать XML» показывается не всегда.
+                // Даём прямую ссылку на файл, который лежит на сервере.
+                <p className={`${hintClass} mt-2`}>
+                  Файл на сервере:{" "}
+                  <a
+                    href={article.xml_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-forest-600 underline break-all"
+                  >
+                    {fileNameFromUrl(article.xml_url)}
+                  </a>
+                  {" "}— этот путь подставила кнопка ниже, менять его не нужно.
+                </p>
+              )}
             </div>
             {!isNew && (
               <div>
@@ -1344,9 +1406,12 @@ export default function ArticleFormPage({
                     <p className={`${hintClass} mt-2`}>
                       Файл собирается на сервере по <strong>сохранённым</strong> данным
                       статьи — правки в форме попадут в него только после сохранения.
-                      Обновлённый бэкенд кладёт ссылку на собранный файл в поле
-                      «URL XML (JATS)» выше, заменяя то, что там стояло; адрес
-                      публикации на РЦНИ вписывают в это же поле вручную.
+                      Обновлённый бэкенд кладёт путь к собранному файлу в поле
+                      «URL XML (JATS)» выше, заменяя то, что там стояло. Этот путь
+                      <strong> исправлять не нужно</strong>: он уже сохранён на сервере, и
+                      сохранение статьи его не изменит. Адрес публикации на РЦНИ
+                      вписывают в это же поле вручную — полностью, вместе с
+                      «https://».
                     </p>
                   </>
                 )}
