@@ -20,6 +20,11 @@ ARG NEXT_PUBLIC_API_PROXY_TARGET=http://backend:8000/api
 ENV NEXT_PUBLIC_API_MODE=$NEXT_PUBLIC_API_MODE
 ENV NEXT_PUBLIC_API_PROXY_TARGET=$NEXT_PUBLIC_API_PROXY_TARGET
 
+# Признак выката: статический файл с номером версии, отдаётся без авторизации
+# (`curl https://<хост>/version.txt`). Пишется из package.json, а не руками —
+# иначе разойдётся с версией при первом же релизе, когда про него забудут.
+RUN node -p "require('./package.json').version" > public/version.txt
+
 RUN npm run build
 
 # --- Stage 3: Production ---
