@@ -396,6 +396,12 @@ function withAdminRequiredFields(article: Article): Article {
   return {
     ...article,
     title: { ru: article.title.ru, en: article.title.en ?? `[EN] ${article.title.ru}` },
+    // Английская аннотация обязательна ровно тогда, когда заполнена русская
+    // (`required={!!abstractRu}` в форме) — без неё сабмит снова упирается в
+    // нативную проверку, как и было у фикстуры 14.
+    abstract: article.abstract
+      ? { ru: article.abstract.ru, en: article.abstract.en ?? `[EN] ${article.abstract.ru}` }
+      : article.abstract,
     udk: article.udk || '330.1',
     jel_codes: article.jel_codes?.length ? article.jel_codes : ['B41'],
     received_date: article.received_date ?? '2025-09-01',
@@ -468,7 +474,29 @@ export const editorialBoard: EditorialBoardMember[] = [
 // ── Mock router ──────────────────────────────────────────────────
 // path начинается с / (без префикса /api/, т.к. он в base URL)
 
-export function getMockData(path: string, _init?: RequestInit): unknown {
+export function getMockData(path: string, init?: RequestInit): unknown {
+  // 🛑 Мок-слой ТОЛЬКО ЧИТАЕТ. Метод запроса он не различает, изменяемого
+  // хранилища у него нет: на `PATCH /articles/14/` вернётся та же статическая
+  // фикстура, что и на `GET`. Дальше форма перечитывает статью и затирает
+  // введённое, а всплывашка «Статья сохранена» всё равно показывается —
+  // сохранение выглядит сделанным и тут же откатывается.
+  //
+  // За один день на это попались двое проверяющих подряд, и оба сочли, что
+  // сломана кнопка сохранения (она исправна: событие `submit` приходит,
+  // обработчик доходит до конца, а в мок-режиме укладывается в ~100 мс, так
+  // что даже «Сохраняем...» не успевает отрисоваться, а всплывашка живёт
+  // ~4 секунды и на замере «через 6 секунд» её уже нет).
+  //
+  // Поэтому здесь громкое предупреждение в консоли: проверять сохранение на
+  // моках нельзя в принципе, для этого нужен живой бэкенд.
+  const method = (init?.method ?? 'GET').toUpperCase();
+  if (method !== 'GET' && method !== 'HEAD') {
+    console.warn(
+      `[mock] ${method} ${path}: мок-слой не пишет — ответ собран из статичной фикстуры, ` +
+        'правка НЕ сохранена. Проверять сохранение нужно против живого бэкенда.'
+    );
+  }
+
   // Issue by ID
   const issueByIdMatch = path.match(/^\/issues\/(\d+)\/$/);
   if (issueByIdMatch) {
