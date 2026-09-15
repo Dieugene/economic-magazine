@@ -41,8 +41,14 @@ const inputClass =
   "w-full px-3 py-2 border border-stone-400 rounded-sm text-sm text-gray-700 bg-white focus:outline-none focus:border-forest-500 focus:ring-2 focus:ring-forest-500/10";
 const textareaClass = `${inputClass} resize-y min-h-[80px]`;
 const selectClass = inputClass;
+// Поле с ошибкой: рамка и кольцо фокуса красные. Цвет — не единственный признак
+// (рядом всегда стоит надпись с текстом ошибки), иначе различающий цвета хуже
+// прочих остался бы без подсказки.
+const inputErrorClass =
+  "w-full px-3 py-2 border border-red-500 rounded-sm text-sm text-gray-700 bg-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20";
 const labelClass = "text-[13px] font-medium text-gray-600 mb-1.5 block";
 const hintClass = "text-xs text-gray-500 mt-1";
+const errorHintClass = "text-xs text-red-600 mt-1";
 
 const emptyAffiliation = (): Affiliation => ({
   organization_name: { ru: "", en: "" },
@@ -120,6 +126,12 @@ export default function ArticleFormPage({
   // Поле «внешний адрес XML»: на новом бэке это `xml_rcsi_url`, на старом —
   // единственное `xml_url`. Какой ключ уйдёт в PATCH, решает схема статьи.
   const [xmlUrl, setXmlUrl] = useState("");
+  // Текст ошибки адреса XML держим отдельно от всплывашки: она живёт несколько
+  // секунд и не связана с полем ничем, что доступно экранному диктору. Найдено
+  // приёмкой 0.1.25 (наблюдение S4): поле с ошибкой ничем не помечалось —
+  // ни рамкой, ни `aria-invalid`, — и тот, кто промотал всплывашку, оставался
+  // без единого указания, где именно ошибка.
+  const [xmlUrlError, setXmlUrlError] = useState<string | null>(null);
   const [receivedDate, setReceivedDate] = useState<string>(
     () => new Date().toISOString().slice(0, 10)
   );
@@ -195,6 +207,9 @@ export default function ArticleFormPage({
       setFundingRu(data.funding?.ru ?? "");
       setFundingEn(data.funding?.en ?? "");
       setXmlUrl((hasSplitXmlFields(data) ? data.xml_rcsi_url : data.xml_url) ?? "");
+      // Значение пришло с сервера, а не от редактора — прежняя жалоба к нему
+      // не относится.
+      setXmlUrlError(null);
       setReceivedDate(data.received_date ?? new Date().toISOString().slice(0, 10));
       setAcceptedDate(data.accepted_date ?? new Date().toISOString().slice(0, 10));
       // Бэк хранит references как массив [{ru, en}, ...]. Склеиваем
@@ -334,10 +349,15 @@ export default function ArticleFormPage({
     // `setBusy(true)`, и выход по `return` оставил бы кнопку «Сохраняем...»
     // навсегда запертой. Рядом уже так сделано для рубрики.
     if (xmlUrlChanged && xmlUrlTrimmed && !isSendableXmlUrl(xmlUrlTrimmed)) {
-      toast.error(
+      const message =
         xmlUrlTrimmed.length > XML_URL_MAX_LENGTH
           ? `Адрес XML длиннее ${XML_URL_MAX_LENGTH} символов — бэкенд такой не примет`
-          : "Адрес XML должен начинаться с http:// или https://",
+          : "Адрес XML должен начинаться с http:// или https://";
+      // Ошибка живёт в двух местах сразу: всплывашка замечается сразу, надпись
+      // у поля остаётся и после её ухода.
+      setXmlUrlError(message);
+      toast.error(
+        message,
         {
           description:
             "Путь, который подставила кнопка «Сформировать XML», исправлять не нужно: " +
@@ -604,6 +624,7 @@ export default function ArticleFormPage({
       const next = fresh.xml_url ?? "";
       if (next === xmlUrl) return;
       setXmlUrl(next);
+      setXmlUrlError(null);
       if (previousRcsi) {
         toast.warning("Ссылка на РЦНИ заменена", {
           description: `Прежний адрес: ${previousRcsi}`,
@@ -1341,11 +1362,25 @@ export default function ArticleFormPage({
                 inputMode="url"
                 ref={xmlUrlRef}
                 maxLength={XML_URL_MAX_LENGTH}
-                className={inputClass}
+                className={xmlUrlError ? inputErrorClass : inputClass}
                 value={xmlUrl}
-                onChange={(e) => setXmlUrl(e.target.value)}
+                // Ошибку снимаем на первом же исправлении: держать красную
+                // рамку на значении, которого редактор уже не вводит, — врать.
+                onChange={(e) => {
+                  setXmlUrl(e.target.value);
+                  if (xmlUrlError) setXmlUrlError(null);
+                }}
                 placeholder="https://journals.rcsi.science/..."
+                aria-invalid={xmlUrlError ? true : undefined}
+                aria-describedby={xmlUrlError ? "xml-url-error" : undefined}
               />
+              {xmlUrlError && (
+                // `role="alert"` — чтобы диктор произнёс надпись сразу, а не
+                // только когда читатель доберётся до неё сам.
+                <p id="xml-url-error" role="alert" className={errorHintClass}>
+                  {xmlUrlError}
+                </p>
+              )}
               {splitXmlFields && (
                 <p className={`${hintClass} mt-2`}>
                   Только внешний адрес XML на сайте РЦНИ. Файл, собранный нашим
