@@ -381,12 +381,48 @@ const articlesByIssue: Record<number, Article[]> = {
 const articleMap: Record<number, Article> = Object.fromEntries(
   allArticleSummaries.map((a) => [a.id, a]),
 );
+// Форма статьи в админке помечает обязательными поля, которых у фикстур нет:
+// почту и ORCID автора, его аффилиацию, английские заголовок и имя, УДК, JEL,
+// даты. Пустые они запирают сохранение НАТИВНОЙ проверкой браузера: сабмит
+// отменяется целиком, всплывает пузырёк у первого пустого поля, и до нашего
+// кода дело не доходит вовсе. Выглядит это как «кнопка не работает молча» — на
+// этом за один день споткнулись двое проверяющих подряд, каждый решив сперва,
+// что сломано сохранение. Поэтому фикстуры, которые открывают именно в
+// админке, дозаполняются здесь.
+//
+// Только эти четыре: списки и публичные страницы берут статьи из `articleMap`,
+// и подмешивать им выдуманные аффилиации незачем.
+function withAdminRequiredFields(article: Article): Article {
+  return {
+    ...article,
+    title: { ru: article.title.ru, en: article.title.en ?? `[EN] ${article.title.ru}` },
+    udk: article.udk || '330.1',
+    jel_codes: article.jel_codes?.length ? article.jel_codes : ['B41'],
+    received_date: article.received_date ?? '2025-09-01',
+    accepted_date: article.accepted_date ?? '2025-10-01',
+    authors: (article.authors ?? []).map((a, i) => ({
+      ...a,
+      full_name: { ru: a.full_name.ru, en: a.full_name.en ?? `[EN] ${a.full_name.ru}` },
+      email: a.email || `author${i + 1}@example.org`,
+      orcid: a.orcid || `0000-0002-0000-000${i + 1}`,
+      affiliations: a.affiliations?.length
+        ? a.affiliations
+        : [
+            {
+              organization_name: { ru: 'Институт экономики РАН', en: 'Institute of Economics RAS' },
+              position: { ru: 'научный сотрудник', en: 'researcher' },
+            },
+          ],
+    })),
+  };
+}
+
 // Полные данные перекрывают summary
 const fullArticleOverrides: Record<number, Article> = {
-  1: articleFullData,
-  13: articleFullData13,
-  14: articleFullData14,
-  15: articleFullData15,
+  1: withAdminRequiredFields(articleFullData),
+  13: withAdminRequiredFields(articleFullData13),
+  14: withAdminRequiredFields(articleFullData14),
+  15: withAdminRequiredFields(articleFullData15),
 };
 
 export const issuesByYear: IssueSummary[] = allIssues;
