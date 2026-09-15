@@ -249,8 +249,19 @@ export const articleFullData13: Article = {
   xml_file: null,
 };
 
+// Фикстура старой схемы собирается ТОЛЬКО так: ключей новой схемы в объекте быть не должно.
+// Базовая фабрика проставляет `xml_file`/`xml_rcsi_url` со значением null всем статьям, а ветку
+// выбирает `hasSplitXmlFields` по НАЛИЧИЮ ключа — от спреда `{...art14, xml_url}` статья уходила
+// в новую ветку с двумя пустыми источниками, и ни одной ссылки XML на странице не появлялось.
+function asLegacySchema(article: Article): Article {
+  const copy = { ...article };
+  delete copy.xml_file;
+  delete copy.xml_rcsi_url;
+  return copy;
+}
+
 export const articleFullData14: Article = {
-  ...art14,
+  ...asLegacySchema(art14),
   abstract: {
     ru: 'В статье исследуется влияние идеологии на осмысление в экономической науке процессов социальных и экономических преобразований на основе качественного анализа наиболее цитируемых статей российских экономистов в научной электронной библиотеке eLIBRARY.RU за период 1992–2025 гг.',
   },
@@ -269,6 +280,17 @@ export const articleFullData14: Article = {
   // ветку совместимости нужно чем-то смотреть глазами, а тестов в проекте нет.
   // Удалить вместе с самой веткой, когда новый бэк доедет до боевого.
   xml_url: 'https://journals.rcsi.science/2587-7666/article/xml/353802',
+};
+
+// Новая схема, заполнен ТОЛЬКО файл на сервере: внешнего адреса ещё нет. Самая ходовая
+// комбинация после переезда бэка — XML у нас собран, а на РЦНИ статья ещё не выложена.
+// Видно её только в карточке админки, строкой «Файл на сервере»: на публичной странице
+// за файл отвечает кнопка скачивания, а она в моках погашена (`USE_MOCKS` в
+// `articleXmlLinks` — эндпоинта `download_xml` в моках нет).
+export const articleFullData15: Article = {
+  ...art15,
+  xml_file: '/files/arch/2025/2025-N4/Tambovcev_VTE_2025_4.xml',
+  xml_rcsi_url: null,
 };
 
 // ── Issues ────────────────────────────────────────────────────────
@@ -364,6 +386,7 @@ const fullArticleOverrides: Record<number, Article> = {
   1: articleFullData,
   13: articleFullData13,
   14: articleFullData14,
+  15: articleFullData15,
 };
 
 export const issuesByYear: IssueSummary[] = allIssues;
