@@ -622,6 +622,11 @@ export interface ArticleCreatePayload {
   received_date: string;
   accepted_date: string;
   funding: { ru: string; en?: string };
+  // Внешний адрес XML. Имя ключа выбирает форма по схеме бэка: `xml_rcsi_url` у
+  // нового, `xml_url` у старого. ⚠️ `xml_file` здесь нет и быть не может — это
+  // FileField, он принимается только multipart'ом; строкой в JSON бэк ответит
+  // 400.
+  xml_rcsi_url?: string | null;
   xml_url?: string | null;
 }
 

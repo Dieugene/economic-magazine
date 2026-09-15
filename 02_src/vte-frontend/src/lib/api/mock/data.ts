@@ -96,7 +96,9 @@ function mkArticle(
     received_date: null,
     accepted_date: null,
     funding: { ru: '' },
-    xml_url: null,
+    // Новая схема полей (стенд): файл отдельно, внешний адрес отдельно.
+    xml_file: null,
+    xml_rcsi_url: null,
   };
 }
 
@@ -224,7 +226,9 @@ export const articleFullData: Article = {
     ru: 'Исследование выполнено при финансовой поддержке Министерства науки и высшего образования Российской Федерации в рамках государственного задания Института экономики РАН.',
     en: 'The study was financially supported by the Ministry of Science and Higher Education of the Russian Federation within the state assignment of the Institute of Economics RAS.',
   },
-  xml_url: 'https://journals.rcsi.science/vte/article/view/2026_1_7_21/xml',
+  // Новая схема: заполнены оба поля — видно обе кнопки сразу.
+  xml_file: '/files/arch/2026/2026-N1/Ivanov_VTE_2026_1.xml',
+  xml_rcsi_url: 'https://journals.rcsi.science/vte/article/view/2026_1_7_21/xml',
 };
 
 export const articleFullData13: Article = {
@@ -239,7 +243,10 @@ export const articleFullData13: Article = {
   jel_codes: ['J28', 'J81', 'I31'],
   received_date: '2025-08-10',
   accepted_date: '2025-10-15',
-  xml_url: 'https://journals.rcsi.science/2587-7666/article/xml/353792',
+  // Новая схема, заполнен только внешний адрес: кнопка скачивания не
+  // показывается — файла у нас нет.
+  xml_rcsi_url: 'https://journals.rcsi.science/2587-7666/article/xml/353792',
+  xml_file: null,
 };
 
 export const articleFullData14: Article = {
@@ -258,6 +265,9 @@ export const articleFullData14: Article = {
     ru: 'Российский научный фонд № 24-18-00665, «Идеологический ландшафт российской экономической науки» в Южном федеральном университете.',
     en: 'Russian Science Foundation No. 24-18-00665, "Ideological landscape of Russian economic science" at Southern Federal University.',
   },
+  // ⚠️ Нарочно СТАРАЯ схема — одно поле `xml_url`. Пока боевой бэк такой,
+  // ветку совместимости нужно чем-то смотреть глазами, а тестов в проекте нет.
+  // Удалить вместе с самой веткой, когда новый бэк доедет до боевого.
   xml_url: 'https://journals.rcsi.science/2587-7666/article/xml/353802',
 };
 

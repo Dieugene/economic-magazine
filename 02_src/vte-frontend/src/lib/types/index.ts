@@ -118,7 +118,14 @@ export interface Article {
   received_date: string | null;
   accepted_date: string | null;
   funding: LocalizedText;
-  xml_url: string | null;
+  // ⚠️ Три поля, потому что бэков два. Новый (стенд с 14.09.2026) отдаёт
+  // `xml_file` + `xml_rcsi_url`, старый (боевой) — одно `xml_url`. Все три
+  // необязательны намеренно: наличие ключа и есть признак схемы, по нему
+  // различает `hasSplitXmlFields` в `lib/api/files.ts`. Ключ `xml_url` убрать,
+  // когда новый бэк доедет до боевого.
+  xml_file?: string | null;
+  xml_rcsi_url?: string | null;
+  xml_url?: string | null;
 }
 
 // Совместимость со старыми именами в коде (точечно используется в страницах)

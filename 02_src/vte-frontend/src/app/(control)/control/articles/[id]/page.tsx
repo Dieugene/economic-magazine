@@ -23,10 +23,12 @@ import {
   articleJatsXml,
   articlePdfLink,
   articleXmlLinks,
+  articleXmlSources,
   fileNameFromUrl,
+  hasSplitXmlFields,
   isRcsiXmlUrl,
   isSendableXmlUrl,
-  isServerXmlPath,
+  isViewableXmlHref,
   XML_URL_MAX_LENGTH,
 } from "@/lib/api/files";
 import { findOverlaps } from "@/lib/utils/pages";
@@ -115,6 +117,8 @@ export default function ArticleFormPage({
   const [jelCodes, setJelCodes] = useState("");
   const [fundingRu, setFundingRu] = useState("");
   const [fundingEn, setFundingEn] = useState("");
+  // Поле «внешний адрес XML»: на новом бэке это `xml_rcsi_url`, на старом —
+  // единственное `xml_url`. Какой ключ уйдёт в PATCH, решает схема статьи.
   const [xmlUrl, setXmlUrl] = useState("");
   const [receivedDate, setReceivedDate] = useState<string>(
     () => new Date().toISOString().slice(0, 10)
@@ -142,12 +146,24 @@ export default function ArticleFormPage({
   // поля формы, — качается то, что лежит на сервере.
   const xmlTarget = article ? articleXmlLinks(article) : null;
 
-  // Менял ли редактор поле «URL XML (JATS)» руками. Сравниваем с тем, что лежит
-  // в сохранённой статье: после «Сформировать XML» там путь от корня, который
-  // бэк сам записал и обратно на запись не принимает (400). Неизменённое поле
-  // не отправляем вовсе — см. `buildPayload`.
+  // Какая схема полей у СЕЙЧАС загруженной статьи. Считаем на каждый рендер, а
+  // не один раз при монтировании: бэк могут перевыложить между загрузкой формы
+  // и сохранением, и ключ должен уехать тот, который бэк понимает сейчас.
+  const splitXmlFields = article ? hasSplitXmlFields(article) : null;
+  const xmlSources = article ? articleXmlSources(article) : null;
+
+  // Что лежит в поле у СОХРАНЁННОЙ статьи. На новой схеме это только внешний
+  // адрес; на старой — что угодно, в том числе путь, который записал сам бэк.
+  const savedXmlFieldValue = article
+    ? (splitXmlFields ? article.xml_rcsi_url ?? "" : article.xml_url ?? "")
+    : "";
+
+  // Менял ли редактор поле внешнего адреса руками. Сравниваем с сохранённым
+  // значением: на старой схеме после «Сформировать XML» там лежит путь от
+  // корня, который бэк записал сам и обратно на запись не принимает (400).
+  // Неизменённое поле не отправляем вовсе — см. `buildPayload`.
   const xmlUrlTrimmed = xmlUrl.trim();
-  const xmlUrlChanged = xmlUrlTrimmed !== (article?.xml_url ?? "").trim();
+  const xmlUrlChanged = xmlUrlTrimmed !== savedXmlFieldValue.trim();
 
   async function loadSections() {
     try {
@@ -178,7 +194,7 @@ export default function ArticleFormPage({
       setJelCodes(data.jel_codes?.join(", ") ?? "");
       setFundingRu(data.funding?.ru ?? "");
       setFundingEn(data.funding?.en ?? "");
-      setXmlUrl(data.xml_url ?? "");
+      setXmlUrl((hasSplitXmlFields(data) ? data.xml_rcsi_url : data.xml_url) ?? "");
       setReceivedDate(data.received_date ?? new Date().toISOString().slice(0, 10));
       setAcceptedDate(data.accepted_date ?? new Date().toISOString().slice(0, 10));
       // Бэк хранит references как массив [{ru, en}, ...]. Склеиваем
@@ -300,6 +316,15 @@ export default function ArticleFormPage({
     return { ru: s.ru.trim(), en: (s.en ?? "").trim() };
   }
 
+  // Под каким ключом внешний адрес XML уходит на бэк. Схема известна —
+  // отправляем один ключ; неизвестна (новая статья) — оба: чужой ключ каждый из
+  // бэков молча пропускает, а вот угаданный неверно потерял бы правку без следа.
+  function xmlFieldPayload(value: string | null): Partial<ArticleCreatePayload> {
+    if (splitXmlFields === true) return { xml_rcsi_url: value };
+    if (splitXmlFields === false) return { xml_url: value };
+    return { xml_rcsi_url: value, xml_url: value };
+  }
+
   function buildPayload(): ArticleCreatePayload | null {
     if (!sectionSlug) {
       toast.error("Выберите рубрику");
@@ -375,12 +400,17 @@ export default function ArticleFormPage({
       received_date: receivedDate,
       accepted_date: acceptedDate,
       funding: { ru: fundingRu, en: fundingEn },
-      // Ключ появляется, ТОЛЬКО если редактор правил поле сам. Иначе статью с
-      // путём от бэка нельзя было бы сохранить вообще: он приходит в GET, но на
-      // PATCH возвращается 400 «Введите правильный URL» (проба на стенде).
-      // Побочно это закрывает и тихую потерю: когда `refreshXmlUrl` не сумел
-      // перечитать свежую ссылку, прежнее значение из формы её больше не затрёт.
-      ...(xmlUrlChanged ? { xml_url: xmlUrlTrimmed || null } : {}),
+      // Ключ появляется, ТОЛЬКО если редактор правил поле сам. На СТАРОЙ схеме
+      // иначе нельзя было бы сохранить статью вообще: путь от бэка приходит в
+      // GET, но на PATCH получает 400 «Введите правильный URL» (проба на
+      // стенде). Побочно это закрывает и тихую потерю: когда перечитать свежую
+      // ссылку не удалось, прежнее значение из формы её больше не затрёт.
+      //
+      // ⚠️ Имя ключа зависит от схемы бэка, и ошибиться здесь — потерять правку
+      // молча: лишний ключ DRF игнорирует и отвечает 200. У новой статьи схема
+      // ещё не известна (ни одного ответа по ней не было), поэтому шлём оба
+      // ключа: каждый бэк возьмёт свой, чужой пропустит.
+      ...(xmlUrlChanged ? xmlFieldPayload(xmlUrlTrimmed || null) : {}),
     };
   }
 
@@ -513,7 +543,11 @@ export default function ArticleFormPage({
       toast.error("В демо-режиме XML не формируется");
       return;
     }
-    const previousRcsi = isRcsiXmlUrl(xmlUrl) ? xmlUrl : null;
+    // Затереть адрес РЦНИ генерация может только на СТАРОЙ схеме, где поле
+    // одно. На новой бэк пишет в `xml_file`, а `xml_rcsi_url` не трогает —
+    // предупреждать не о чем.
+    const previousRcsi =
+      splitXmlFields === false && isRcsiXmlUrl(xmlUrl) ? xmlUrl : null;
     if (
       previousRcsi &&
       !confirm(
@@ -544,7 +578,7 @@ export default function ArticleFormPage({
         // документом. Скачать его можно ссылкой рядом — она смотрит на поле.
         toast.success("XML сформирован на сервере");
       }
-      await refreshXmlUrl(previousRcsi);
+      await refreshXmlState(previousRcsi);
     } catch (e) {
       toast.error(parseApiError(e), { description: "Не удалось сформировать XML" });
     } finally {
@@ -552,15 +586,21 @@ export default function ArticleFormPage({
     }
   }
 
-  // Перечитываем ТОЛЬКО ссылку на XML, а не всю статью: loadArticle() перезальёт
-  // два десятка полей формы и сотрёт несохранённые правки редактора. Обновить
-  // поле при этом обязательно — иначе следующее «Сохранить изменения» отправит
-  // прежнее значение и затрёт свежую ссылку.
-  async function refreshXmlUrl(previousRcsi: string | null) {
+  // Перечитываем ТОЛЬКО статью, а не форму: loadArticle() перезальёт два
+  // десятка полей и сотрёт несохранённые правки редактора. Свежая запись нужна
+  // ради ссылок на файл — они считаются от сохранённой статьи, а не от формы.
+  //
+  // ⚠️ Поле ввода трогаем ТОЛЬКО на старой схеме, где генерация пишет в то же
+  // поле: иначе следующее «Сохранить изменения» затёрло бы свежую ссылку старым
+  // значением из формы. На новой схеме поле принадлежит редактору целиком —
+  // перезаписать его значит молча потерять адрес, который он только что вписал
+  // и ещё не сохранил.
+  async function refreshXmlState(previousRcsi: string | null) {
     if (!articleId) return;
     try {
       const fresh = await adminApi.getArticle(articleId);
       setArticle(fresh);
+      if (hasSplitXmlFields(fresh)) return;
       const next = fresh.xml_url ?? "";
       if (next === xmlUrl) return;
       setXmlUrl(next);
@@ -1285,15 +1325,18 @@ export default function ArticleFormPage({
           </legend>
           <div className="p-5 pt-3 space-y-4">
             <div>
-              <label htmlFor="xml-url" className={labelClass}>URL XML (JATS)</label>
+              <label htmlFor="xml-url" className={labelClass}>
+                {splitXmlFields ? "Внешняя ссылка на XML (РЦНИ)" : "URL XML (JATS)"}
+              </label>
               <input
                 id="xml-url"
-                // ⚠️ НЕ `type="url"`. Кнопка «Сформировать XML» подставляет сюда
-                // путь от корня (`/files/arch/...`), который пишет сам бэк, —
-                // браузер такой адрес считает невалидным и молча запирает
-                // сохранение ВСЕЙ формы, хотя редактор этого значения не вводил.
-                // Ровно на это наткнулась редакция 11.09.2026. Проверка теперь
-                // своя и только для значений, введённых руками (`buildPayload`).
+                // ⚠️ НЕ `type="url"` — и на новой схеме тоже. На старой сюда
+                // подставлял путь от корня (`/files/arch/...`) сам бэк, браузер
+                // считал такой адрес невалидным и молча запирал сохранение ВСЕЙ
+                // формы, хотя редактор этого значения не вводил: ровно на это
+                // наткнулась редакция 11.09.2026. Одна сборка ходит на оба бэка,
+                // значит поведение поля должно быть одинаковым; проверка своя и
+                // только для значений, введённых руками (`buildPayload`).
                 type="text"
                 inputMode="url"
                 ref={xmlUrlRef}
@@ -1303,21 +1346,29 @@ export default function ArticleFormPage({
                 onChange={(e) => setXmlUrl(e.target.value)}
                 placeholder="https://journals.rcsi.science/..."
               />
-              {article?.xml_url && isServerXmlPath(article.xml_url) && (
-                // Путь от корня редактору нечем проверить: ссылки «Открыть XML
-                // на РЦНИ» у него нет, а «Скачать XML» показывается не всегда.
-                // Даём прямую ссылку на файл, который лежит на сервере.
+              {splitXmlFields && (
+                <p className={`${hintClass} mt-2`}>
+                  Только внешний адрес XML на сайте РЦНИ. Файл, собранный нашим
+                  сервером, хранится отдельно и это поле не затирает.
+                </p>
+              )}
+              {xmlSources?.server && isViewableXmlHref(xmlSources.server) && (
+                // Файл на нашем сервере редактору нечем проверить: ссылки
+                // «Открыть XML на РЦНИ» у него нет, а «Скачать XML»
+                // показывается не всегда. Даём прямую ссылку.
                 <p className={`${hintClass} mt-2`}>
                   Файл на сервере:{" "}
                   <a
-                    href={article.xml_url}
+                    href={xmlSources.server}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-forest-600 underline break-all"
                   >
-                    {fileNameFromUrl(article.xml_url)}
+                    {fileNameFromUrl(xmlSources.server)}
                   </a>
-                  {" "}— этот путь подставила кнопка ниже, менять его не нужно.
+                  {splitXmlFields
+                    ? " — его записала кнопка ниже, в это поле он не попадает."
+                    : " — этот путь подставила кнопка ниже, менять его не нужно."}
                 </p>
               )}
             </div>
@@ -1403,15 +1454,31 @@ export default function ArticleFormPage({
                         </PdfDownloadLink>
                       )}
                     </div>
+                    {/* Подсказка разная у двух бэков, и это не косметика: на
+                        старом генерация ЗАМЕЩАЕТ единственное поле, на новом
+                        пишет в своё. Общий текст был бы неверен ровно там, где
+                        редактор боится нажать кнопку. */}
                     <p className={`${hintClass} mt-2`}>
                       Файл собирается на сервере по <strong>сохранённым</strong> данным
                       статьи — правки в форме попадут в него только после сохранения.
-                      Обновлённый бэкенд кладёт путь к собранному файлу в поле
-                      «URL XML (JATS)» выше, заменяя то, что там стояло. Этот путь
-                      <strong> исправлять не нужно</strong>: он уже сохранён на сервере, и
-                      сохранение статьи его не изменит. Адрес публикации на РЦНИ
-                      вписывают в это же поле вручную — полностью, вместе с
-                      «https://».
+                      {splitXmlFields ? (
+                        <>
+                          {" "}Собранный файл хранится отдельно и показан выше
+                          строкой «Файл на сервере»; поле «Внешняя ссылка на XML
+                          (РЦНИ)» кнопка <strong>не трогает</strong> — адрес
+                          публикации на РЦНИ вписывают туда вручную, полностью,
+                          вместе с «https://».
+                        </>
+                      ) : (
+                        <>
+                          {" "}Обновлённый бэкенд кладёт путь к собранному файлу в поле
+                          «URL XML (JATS)» выше, заменяя то, что там стояло. Этот путь
+                          <strong> исправлять не нужно</strong>: он уже сохранён на сервере, и
+                          сохранение статьи его не изменит. Адрес публикации на РЦНИ
+                          вписывают в это же поле вручную — полностью, вместе с
+                          «https://».
+                        </>
+                      )}
                     </p>
                   </>
                 )}
